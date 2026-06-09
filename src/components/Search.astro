@@ -1,0 +1,109 @@
+---
+---
+
+<div id="search" class="relative">
+  <button
+    id="search-toggle"
+    class="cursor-pointer border-0 bg-transparent p-1 text-[var(--color-ink-light)] hover:text-[var(--color-ink)] transition-colors"
+    aria-label="Search"
+    type="button"
+  >
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </svg>
+  </button>
+</div>
+
+<div id="search-modal" class="fixed inset-0 z-[100] hidden items-start justify-center bg-black/30 pt-[15vh]" role="dialog" aria-modal="true">
+  <div class="w-full max-w-lg rounded-lg bg-[var(--color-paper)] p-6 shadow-lg border border-[var(--color-border)]">
+    <div class="flex items-center gap-3 border-b border-[var(--color-border)] pb-3">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[var(--color-ink-light)]">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search articles..."
+        class="w-full border-0 bg-transparent text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-light)]"
+        autofocus
+      />
+      <button id="search-close" class="cursor-pointer border-0 bg-transparent text-sm text-[var(--color-ink-light)] hover:text-[var(--color-ink)]" type="button">ESC</button>
+    </div>
+    <div id="search-results" class="mt-4 max-h-60 space-y-2 overflow-y-auto">
+      <p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const toggle = document.getElementById('search-toggle');
+  const modal = document.getElementById('search-modal');
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+  const close = document.getElementById('search-close');
+
+  let pagefind = null;
+
+  async function getPagefind() {
+    if (!pagefind) {
+      const script = document.createElement('script');
+      script.src = '/pagefind/pagefind.js';
+      document.head.appendChild(script);
+      pagefind = await new Promise((resolve) => {
+        script.onload = () => resolve(window.pagefind);
+      });
+    }
+    return pagefind;
+  }
+
+  function openSearch() {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    input.value = '';
+    results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>';
+    input.focus();
+  }
+
+  function closeSearch() {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  if (toggle && modal) {
+    toggle.addEventListener('click', openSearch);
+    close.addEventListener('click', closeSearch);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeSearch(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSearch();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+    });
+
+    let debounceTimer;
+    input.addEventListener('input', async () => {
+      clearTimeout(debounceTimer);
+      const term = input.value.trim();
+      if (!term) {
+        results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>';
+        return;
+      }
+      debounceTimer = setTimeout(async () => {
+        const pf = await getPagefind();
+        if (!pf) return;
+        const searchResults = await pf.search(term);
+        if (!searchResults || searchResults.results.length === 0) {
+          results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">No results found.</p>';
+          return;
+        }
+        let html = '';
+        for (const r of searchResults.results.slice(0, 10)) {
+          const data = await r.data();
+          html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
+            <div class="font-medium text-[var(--color-ink)]">${data.meta.title}</div>
+            <div class="text-xs text-[var(--color-ink-light)]">${data.excerpt}</div>
+          </a>`;
+        }
+        results.innerHTML = html;
+      }, 200);
+    });
+  }
+</script>

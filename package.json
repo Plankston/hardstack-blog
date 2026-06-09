@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "npx pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -15,8 +16,10 @@
     "@astrojs/mdx": "^6.0.2",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
+    "@pagefind/default-ui": "^1.5.2",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.4",
+    "pagefind": "^1.5.2",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.3.0"
   }
