@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <BaseHead title="Blog — {SITE_TITLE}" description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <h1 class="mb-2 font-serif text-3xl">Blog</h1>
+      <p class="mb-10 text-sm text-[var(--color-ink-light)]">
+        深度开源项目安装教程与踩坑记录
+      </p>
+
+      <hr class="mb-10" />
+
+      {
+        posts.length > 0 ? (
+          <div class="space-y-10">
+            {
+              posts.map((post) => (
+                <article class="border-b border-[var(--color-border)] pb-8 last:border-0">
+                  <a href={`/blog/${post.id}/`} class="group block no-underline">
+                    <h2 class="mb-2 font-serif text-xl font-bold text-[var(--color-ink)] group-hover:text-[var(--color-accent-light)] transition-colors">
+                      {post.data.title}
+                    </h2>
+                    <p class="mb-2 text-sm text-[var(--color-ink-light)]">
+                      <FormattedDate date={post.data.pubDate} />
+                    </p>
+                    <p class="text-sm text-[var(--color-ink-light)] leading-relaxed">
+                      {post.data.description}
+                    </p>
+                  </a>
+                </article>
+              ))
+            }
+          </div>
+        ) : (
+          <div class="py-16 text-center text-[var(--color-ink-light)]">
+            <p class="font-serif text-lg italic">No posts yet. Stay tuned — the first one is on its way.</p>
+          </div>
+        )
+      }
+    </main>
+    <Footer />
+  </body>
+</html>

@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <section class="mb-16 text-center">
+        <h1 class="mb-4 text-5xl font-bold tracking-tight">
+          {SITE_TITLE}
+        </h1>
+        <p class="mx-auto max-w-lg text-lg text-[var(--color-ink-light)] italic">
+          {SITE_DESCRIPTION}
+        </p>
+        <p class="mt-2 text-sm text-[var(--color-ink-light)]">
+          深度开源项目安装教程 · 踩坑记录 · 横向对比
+        </p>
+      </section>
+
+      <hr class="mb-12" />
+
+      <section>
+        <div class="mb-8 flex items-baseline justify-between">
+          <h2 class="m-0 font-serif text-xl">Latest Posts</h2>
+          <a href="/blog" class="text-sm">View all →</a>
+        </div>
+        {
+          posts.length > 0 ? (
+            <div class="space-y-8">
+              {
+                posts.map((post) => (
+                  <article class="border-b border-[var(--color-border)] pb-6 last:border-0">
+                    <a href={`/blog/${post.id}/`} class="group block no-underline">
+                      <h3 class="mb-2 text-xl font-serif font-bold text-[var(--color-ink)] group-hover:text-[var(--color-accent-light)] transition-colors">
+                        {post.data.title}
+                      </h3>
+                      <p class="mb-2 text-sm text-[var(--color-ink-light)]">
+                        <FormattedDate date={post.data.pubDate} />
+                      </p>
+                      <p class="text-sm text-[var(--color-ink-light)] leading-relaxed">
+                        {post.data.description}
+                      </p>
+                    </a>
+                  </article>
+                ))
+              }
+            </div>
+          ) : (
+            <div class="py-12 text-center text-[var(--color-ink-light)]">
+              <p class="font-serif text-lg italic">Posts coming soon…</p>
+              <p class="mt-4 text-sm">First post: <strong>opencode 安装与使用教程</strong></p>
+            </div>
+          )
+        }
+      </section>
+    </main>
+    <Footer />
+  </body>
+</html>
