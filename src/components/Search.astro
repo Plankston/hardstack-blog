@@ -4,7 +4,7 @@
 <div id="search" class="relative">
   <button
     id="search-toggle"
-    class="cursor-pointer border-0 bg-transparent p-1 text-[var(--color-ink-light)] hover:text-[var(--color-ink)] transition-colors"
+    class="cursor-pointer border-0 bg-transparent p-1 text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors"
     aria-label="Search"
     type="button"
   >
@@ -17,20 +17,20 @@
 <div id="search-modal" class="fixed inset-0 z-[100] hidden items-start justify-center bg-black/30 pt-[15vh]" role="dialog" aria-modal="true">
   <div class="w-full max-w-lg rounded-lg bg-[var(--color-paper)] p-6 shadow-lg border border-[var(--color-border)]">
     <div class="flex items-center gap-3 border-b border-[var(--color-border)] pb-3">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[var(--color-ink-light)]">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-[var(--color-ink-faint)]">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
       </svg>
       <input
         id="search-input"
         type="text"
         placeholder="Search articles..."
-        class="w-full border-0 bg-transparent text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-light)]"
+        class="w-full border-0 bg-transparent text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)]"
         autofocus
       />
-      <button id="search-close" class="cursor-pointer border-0 bg-transparent text-sm text-[var(--color-ink-light)] hover:text-[var(--color-ink)]" type="button">ESC</button>
+      <button id="search-close" class="cursor-pointer border-0 bg-transparent text-sm text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]" type="button">ESC</button>
     </div>
     <div id="search-results" class="mt-4 max-h-60 space-y-2 overflow-y-auto">
-      <p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>
+      <p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>
     </div>
   </div>
 </div>
@@ -60,7 +60,7 @@
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     input.value = '';
-    results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>';
+    results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
     input.focus();
   }
 
@@ -83,7 +83,7 @@
       clearTimeout(debounceTimer);
       const term = input.value.trim();
       if (!term) {
-        results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">Type to search...</p>';
+        results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
         return;
       }
       debounceTimer = setTimeout(async () => {
@@ -91,7 +91,7 @@
         if (!pf) return;
         const searchResults = await pf.search(term);
         if (!searchResults || searchResults.results.length === 0) {
-          results.innerHTML = '<p class="text-sm text-[var(--color-ink-light)]">No results found.</p>';
+          results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">No results found.</p>';
           return;
         }
         let html = '';
@@ -99,7 +99,7 @@
           const data = await r.data();
           html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
             <div class="font-medium text-[var(--color-ink)]">${data.meta.title}</div>
-            <div class="text-xs text-[var(--color-ink-light)]">${data.excerpt}</div>
+            <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt}</div>
           </a>`;
         }
         results.innerHTML = html;

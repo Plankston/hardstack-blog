@@ -5,7 +5,7 @@ import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { useTranslations, LOCALES } from '../../i18n/ui';
-import { getLocaleFromParams } from '../../i18n/utils';
+import { getLocaleFromParams, getSlug } from '../../i18n/utils';
 
 export async function getStaticPaths() {
   return Object.keys(LOCALES).map((locale) => ({ params: { locale } }));
@@ -28,28 +28,32 @@ const posts = (await getCollection('blog'))
   <body>
     <Header locale={currentLocale} />
     <main>
-      <section class="mb-16 text-center">
-        <p class="post-meta mb-3">{currentLocale === 'en' ? 'Vol. I · 2026' : '第一卷 · 2026'}</p>
-        <h1 class="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
-          {t('site.title')}
-        </h1>
-        <p class="mx-auto max-w-md text-base leading-relaxed text-[var(--color-ink-light)]">
-          {t('site.description')}
-        </p>
-      </section>
+      <!-- Hero: full-bleed -->
+      <div class="bg-[var(--color-paper-light)]">
+        <div class="section-inner py-20 text-center">
+          <p class="post-meta mb-3">{currentLocale === 'en' ? 'Vol. I · 2026' : '第一卷 · 2026'}</p>
+          <h1 class="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
+            {t('site.title')}
+          </h1>
+          <p class="mx-auto max-w-md text-base leading-relaxed text-[var(--color-ink-muted)]">
+            {t('site.description')}
+          </p>
+        </div>
+      </div>
 
-      <hr class="mb-14" />
+      <!-- Post list -->
+      <div class="section-inner">
+        <hr class="mb-14" />
 
-      <section>
         {posts.length > 0 ? (
           <div class="space-y-10">
             {posts.map((post, i) => (
               <article>
                 <a
-                  href={new URL(`/${currentLocale}/blog/${post.id}/`, Astro.site).pathname}
+                  href={new URL(`/${currentLocale}/blog/${getSlug(post)}/`, Astro.site).pathname}
                   class="group flex items-start gap-5 no-underline md:gap-8"
                 >
-                  <span class="hidden font-serif text-3xl font-bold text-[var(--color-border)] md:block md:w-12 md:shrink-0">
+                  <span class="hidden font-serif text-3xl font-bold text-[var(--color-ink-muted)] md:block md:w-12 md:shrink-0">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div class="min-w-0 flex-1">
@@ -62,16 +66,16 @@ const posts = (await getCollection('blog'))
                     <h2 class="mb-2 font-serif text-xl font-bold leading-snug text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-light)]">
                       {post.data.title}
                     </h2>
-                    <p class="text-sm leading-relaxed text-[var(--color-ink-light)]">
-                      {post.data.description}
-                    </p>
+<p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">
+  {post.data.description}
+</p>
                   </div>
                 </a>
               </article>
             ))}
           </div>
         ) : (
-          <div class="py-16 text-center text-[var(--color-ink-light)]">
+          <div class="py-16 text-center text-[var(--color-ink-faint)]">
             <p class="font-serif text-lg italic">
               {currentLocale === 'en' ? 'Posts coming soon…' : '文章即将上线……'}
             </p>
@@ -80,7 +84,7 @@ const posts = (await getCollection('blog'))
             </p>
           </div>
         )}
-      </section>
+      </div>
     </main>
     <Footer locale={currentLocale} />
   </body>

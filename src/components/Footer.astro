@@ -14,8 +14,8 @@ const today = new Date();
 <footer class="border-t border-[var(--color-border)] py-12 text-center">
   <div class="mx-auto max-w-md px-6">
     <p class="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{t('site.title')}</p>
-    <p class="text-sm italic text-[var(--color-ink-light)]">{t('footer.tagline')}</p>
-    <div class="mt-6 text-xs uppercase tracking-widest text-[var(--color-ink-muted)]">
+    <p class="text-sm italic text-[var(--color-ink-muted)]">{t('footer.tagline')}</p>
+    <div class="mt-6 text-xs uppercase tracking-widest text-[var(--color-ink-faint)]">
       &copy; {today.getFullYear()} {currentLocale === 'en' ? '· Vol. I ·' : '· 第一卷 ·'}&nbsp;{t('footer.colophon')}
     </div>
   </div>

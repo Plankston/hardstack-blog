@@ -3,28 +3,29 @@
 @theme {
   --color-paper: #efe7d2;
   --color-paper-light: #f5f0e4;
-  --color-ink: #2c2c2c;
-  --color-ink-light: #78716c;
-  --color-ink-muted: #a8a29e;
-  --color-accent: #1a3a5c;
-  --color-accent-light: #2d6a9f;
-  --color-border: #e0d6c4;
-  --color-code-bg: #f0e8da;
-  --color-code-border: #dcd0bc;
+  --color-ink: #1c1814;
+  --color-ink-muted: #5c5548;
+  --color-ink-faint: #8a7f6e;
+  --color-link: #205ea6;
+  --color-accent: #bc5215;
+  --color-accent-light: #da702c;
+  --color-border: #d4c9b3;
+  --color-code-bg: #e6ddcb;
+  --color-code-border: #cdc0a8;
   --font-serif: "Georgia", "Noto Serif SC", "Source Han Serif SC", serif;
   --font-sans: "Atkinson", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "SF Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
 }
 
 :root {
-  --accent: #1a3a5c;
-  --accent-dark: #0f2440;
-  --black: 44, 44, 44;
-  --gray: 120, 113, 108;
-  --gray-light: 224, 214, 196;
-  --gray-dark: 44, 44, 44;
+  --accent: #bc5215;
+  --accent-dark: #8a3b0f;
+  --black: 28, 24, 20;
+  --gray: 92, 85, 72;
+  --gray-light: 212, 201, 179;
+  --gray-dark: 28, 24, 20;
   --gray-gradient: rgba(239, 231, 210, 80%), #efe7d2;
-  --box-shadow: 0 1px 3px rgba(44, 44, 44, 6%), 0 4px 12px rgba(44, 44, 44, 4%);
+  --box-shadow: 0 1px 3px rgba(28, 24, 20, 6%), 0 4px 12px rgba(28, 24, 20, 4%);
 }
 
 body {
@@ -34,14 +35,17 @@ body {
   text-align: left;
   background: var(--color-paper);
   color: var(--color-ink);
-  font-size: 17px;
-  line-height: 1.8;
+  font-size: 18px;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
 
 main {
   width: 100%;
-  max-width: 800px;
+}
+
+.section-inner {
+  max-width: 960px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
 }
@@ -62,19 +66,27 @@ h4 { font-size: 1.15em; }
 strong, b { font-weight: 700; }
 
 a {
-  color: var(--color-accent-light);
+  color: var(--color-link);
   text-decoration: none;
 }
 
 a:hover {
   color: var(--color-accent);
+  text-decoration: underline;
 }
 
 p { margin-bottom: 1.2em; }
 
 .prose {
+  max-width: 700px;
+  margin: 0 auto;
   font-size: 1.05em;
   line-height: 1.85;
+}
+
+.prose pre {
+  margin-inline: -1.5rem;
+  border-radius: 4px;
 }
 
 .prose p {
@@ -143,7 +155,7 @@ blockquote {
   border-left: 2px solid var(--color-accent);
   padding: 0 0 0 1.2em;
   margin: 1.5em 0;
-  color: var(--color-ink-light);
+  color: var(--color-ink-muted);
   font-style: italic;
 }
 
@@ -180,16 +192,17 @@ th {
 
 .post-meta {
   font-size: 0.82em;
-  color: var(--color-ink-light);
+  color: var(--color-ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 @media (max-width: 720px) {
   body { font-size: 16px; }
-  main { padding: 2rem 1.25rem; }
+  .section-inner { padding: 2rem 1.25rem; }
   h1 { font-size: 1.8em; }
   h2 { font-size: 1.4em; }
   h3 { font-size: 1.2em; }
-  .prose { font-size: 1em; }
+  .prose { max-width: 100%; font-size: 1em; }
+  .prose pre { margin-inline: 0; border-radius: 6px; }
 }
