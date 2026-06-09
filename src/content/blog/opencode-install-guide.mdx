@@ -1,0 +1,242 @@
+---
+title: "OpenCode 安装指南：开源 AI 编程助手的 4 种安装方式（2026 实测）"
+description: "完整安装教程，涵盖 curl、npm、brew、手动安装四种方式，以及首次配置和踩坑记录"
+pubDate: 2026-06-09
+tags: ["opencode", "ai", "cli", "installation", "guide"]
+category: "ai-tools"
+difficulty: "beginner"
+timeToRead: 15
+---
+
+## 概述
+
+[OpenCode](https://opencode.ai) 是一个开源 AI 编程助手，拥有 160K+ GitHub Stars，每月服务 750 万+ 开发者。它支持在终端、IDE 和桌面端运行，兼容 Claude、GPT、Gemini 等 75+ 模型提供商。
+
+这篇教程带你完成从零安装到首次运行的全过程。
+
+## 前置要求
+
+- **操作系统**: Linux（本教程基于 Ubuntu/WSL2）、macOS 或 Windows
+- **终端**: Bash / Zsh
+- **机器**: x86_64 或 ARM64 架构
+- **网络**: 能访问 GitHub 和 opencode.ai
+- **硬盘空间**: 至少 500MB（opencode 二进制约 150MB）
+
+## 方式一：一键脚本安装（推荐）
+
+这是最简单的方式，适合大多数用户：
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+该脚本会自动：
+1. 检测你的操作系统和架构
+2. 从 GitHub Releases 下载对应版本
+3. 安装到 `~/.local/bin/opencode`
+4. 将 `~/.local/bin` 添加到 PATH
+
+### 安装指定版本
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --version 1.0.180
+```
+
+### 不自动修改 PATH
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+```
+
+### 实际安装输出示例
+
+```
+OpenCode Installer v1.0.0
+ℹ Detected OS: linux
+ℹ Detected Architecture: x86_64
+ℹ Downloading OpenCode v1.16.2...
+✓ Downloaded to /tmp/opencode-xxxxx
+✓ Installed to /home/user/.local/bin/opencode
+✓ Added ~/.local/bin to PATH in ~/.bashrc
+✓ Installation complete! Run 'opencode' to start.
+```
+
+## 方式二：npm 安装
+
+如果你已安装了 Node.js：
+
+```bash
+npm install -g @opencode/cli
+```
+
+安装后验证：
+
+```bash
+opencode --version
+# 输出: 1.16.2
+```
+
+> ⚠️ 注意：npm 安装包可能不是最新版本。如果想获取最新版，建议用方式一。
+
+## 方式三：Homebrew（macOS）
+
+```bash
+brew install opencode
+```
+
+## 方式四：手动安装
+
+从 [GitHub Releases](https://github.com/anomalyco/opencode/releases) 下载对应平台的二进制文件：
+
+1. 打开 [releases 页面](https://github.com/anomalyco/opencode/releases)
+2. 找到最新版本
+3. 下载对应平台的压缩包（`opencode-linux-x86_64.tar.gz` 等）
+4. 解压并移动到 PATH 目录：
+
+```bash
+tar -xzf opencode-linux-x86_64.tar.gz
+mv opencode ~/.local/bin/
+chmod +x ~/.local/bin/opencode
+```
+
+## 验证安装
+
+```bash
+opencode --version
+# 应输出版本号，如: 1.16.2
+
+opencode --help
+# 应显示所有可用命令
+```
+
+如果出现 `command not found`，确保在 shell 配置文件中添加 PATH：
+
+```bash
+# 添加到 ~/.bashrc 或 ~/.zshrc
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+## 首次配置
+
+### 1. 配置 AI 提供商
+
+OpenCode 默认包含免费模型，但你也可以连接自己的 API Key：
+
+```bash
+opencode providers
+```
+
+这会打开交互式界面，你可以添加：
+- OpenAI（GPT-4、GPT-4o）
+- Anthropic（Claude Sonnet、Opus）
+- Google（Gemini Pro）
+- 本地模型（Ollama、vLLM）
+- 以及 70+ 其他提供商
+
+### 2. 启动 opencode
+
+进入一个项目目录，运行：
+
+```bash
+cd your-project
+opencode
+```
+
+这会启动 TUI（终端用户界面），你可以在其中与 AI 对话，编写代码。
+
+### 3. 基本用法
+
+```
+# 在当前项目启动 opencode 对话
+opencode
+
+# 一次性执行命令
+opencode run "为这个项目添加 README"
+
+# 启动 Web 界面
+opencode web
+
+# 启动 headless 服务
+opencode serve
+```
+
+## 常见问题
+
+### Q: Linux 上安装后提示 "Permission denied"
+**解决**: 给二进制文件添加执行权限：
+```bash
+chmod +x ~/.local/bin/opencode
+```
+
+### Q: curl 安装报 404
+curl 安装脚本可能在维护中，请尝试方式四手动安装，或稍后重试。
+
+### Q: 如何升级 OpenCode？
+```bash
+# 升级到最新版
+opencode upgrade
+
+# 指定方法安装
+opencode upgrade --method curl
+
+# 升级到特定版本
+opencode upgrade 1.0.180
+```
+
+### Q: 如何彻底卸载？
+```bash
+opencode uninstall
+```
+
+### Q: 支持 Windows 吗？
+支持！可以使用 PowerShell 或通过 WSL 运行。Windows 安装方式：
+```powershell
+# Windows (PowerShell)
+iwr https://opencode.ai/install.ps1 | iex
+```
+
+或通过 Scoop:
+```powershell
+scoop install opencode
+```
+
+## 踩坑记录
+
+### 坑 1：WSL2 中 curl 安装后 PATH 未立即生效
+**现象**: 安装成功后运行 `opencode` 提示 `command not found`
+**解决**: 运行 `source ~/.bashrc` 或重新打开终端
+
+### 坑 2：npm 全局安装权限问题
+**现象**: `npm install -g` 时报 EACCES 错误
+**解决**: 配置 npm 全局安装路径：
+```bash
+npm config set prefix ~/.npm-global
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+```
+
+### 坑 3：升级时二进制冲突
+**现象**: 升级提示文件被占用
+**解决**: 关闭所有 opencode 进程后再升级：
+```bash
+pkill opencode
+opencode upgrade
+```
+
+## 总结
+
+OpenCode 的安装过程相当流畅。对于大多数 Linux 用户，一行命令即可完成：
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+四种安装方式对比：
+
+| 方式 | 难度 | 适用场景 |
+|------|------|---------|
+| curl 脚本 | ⭐ | 新手推荐，全自动 |
+| npm | ⭐⭐ | Node.js 开发者 |
+| Homebrew | ⭐ | macOS 用户 |
+| 手动下载 | ⭐⭐⭐ | 需要特定版本/离线安装 |
+
+安装完成后，运行 `opencode` 进入项目目录即可开始使用。下篇文章将介绍 OpenCode 的进阶使用技巧。
