@@ -36,6 +36,12 @@ export default defineConfig({
       },
 	],
 
+  markdown: {
+    shikiConfig: {
+      theme: 'github-light-default',
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },
