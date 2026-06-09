@@ -1,12 +1,12 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-type Props = HTMLAttributes<'a'>;
+type Props = HTMLAttributes<'a'> & { locale?: string };
 
-const { href, class: className, ...props } = Astro.props;
+const { href, locale = 'en', class: className, ...props } = Astro.props as Props;
 const pathname = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
-const subpath = pathname.match(/[^\/]+/g);
-const isActive = href === pathname || href === '/' + (subpath?.[0] || '');
+const subpath = pathname.replace(/^\/(en|zh-CN)/, '').match(/[^\/]+/g);
+const isActive = href === pathname || href.endsWith('/' + (subpath?.[0] || ''));
 ---
 
 <a

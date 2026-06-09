@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Giscus from '../components/Giscus.astro';
 import Header from '../components/Header.astro';
+import { useTranslations } from '../i18n/ui';
 
 interface Props {
   title: string;
@@ -13,27 +14,38 @@ interface Props {
   category?: string;
   difficulty?: string;
   timeToRead?: number;
+  locale: string;
 }
 
-const { title, description, pubDate, updatedDate, category, timeToRead } = Astro.props;
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  category,
+  difficulty,
+  timeToRead,
+  locale,
+} = Astro.props;
+const t = useTranslations(locale);
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang={t('site.lang')}>
   <head>
     <BaseHead title={title} description={description} />
   </head>
   <body>
-    <Header />
+    <Header locale={locale} />
     <main>
       <article>
         <header class="mb-10">
           <div class="post-meta mb-3">
-            <FormattedDate date={pubDate} />
+            {t('blog.postedOn')} <FormattedDate date={pubDate} />
             {updatedDate && (
-              <span class="ml-2">· Updated <FormattedDate date={updatedDate} /></span>
+              <span class="ml-2">· {t('blog.updatedOn')} <FormattedDate date={updatedDate} /></span>
             )}
-            {timeToRead && <span class="ml-2">· {timeToRead} min read</span>}
+            {timeToRead && <span class="ml-2">· {timeToRead} {t('blog.minRead')}</span>}
           </div>
           <h1 class="font-serif text-3xl leading-tight md:text-4xl">{title}</h1>
           <p class="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-ink-light)]">
@@ -47,9 +59,9 @@ const { title, description, pubDate, updatedDate, category, timeToRead } = Astro
           <slot />
         </div>
 
-        <Giscus />
+        <Giscus locale={locale} />
       </article>
     </main>
-    <Footer />
+    <Footer locale={locale} />
   </body>
 </html>

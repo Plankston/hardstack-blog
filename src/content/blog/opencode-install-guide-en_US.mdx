@@ -1,0 +1,245 @@
+---
+title: "OpenCode Installation Guide: 4 Ways to Install the Open-Source AI Coding Assistant (2026实测)"
+description: "Complete installation tutorial covering curl, npm, brew, and manual install — plus first-time setup and troubleshooting"
+pubDate: 2026-06-09
+tags: ["opencode", "ai", "cli", "installation", "guide"]
+category: "ai-tools"
+difficulty: "beginner"
+timeToRead: 12
+postLang: "en"
+groupKey: "opencode-install-guide"
+---
+
+## Overview
+
+[OpenCode](https://opencode.ai) is an open-source AI coding assistant with 160K+ GitHub Stars, serving over 7.5 million developers each month. It runs in the terminal, IDE, and desktop environments, supporting 75+ model providers including Claude, GPT, Gemini, and more.
+
+This guide walks you through the entire process from zero installation to first run.
+
+## Prerequisites
+
+- **OS**: Linux (this guide is based on Ubuntu/WSL2), macOS, or Windows
+- **Terminal**: Bash / Zsh
+- **Architecture**: x86_64 or ARM64
+- **Network**: Access to GitHub and opencode.ai
+- **Disk Space**: At least 500MB (opencode binary is ~150MB)
+
+## Method 1: One-Line Script Install (Recommended)
+
+The easiest way — suitable for most users:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+The script automatically:
+1. Detects your OS and architecture
+2. Downloads the matching release from GitHub Releases
+3. Installs to `~/.local/bin/opencode`
+4. Adds `~/.local/bin` to your PATH
+
+### Install a Specific Version
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --version 1.0.180
+```
+
+### Skip PATH Modification
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+```
+
+### Sample Installation Output
+
+```
+OpenCode Installer v1.0.0
+ℹ Detected OS: linux
+ℹ Detected Architecture: x86_64
+ℹ Downloading OpenCode v1.16.2...
+✓ Downloaded to /tmp/opencode-xxxxx
+✓ Installed to /home/user/.local/bin/opencode
+✓ Added ~/.local/bin to PATH in ~/.bashrc
+✓ Installation complete! Run 'opencode' to start.
+```
+
+## Method 2: npm Install
+
+If you already have Node.js installed:
+
+```bash
+npm install -g @opencode/cli
+```
+
+Verify the installation:
+
+```bash
+opencode --version
+# Output: 1.16.2
+```
+
+> ⚠️ Note: The npm package may not be the latest version. For the newest release, use Method 1.
+
+## Method 3: Homebrew (macOS)
+
+```bash
+brew install opencode
+```
+
+## Method 4: Manual Install
+
+Download the binary for your platform from [GitHub Releases](https://github.com/anomalyco/opencode/releases):
+
+1. Open the [releases page](https://github.com/anomalyco/opencode/releases)
+2. Find the latest version
+3. Download the archive for your platform (e.g., `opencode-linux-x86_64.tar.gz`)
+4. Extract and move to a directory in your PATH:
+
+```bash
+tar -xzf opencode-linux-x86_64.tar.gz
+mv opencode ~/.local/bin/
+chmod +x ~/.local/bin/opencode
+```
+
+## Verify Installation
+
+```bash
+opencode --version
+# Should output a version number, e.g.: 1.16.2
+
+opencode --help
+# Should display all available commands
+```
+
+If you get `command not found`, make sure `~/.local/bin` is in your PATH:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+## First-Time Setup
+
+### 1. Configure AI Provider
+
+OpenCode includes free models by default, but you can also connect your own API key:
+
+```bash
+opencode providers
+```
+
+This opens an interactive UI where you can add:
+- OpenAI (GPT-4, GPT-4o)
+- Anthropic (Claude Sonnet, Opus)
+- Google (Gemini Pro)
+- Local models (Ollama, vLLM)
+- 70+ other providers
+
+### 2. Launch opencode
+
+Navigate to your project directory and run:
+
+```bash
+cd your-project
+opencode
+```
+
+This launches the TUI (terminal user interface), where you can chat with AI and write code.
+
+### 3. Basic Usage
+
+```
+# Start an opencode session in the current project
+opencode
+
+# Execute a one-shot command
+opencode run "Add a README to this project"
+
+# Launch the web interface
+opencode web
+
+# Start a headless service
+opencode serve
+```
+
+## FAQ
+
+### Q: "Permission denied" after installing on Linux
+**Fix**: Add execute permission to the binary:
+```bash
+chmod +x ~/.local/bin/opencode
+```
+
+### Q: curl install returns 404
+The curl installation script may be under maintenance. Try Method 4 (manual install) or try again later.
+
+### Q: How to upgrade OpenCode?
+```bash
+# Upgrade to the latest version
+opencode upgrade
+
+# Install using a specific method
+opencode upgrade --method curl
+
+# Upgrade to a specific version
+opencode upgrade 1.0.180
+```
+
+### Q: How to completely uninstall?
+```bash
+opencode uninstall
+```
+
+### Q: Does it support Windows?
+Yes! You can use PowerShell or run it through WSL. Windows installation:
+
+```powershell
+# Windows (PowerShell)
+iwr https://opencode.ai/install.ps1 | iex
+```
+
+Or via Scoop:
+```powershell
+scoop install opencode
+```
+
+## Troubleshooting
+
+### Issue 1: PATH not immediately available after curl install on WSL2
+**Symptom**: Running `opencode` after installation gives `command not found`
+**Fix**: Run `source ~/.bashrc` or open a new terminal
+
+### Issue 2: npm global install permission error
+**Symptom**: `npm install -g` throws EACCES
+**Fix**: Configure npm's global install path:
+```bash
+npm config set prefix ~/.npm-global
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+```
+
+### Issue 3: Binary conflict during upgrade
+**Symptom**: Upgrade fails because the file is in use
+**Fix**: Close all opencode processes before upgrading:
+```bash
+pkill opencode
+opencode upgrade
+```
+
+## Summary
+
+The OpenCode installation process is straightforward. For most Linux users, a single command is all you need:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+Installation method comparison:
+
+| Method | Difficulty | Best For |
+|--------|-----------|---------|
+| curl script | ⭐ | Beginners, fully automatic |
+| npm | ⭐⭐ | Node.js developers |
+| Homebrew | ⭐ | macOS users |
+| Manual download | ⭐⭐⭐ | Specific versions / offline install |
+
+Once installed, run `opencode` in your project directory to get started. The next article will cover advanced usage tips for OpenCode.

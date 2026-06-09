@@ -1,3 +1,12 @@
+---
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+const giscusLang = locale === 'zh-CN' ? 'zh-CN' : 'en';
+---
+
 <section class="giscus-wrapper">
   <script
     src="https://giscus.app/client.js"
@@ -11,7 +20,7 @@
     data-emit-metadata="0"
     data-input-position="bottom"
     data-theme="preferred_color_scheme"
-    data-lang="zh-CN"
+    data-lang={giscusLang}
     crossorigin="anonymous"
     async
   >
