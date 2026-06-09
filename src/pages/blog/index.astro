@@ -19,40 +19,41 @@ const posts = (await getCollection('blog')).sort(
   <body>
     <Header />
     <main>
-      <h1 class="mb-2 font-serif text-3xl">Blog</h1>
-      <p class="mb-10 text-sm text-[var(--color-ink-light)]">
-        深度开源项目安装教程与踩坑记录
-      </p>
+      <header class="mb-12">
+        <p class="post-meta mb-2">Archive</p>
+        <h1 class="font-serif text-3xl">All Posts</h1>
+      </header>
 
-      <hr class="mb-10" />
+      <hr class="mb-12" />
 
-      {
-        posts.length > 0 ? (
-          <div class="space-y-10">
-            {
-              posts.map((post) => (
-                <article class="border-b border-[var(--color-border)] pb-8 last:border-0">
-                  <a href={`/blog/${post.id}/`} class="group block no-underline">
-                    <h2 class="mb-2 font-serif text-xl font-bold text-[var(--color-ink)] group-hover:text-[var(--color-accent-light)] transition-colors">
-                      {post.data.title}
-                    </h2>
-                    <p class="mb-2 text-sm text-[var(--color-ink-light)]">
-                      <FormattedDate date={post.data.pubDate} />
-                    </p>
-                    <p class="text-sm text-[var(--color-ink-light)] leading-relaxed">
-                      {post.data.description}
-                    </p>
-                  </a>
-                </article>
-              ))
-            }
-          </div>
-        ) : (
-          <div class="py-16 text-center text-[var(--color-ink-light)]">
-            <p class="font-serif text-lg italic">No posts yet. Stay tuned — the first one is on its way.</p>
-          </div>
-        )
-      }
+      {posts.length > 0 ? (
+        <div class="space-y-10">
+          {posts.map((post, i) => (
+            <article>
+              <a href={`/blog/${post.id}/`} class="group flex items-start gap-5 no-underline md:gap-8">
+                <span class="hidden pt-0.5 font-serif text-xl font-bold text-[var(--color-ink-muted)] md:block md:w-10 md:text-right md:text-base">
+                  {String(posts.length - i).padStart(2, '0')}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="post-meta mb-1">
+                    <FormattedDate date={post.data.pubDate} />
+                  </div>
+                  <h2 class="font-serif text-lg font-bold leading-snug text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-light)]">
+                    {post.data.title}
+                  </h2>
+                  <p class="mt-1 text-sm text-[var(--color-ink-light)]">
+                    {post.data.description}
+                  </p>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="py-16 text-center text-[var(--color-ink-light)]">
+          <p class="font-serif text-lg italic">No posts yet.</p>
+        </div>
+      )}
     </main>
     <Footer />
   </body>

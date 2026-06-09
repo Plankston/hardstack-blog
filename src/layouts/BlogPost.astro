@@ -10,9 +10,12 @@ interface Props {
   description: string;
   pubDate: Date;
   updatedDate?: Date;
+  category?: string;
+  difficulty?: string;
+  timeToRead?: number;
 }
 
-const { title, description, pubDate, updatedDate } = Astro.props;
+const { title, description, pubDate, updatedDate, category, timeToRead } = Astro.props;
 ---
 
 <!doctype html>
@@ -24,24 +27,26 @@ const { title, description, pubDate, updatedDate } = Astro.props;
     <Header />
     <main>
       <article>
-        <header class="mb-10 text-center">
-          <div class="mb-2 text-sm text-[var(--color-ink-light)]">
+        <header class="mb-10">
+          <div class="post-meta mb-3">
             <FormattedDate date={pubDate} />
             {updatedDate && (
-              <span class="ml-2 italic">
-                · Updated <FormattedDate date={updatedDate} />
-              </span>
+              <span class="ml-2">· Updated <FormattedDate date={updatedDate} /></span>
             )}
+            {timeToRead && <span class="ml-2">· {timeToRead} min read</span>}
           </div>
-          <h1 class="mb-4 font-serif text-3xl leading-tight">{title}</h1>
-          <p class="mx-auto max-w-xl text-sm text-[var(--color-ink-light)] italic">
+          <h1 class="font-serif text-3xl leading-tight md:text-4xl">{title}</h1>
+          <p class="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-ink-light)]">
             {description}
           </p>
         </header>
+
         <hr class="mb-10" />
-        <div class="prose mx-auto max-w-2xl">
+
+        <div class="prose">
           <slot />
         </div>
+
         <Giscus />
       </article>
     </main>
