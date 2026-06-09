@@ -13,11 +13,11 @@ const t = useTranslations(currentLocale);
 ---
 
 <header class="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-paper)]/95 backdrop-blur-sm">
-  <nav class="mx-auto flex max-w-[960px] items-center justify-between px-6 py-3">
+  <nav class="mx-auto flex max-w-[960px] items-center pl-[10px] pr-6 py-3">
     <a href={`/${currentLocale}/`} class="font-serif text-lg font-bold tracking-tight no-underline text-[var(--color-ink)] hover:text-[var(--color-accent)]">
       {t('site.title')}
     </a>
-    <div class="flex items-center gap-8">
+    <div class="flex flex-1 items-center justify-end gap-8">
       <div class="flex items-center gap-6">
         <HeaderLink href={`/${currentLocale}/blog`} locale={currentLocale}>{t('nav.blog')}</HeaderLink>
         <HeaderLink href={`/${currentLocale}/about`} locale={currentLocale}>{t('nav.about')}</HeaderLink>
