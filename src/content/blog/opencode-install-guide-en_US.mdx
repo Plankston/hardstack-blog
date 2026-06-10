@@ -1,56 +1,64 @@
 ---
-title: "OpenCode Installation Guide: 4 Ways to Install the Open-Source AI Coding Assistant (2026实测)"
-description: "Complete installation tutorial covering curl, npm, brew, and manual install — plus first-time setup and troubleshooting"
+title: "OpenCode Complete Guide: Installation, Configuration & All Features (2026)"
+description: "A comprehensive walkthrough from zero installation to mastering OpenCode's TUI, CLI, agents, MCP, and advanced workflows"
 pubDate: 2026-06-09
-tags: ["opencode", "ai", "cli", "installation", "guide"]
+tags: ["opencode", "ai", "cli", "installation", "guide", "features"]
 category: "ai-tools"
 difficulty: "beginner"
-timeToRead: 12
+timeToRead: 25
 postLang: "en"
-groupKey: "opencode-install-guide"
+groupKey: "opencode-complete-guide"
 ---
 
-## Overview
+## What Is OpenCode?
 
-[OpenCode](https://opencode.ai) is an open-source AI coding assistant with 160K+ GitHub Stars, serving over 7.5 million developers each month. It runs in the terminal, IDE, and desktop environments, supporting 75+ model providers including Claude, GPT, Gemini, and more.
+[OpenCode](https://opencode.ai) is an open-source AI coding assistant with 160K+ GitHub Stars, serving over 7.5 million developers each month. It runs in the terminal (TUI), IDE, and desktop environments, supporting 75+ model providers including Claude, GPT, Gemini, and more.
 
-This guide walks you through the entire process from zero installation to first run.
+Unlike a simple chatbot, OpenCode is designed to be deeply integrated into your development workflow. It can read and edit files, execute shell commands, review pull requests, manage sessions, and orchestrate multi-agent coding tasks — all from your terminal.
+
+This guide covers everything from installation to advanced features, so you can go from zero to productive in a single reading session.
 
 ## Prerequisites
 
-- **OS**: Linux (this guide is based on Ubuntu/WSL2), macOS, or Windows
-- **Terminal**: Bash / Zsh
+- **OS**: Linux (Ubuntu/WSL2 recommended), macOS, or Windows (PowerShell / WSL2)
+- **Terminal**: Bash, Zsh, or Fish
 - **Architecture**: x86_64 or ARM64
 - **Network**: Access to GitHub and opencode.ai
-- **Disk Space**: At least 500MB (opencode binary is ~150MB)
+- **Disk Space**: At least 500 MB (the opencode binary is ~150 MB)
+- **Node.js** (optional): Required only for the npm installation method
 
-## Method 1: One-Line Script Install (Recommended)
+## Installation Methods
 
-The easiest way — suitable for most users:
+OpenCode offers four installation methods. Choose the one that best fits your environment.
+
+### Method 1: One-Line Script Install (Recommended)
+
+This is the simplest way and works on Linux, macOS, and WSL2:
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash
 ```
 
 The script automatically:
-1. Detects your OS and architecture
-2. Downloads the matching release from GitHub Releases
-3. Installs to `~/.local/bin/opencode`
-4. Adds `~/.local/bin` to your PATH
 
-### Install a Specific Version
+1. Detects your operating system and CPU architecture
+2. Downloads the matching release from GitHub Releases
+3. Installs the binary to `~/.local/bin/opencode`
+4. Adds `~/.local/bin` to your PATH in your shell config file (`.bashrc` / `.zshrc`)
+
+#### Install a Specific Version
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash -s -- --version 1.0.180
 ```
 
-### Skip PATH Modification
+#### Skip Automatic PATH Modification
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
 ```
 
-### Sample Installation Output
+#### Sample Installation Output
 
 ```
 OpenCode Installer v1.0.0
@@ -63,9 +71,9 @@ OpenCode Installer v1.0.0
 ✓ Installation complete! Run 'opencode' to start.
 ```
 
-## Method 2: npm Install
+### Method 2: npm Install
 
-If you already have Node.js installed:
+If you already have Node.js (18+) and npm (9+) installed:
 
 ```bash
 npm install -g @opencode/cli
@@ -78,15 +86,15 @@ opencode --version
 # Output: 1.16.2
 ```
 
-> ⚠️ Note: The npm package may not be the latest version. For the newest release, use Method 1.
+> **Note**: The npm package may lag behind the latest release. For the newest version, use the curl script (Method 1).
 
-## Method 3: Homebrew (macOS)
+### Method 3: Homebrew (macOS)
 
 ```bash
 brew install opencode
 ```
 
-## Method 4: Manual Install
+### Method 4: Manual Install
 
 Download the binary for your platform from [GitHub Releases](https://github.com/anomalyco/opencode/releases):
 
@@ -101,7 +109,21 @@ mv opencode ~/.local/bin/
 chmod +x ~/.local/bin/opencode
 ```
 
-## Verify Installation
+### Windows Installation
+
+Windows users can use PowerShell or WSL2:
+
+```powershell
+# PowerShell (direct install)
+iwr https://opencode.ai/install.ps1 | iex
+
+# Or via Scoop
+scoop install opencode
+```
+
+## Verifying Installation
+
+Once installed, confirm everything works:
 
 ```bash
 opencode --version
@@ -111,135 +133,744 @@ opencode --help
 # Should display all available commands
 ```
 
-If you get `command not found`, make sure `~/.local/bin` is in your PATH:
+If you get `command not found`, ensure the install directory is in your PATH:
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
+Then reload your shell: `source ~/.bashrc` (or open a new terminal).
+
 ## First-Time Setup
 
-### 1. Configure AI Provider
+### 1. Configure an AI Provider
 
-OpenCode includes free models by default, but you can also connect your own API key:
+OpenCode includes several free models by default, but to get the best experience you'll want to connect your own API keys:
 
 ```bash
 opencode providers
 ```
 
-This opens an interactive UI where you can add:
-- OpenAI (GPT-4, GPT-4o)
-- Anthropic (Claude Sonnet, Opus)
-- Google (Gemini Pro)
-- Local models (Ollama, vLLM)
-- 70+ other providers
+This opens an interactive UI where you can add credentials for:
 
-### 2. Launch opencode
+- **OpenAI** — GPT-4, GPT-4o, o1, o3
+- **Anthropic** — Claude Sonnet 4, Claude Opus
+- **Google** — Gemini 2.0 Pro, Gemini 2.0 Flash
+- **OpenRouter** — unified access to 200+ models
+- **Local models** — Ollama, vLLM, LM Studio
+- **70+ other providers**
 
-Navigate to your project directory and run:
+You can also set provider credentials via environment variables:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-..."
+```
+
+### 2. Launch OpenCode
+
+Navigate to a project directory and start a session:
 
 ```bash
 cd your-project
 opencode
 ```
 
-This launches the TUI (terminal user interface), where you can chat with AI and write code.
+This launches the TUI (terminal user interface), where you can chat with AI, read and edit files, and execute commands — all within your terminal.
 
-### 3. Basic Usage
+## Core Commands Reference
 
-```
-# Start an opencode session in the current project
+| Command | Description |
+|---------|-------------|
+| `opencode` | Launch the TUI interactive interface (default) |
+| `opencode run "prompt"` | Execute a one-shot task from the command line |
+| `opencode serve` | Start the headless server mode |
+| `opencode web` | Launch the web interface |
+| `opencode pr <number>` | Fetch and check out a GitHub PR branch |
+| `opencode session` | Manage conversation sessions |
+| `opencode models [provider]` | List available models |
+| `opencode providers` | Manage AI provider configurations |
+| `opencode stats` | View token usage statistics |
+| `opencode mcp` | Manage MCP (Model Context Protocol) servers |
+| `opencode agent` | Manage custom agents |
+| `opencode upgrade` | Upgrade OpenCode to the latest version |
+| `opencode uninstall` | Remove OpenCode from your system |
+
+## TUI Mode
+
+The TUI (Terminal User Interface) is OpenCode's primary interaction mode, designed for extended coding sessions with full keyboard navigation.
+
+### Starting the TUI
+
+```bash
+# Start in the current directory
+cd /path/to/project
 opencode
 
-# Execute a one-shot command
-opencode run "Add a README to this project"
+# Start with a specific project path
+opencode /path/to/project
 
-# Launch the web interface
-opencode web
+# Resume the last session
+opencode --continue
+# or
+opencode -c
 
-# Start a headless service
-opencode serve
+# Resume a specific session
+opencode --session ses_abc123
+# or
+opencode -s ses_abc123
+
+# Launch TUI and immediately send a prompt (non-interactive)
+opencode -p "Analyze this project's architecture and suggest improvements"
 ```
 
-## FAQ
+### Keyboard Shortcuts
 
-### Q: "Permission denied" after installing on Linux
-**Fix**: Add execute permission to the binary:
+| Shortcut | Function |
+|----------|----------|
+| `Enter` | Submit message (press twice when needed) |
+| `Tab` | Switch between agents (e.g., build / plan) |
+| `Ctrl+P` | Open the command palette |
+| `Ctrl+X L` | Switch active session |
+| `Ctrl+X M` | Switch model |
+| `Ctrl+X N` | Create a new session |
+| `Ctrl+X E` | Open the editor |
+| `Ctrl+C` | Exit OpenCode |
+
+### TUI Tips
+
+- Use `Tab` to cycle through available agents for different tasks
+- The command palette (`Ctrl+P`) gives quick access to all actions without remembering shortcuts
+- You can run TUI in the background for long-running tasks: `opencode --demo "Describe your capabilities and wait" &`
+
+## CLI Mode
+
+CLI mode is ideal for automation, scripting, and one-shot tasks. Everything you can do in TUI, you can do from the command line.
+
+### Basic Usage
+
 ```bash
-chmod +x ~/.local/bin/opencode
+# Simple task
+opencode run "Add retry logic to the API client"
+
+# Attach files for context
+opencode run "Review this config for security issues" -f config.yaml -f .env.example
+
+# Show the model's thinking process
+opencode run "Debug why the CI test is failing" --thinking
+
+# Specify a model explicitly
+opencode run "Refactor the auth module" --model openrouter/anthropic/claude-sonnet-4
 ```
 
-### Q: curl install returns 404
-The curl installation script may be under maintenance. Try Method 4 (manual install) or try again later.
+### Complete CLI Options
 
-### Q: How to upgrade OpenCode?
+```bash
+opencode run [message..]
+
+Options:
+  --command                    The command to execute (defaults to the message)
+  --continue, -c               Continue the last session
+  --session                    Resume a specific session by ID
+  --share                      Share the session
+  --model, -m                  Specify a model (provider/model format)
+  --agent                      Specify an agent to use
+  --format                     Output format: default | json
+  --file, -f                   Attach a file (repeatable)
+  --title                      Session title
+  --attach                     Connect to a running opencode server
+  --port                       Local server port
+  --variant                    Model variant: high | max | minimal
+  --thinking                   Display the model's thought process
+  --replay                     Restore interaction history (default: true)
+  --dangerously-skip-permissions   Auto-approve permissions not explicitly denied (dangerous!)
+```
+
+## AI Provider Configuration
+
+OpenCode supports 75+ model providers. Here's how to manage them.
+
+### List Available Providers
+
+```bash
+opencode providers list
+opencode auth list
+```
+
+### Log In to a Provider
+
+```bash
+# Interactive login
+opencode providers login
+
+# Or set environment variables (takes precedence)
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-..."
+```
+
+### Provider Configuration Example
+
+Add this to your `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "provider": {
+    "anthropic": {
+      "api": "https://api.anthropic.com",
+      "env": ["ANTHROPIC_API_KEY"]
+    },
+    "openrouter": {
+      "npm": "@opencode/plugin-openrouter",
+      "env": ["OPENROUTER_API_KEY"]
+    }
+  },
+  "enabled_providers": ["anthropic", "openrouter"],
+  "disabled_providers": ["openai"]
+}
+```
+
+### Checking Available Models
+
+```bash
+# List all models
+opencode models
+
+# List models for a specific provider
+opencode models openrouter
+```
+
+## MCP Integration
+
+MCP (Model Context Protocol) allows OpenCode to connect to external tools and services. Think of MCP servers as plugins that extend what OpenCode can do — filesystem access, database queries, API calls, and more.
+
+### List MCP Servers
+
+```bash
+opencode mcp list
+opencode mcp ls
+```
+
+### Add an MCP Server
+
+```bash
+# Add a stdio-based server
+opencode mcp add filesystem -- "npx -y @modelcontextprotocol/server-filesystem /path/to/data"
+
+# Add an SSE-based server on a custom port
+opencode mcp add --port 3001 -- "node my-mcp-server.js"
+```
+
+### Authenticate an MCP Server
+
+```bash
+opencode mcp auth myserver
+opencode mcp logout myserver
+opencode mcp debug myserver
+```
+
+## Agent System
+
+OpenCode supports creating custom agents — specialized AI personas tuned for specific tasks. Agents can have their own model, permissions, and behavior.
+
+### List Agents
+
+```bash
+opencode agent list
+```
+
+### Create an Agent
+
+```bash
+opencode agent create my-agent \
+  --description "Specialized in React component development" \
+  --mode subagent \
+  --model openrouter/anthropic/claude-sonnet-4
+```
+
+### Agent Configuration Example
+
+In `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "agent": {
+    "code-reviewer": {
+      "name": "Code Reviewer",
+      "description": "Security and correctness expert",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4",
+      "color": "#E74C3C",
+      "permissions": ["read", "edit"]
+    },
+    "bug-hunter": {
+      "name": "Bug Hunter",
+      "description": "Debugging and fix specialist",
+      "mode": "subagent",
+      "model": "openai/gpt-4",
+      "variant": "high",
+      "permissions": ["bash", "read", "edit"]
+    }
+  }
+}
+```
+
+### Use an Agent
+
+```bash
+opencode run "Review this code for vulnerabilities" --agent code-reviewer
+```
+
+Switch between agents in TUI mode using the `Tab` key.
+
+## Session Management
+
+Every conversation in OpenCode is a session. You can list, delete, export, and import them.
+
+### List Sessions
+
+```bash
+opencode session list
+```
+
+### Delete a Session
+
+```bash
+opencode session delete ses_abc123
+```
+
+### Export a Session
+
+```bash
+# Export the current session
+opencode export
+
+# Export a specific session
+opencode export ses_abc123
+
+# Export and sanitize sensitive info
+opencode export ses_abc123 --sanitize
+```
+
+### Import a Session
+
+```bash
+# Import from a local file
+opencode import session.json
+
+# Import from a share URL
+opencode import https://opencode.ai/share/xxx
+```
+
+## GitHub Integration
+
+OpenCode can integrate directly with GitHub for pull request reviews.
+
+### Install the GitHub Agent
+
+```bash
+opencode github install
+```
+
+### Run the GitHub Agent
+
+```bash
+opencode github run
+```
+
+### Review a Pull Request
+
+```bash
+# Fetch PR #42 and launch opencode with it
+opencode pr 42
+
+# Review a PR by cloning into a temp directory
+REVIEW=$(mktemp -d)
+git clone https://github.com/user/repo.git $REVIEW
+cd $REVIEW
+opencode run "Review the diff against main. Report bugs, security risks, test gaps, and style issues."
+```
+
+## Server Mode
+
+OpenCode can run as a server, allowing remote connections and web-based access.
+
+### Start a Headless Server
+
+```bash
+# Basic start
+opencode serve
+
+# Specify a port
+opencode serve --port 4096
+
+# Enable mDNS discovery
+opencode serve --mdns
+# Accessible at http://opencode.local:4096
+```
+
+### Start the Web Interface
+
+```bash
+opencode web
+# or with a custom port
+opencode web --port 3096
+```
+
+### Connect to a Remote Server
+
+```bash
+opencode attach http://hostname:4096
+```
+
+## Configuration Reference
+
+OpenCode's configuration file lives at `~/.config/opencode/opencode.json`. The file uses a JSON schema for validation and IDE autocompletion.
+
+### Full Configuration Example
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "shell": "/bin/bash",
+
+  "logLevel": "INFO",
+
+  "server": {
+    "port": 0,
+    "hostname": "127.0.0.1",
+    "mdns": false,
+    "mdnsDomain": "opencode.local",
+    "cors": []
+  },
+
+  "skills": {
+    "paths": ["~/.config/opencode/skills"]
+  },
+
+  "model": "anthropic/claude-sonnet-4",
+  "small_model": "openai/gpt-3.5-turbo",
+  "default_agent": "build",
+  "username": "developer",
+
+  "share": "manual",
+
+  "agent": {
+    "build": {
+      "name": "Build Agent",
+      "description": "Default coding assistant agent",
+      "model": "anthropic/claude-sonnet-4",
+      "mode": "primary"
+    }
+  },
+
+  "mcp": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    }
+  },
+
+  "formatter": true,
+
+  "lsp": true,
+
+  "instructions": [
+    "~/.config/opencode/instructions.md"
+  ],
+
+  "permission": {
+    "read": {
+      "~/**": "allow",
+      "/etc/**": "deny"
+    },
+    "edit": {
+      "**/*.go": "allow",
+      "**/*": "ask"
+    },
+    "bash": "ask"
+  }
+}
+```
+
+### Permission Configuration
+
+| Permission | Description | Values |
+|-----------|-------------|--------|
+| `read` | File read access | `ask`, `allow`, `deny` |
+| `edit` | File edit/write access | `ask`, `allow`, `deny` |
+| `bash` | Shell command execution | `ask`, `allow`, `deny` |
+
+Permission entries support glob patterns. For example:
+- `"~/projects/**": "allow"` — allow read access to everything under `~/projects`
+- `"/etc/**": "deny"` — deny access to system configuration files
+- `"**/*": "ask"` — ask for permission on everything else
+
+The `bash` permission is especially sensitive — only set it to `"allow"` if you fully trust the model and environment.
+
+## Advanced Tips
+
+### 1. Debugging Tools
+
+```bash
+# View current configuration
+opencode debug config
+
+# View system debug info
+opencode debug info
+
+# Inspect LSP debugging
+opencode debug lsp
+
+# Check startup time
+opencode debug startup
+
+# Inspect an agent configuration
+opencode debug agent build
+```
+
+### 2. Usage Statistics & Cost Management
+
+```bash
+# View all stats
+opencode stats
+
+# View stats for the last 7 days
+opencode stats --days 7
+
+# Show top 5 models by usage
+opencode stats --models 5
+
+# Filter by project
+opencode stats --project myproject
+```
+
+### 3. Plugin Management
+
+OpenCode supports plugins for extending functionality:
+
+```bash
+# Install a plugin
+opencode plugin opencode-plugin-github
+
+# Install globally
+opencode plugin --global opencode-plugin-docs
+
+# Force reinstall
+opencode plugin opencode-plugin-github --force
+```
+
+### 4. Upgrade & Uninstall
+
 ```bash
 # Upgrade to the latest version
 opencode upgrade
 
-# Install using a specific method
-opencode upgrade --method curl
-
 # Upgrade to a specific version
-opencode upgrade 1.0.180
-```
+opencode upgrade 1.15.0
 
-### Q: How to completely uninstall?
-```bash
+# Uninstall OpenCode
 opencode uninstall
 ```
 
-### Q: Does it support Windows?
-Yes! You can use PowerShell or run it through WSL. Windows installation:
+### 5. Shell Completions
 
-```powershell
-# Windows (PowerShell)
-iwr https://opencode.ai/install.ps1 | iex
+Generate shell auto-completions for faster command entry:
+
+```bash
+# Generate bash completions
+opencode completion
+
+# Generate and save zsh completions
+opencode completion >> ~/.zsh/completion/_opencode
 ```
 
-Or via Scoop:
-```powershell
-scoop install opencode
+Make sure the completion directory is in your `fpath` and enabled in your `.zshrc`.
+
+### 6. ACP (Agent Client Protocol)
+
+Start an ACP server for agent-to-agent communication:
+
+```bash
+opencode acp
 ```
 
-## Troubleshooting
+### 7. Parallel Task Execution
 
-### Issue 1: PATH not immediately available after curl install on WSL2
-**Symptom**: Running `opencode` after installation gives `command not found`
-**Fix**: Run `source ~/.bashrc` or open a new terminal
+Run multiple tasks simultaneously:
 
-### Issue 2: npm global install permission error
-**Symptom**: `npm install -g` throws EACCES
-**Fix**: Configure npm's global install path:
+```bash
+# Two tasks in parallel
+opencode run "Fix issue #101" -m &
+opencode run "Add parser regression tests" -m
+wait
+```
+
+The `-m` flag runs in minimal mode (no TUI), and `&` pushes it to the background.
+
+### 8. Smoke Test
+
+Quickly verify that OpenCode is functioning:
+
+```bash
+opencode run 'Respond with exactly: OPENCODE_SMOKE_OK'
+# Successful output includes: OPENCODE_SMOKE_OK
+```
+
+## Common Pitfalls & Troubleshooting
+
+### Pitfall 1: TUI Requires PTY Mode
+
+**Symptom**: The TUI appears stuck or doesn't accept input.
+
+**Cause**: Interactive mode requires a pseudo-terminal (PTY). When running in the background or through certain wrapper scripts, PTY allocation may be missing.
+
+**Fix**: Use the `--continue` flag in combination with `-p` for background tasks:
+
+```bash
+# Correct — works in background
+opencode --continue -p "Wait for further instructions"
+
+# Wrong — will hang in foreground-only mode
+opencode --continue
+```
+
+### Pitfall 2: Don't Use `/exit` to Quit
+
+**Symptom**: Typing `/exit` opens an agent selector instead of exiting.
+
+**Cause**: `/exit` is not a valid command in OpenCode.
+
+**Fix**: Use `Ctrl+C` or send a kill signal:
+
+```bash
+Ctrl+C
+
+# Or from another terminal
+pkill -f opencode
+```
+
+### Pitfall 3: PATH / Binary Conflicts
+
+**Symptom**: Running `opencode` uses the wrong version or produces unexpected behavior.
+
+**Fix**: Check if you have multiple versions installed:
+
+```bash
+which -a opencode
+opencode --version
+```
+
+If you see multiple paths, remove the extra ones or adjust your PATH order.
+
+### Pitfall 4: PATH Not Available After Install
+
+**Symptom**: `opencode: command not found` immediately after installation.
+
+**Fix**: Source your shell config or open a new terminal:
+
+```bash
+source ~/.bashrc   # or ~/.zshrc
+```
+
+If the install script didn't add it automatically, add it manually:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Pitfall 5: npm Global Install Permission Error
+
+**Symptom**: `npm install -g @opencode/cli` throws EACCES.
+
+**Fix**: Configure npm to use a personal prefix directory:
+
 ```bash
 npm config set prefix ~/.npm-global
 echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+npm install -g @opencode/cli
 ```
 
-### Issue 3: Binary conflict during upgrade
-**Symptom**: Upgrade fails because the file is in use
-**Fix**: Close all opencode processes before upgrading:
+### Pitfall 6: Binary Conflict During Upgrade
+
+**Symptom**: Upgrade fails because the binary is in use.
+
+**Fix**: Terminate all OpenCode processes before upgrading:
+
 ```bash
 pkill opencode
 opencode upgrade
 ```
 
-## Summary
+### Pitfall 7: File Permission Errors
 
-The OpenCode installation process is straightforward. For most Linux users, a single command is all you need:
+**Symptom**: OpenCode can't read or write files it needs.
 
-```bash
-curl -fsSL https://opencode.ai/install | bash
+**Fix**: Configure the `permission` section in `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "permission": {
+    "read": {"~/projects/**": "allow"},
+    "bash": "ask"
+  }
+}
 ```
 
-Installation method comparison:
+Be specific about file patterns to maintain security while granting needed access.
+
+### Pitfall 8: curl Install Returns 404
+
+**Symptom**: The curl installation script returns a 404 error.
+
+**Fix**: The install script may be temporarily unavailable. Try manual installation (Method 4) or wait and retry.
+
+## Summary
+
+OpenCode is a powerful, open-source AI coding assistant that can significantly boost your development productivity. Here's a quick comparison of installation methods:
 
 | Method | Difficulty | Best For |
 |--------|-----------|---------|
-| curl script | ⭐ | Beginners, fully automatic |
-| npm | ⭐⭐ | Node.js developers |
+| Curl Script | ⭐ | Beginners — fully automatic, recommended |
+| npm | ⭐⭐ | Node.js developers who want simple updates |
 | Homebrew | ⭐ | macOS users |
-| Manual download | ⭐⭐⭐ | Specific versions / offline install |
+| Manual Download | ⭐⭐⭐ | Specific versions, offline/air-gapped installs |
 
-Once installed, run `opencode` in your project directory to get started. The next article will cover advanced usage tips for OpenCode.
+After installation, the fastest path to productivity:
+
+```bash
+# 1. Install (pick one)
+curl -fsSL https://opencode.ai/install | bash
+
+# 2. Configure your AI provider
+opencode providers login
+
+# 3. Start coding
+cd your-project
+opencode
+```
+
+From there, explore the TUI shortcuts, try CLI mode for automation, configure custom agents for specialized tasks, and set up MCP servers to connect your toolchain. The more you integrate OpenCode into your workflow, the more value you'll get from it.
+
+### Key Takeaways
+
+- **4 installation methods** — choose curl for simplicity, npm for Node.js ecosystems, brew for macOS, or manual for control
+- **Two interaction modes** — TUI for rich interactive sessions, CLI for scripting and automation
+- **75+ AI providers** — bring your own models or use the built-in free options
+- **Custom agents** — create specialized AI personas for different tasks
+- **MCP integration** — connect external tools and data sources
+- **Session management** — save, export, import, and share conversations
+- **Server mode** — run headless or via web interface
+- **GitHub PR review** — automated code review powered by AI
+
+## Resources
+
+- **Website**: https://opencode.ai
+- **GitHub**: https://github.com/sst/opencode
+- **Config Schema**: https://opencode.ai/config.json
+- **npm Package**: `@opencode/cli`

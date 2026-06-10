@@ -1,0 +1,876 @@
+---
+title: "OpenCode 完全指南：安装、配置与全部功能详解（2026）"
+description: "从零开始安装到精通 OpenCode 的 TUI、CLI、Agent、MCP 及进阶工作流"
+pubDate: 2026-06-09
+tags: ["opencode", "ai", "cli", "installation", "guide", "features"]
+category: "ai-tools"
+difficulty: "beginner"
+timeToRead: 25
+postLang: "zh-CN"
+groupKey: "opencode-complete-guide"
+---
+
+## 什么是 OpenCode
+
+[OpenCode](https://opencode.ai) 是一个开源 AI 编程助手，拥有 160K+ GitHub Stars，每月服务 750 万+ 开发者。它支持在终端（TUI）、IDE 和桌面端运行，兼容 Claude、GPT、Gemini 等 75+ 模型提供商。
+
+与简单的聊天机器人不同，OpenCode 深度集成到你的开发工作流中。它可以读取和编辑文件、执行 Shell 命令、审查 Pull Request、管理会话，以及编排多 Agent 编码任务——全部在终端中完成。
+
+本文将覆盖从安装到进阶功能的全部内容，让你一次性从零到熟练掌握。
+
+## 前置要求
+
+- **操作系统**：Linux（推荐 Ubuntu/WSL2）、macOS 或 Windows（PowerShell / WSL2）
+- **终端**：Bash、Zsh 或 Fish
+- **架构**：x86_64 或 ARM64
+- **网络**：能访问 GitHub 和 opencode.ai
+- **硬盘空间**：至少 500 MB（opencode 二进制约 150 MB）
+- **Node.js**（可选）：仅 npm 安装方式需要
+
+## 安装方法
+
+OpenCode 提供四种安装方式，按你的环境选择最合适的一种。
+
+### 方式一：一键脚本安装（推荐）
+
+这是最简单的方式，适用于 Linux、macOS 和 WSL2：
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+该脚本会自动：
+
+1. 检测你的操作系统和 CPU 架构
+2. 从 GitHub Releases 下载对应版本
+3. 安装到 `~/.local/bin/opencode`
+4. 将 `~/.local/bin` 添加到 shell 配置文件的 PATH 中（`.bashrc` / `.zshrc`）
+
+#### 安装指定版本
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --version 1.0.180
+```
+
+#### 不自动修改 PATH
+
+```bash
+curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+```
+
+#### 实际安装输出示例
+
+```
+OpenCode Installer v1.0.0
+ℹ Detected OS: linux
+ℹ Detected Architecture: x86_64
+ℹ Downloading OpenCode v1.16.2...
+✓ Downloaded to /tmp/opencode-xxxxx
+✓ Installed to /home/user/.local/bin/opencode
+✓ Added ~/.local/bin to PATH in ~/.bashrc
+✓ Installation complete! Run 'opencode' to start.
+```
+
+### 方式二：npm 安装
+
+如果你已安装 Node.js（18+）和 npm（9+）：
+
+```bash
+npm install -g @opencode/cli
+```
+
+安装后验证：
+
+```bash
+opencode --version
+# 输出: 1.16.2
+```
+
+> **注意**：npm 安装包可能不是最新版本。想获取最新版，建议使用方式一。
+
+### 方式三：Homebrew（macOS）
+
+```bash
+brew install opencode
+```
+
+### 方式四：手动安装
+
+从 [GitHub Releases](https://github.com/anomalyco/opencode/releases) 下载对应平台的二进制文件：
+
+1. 打开 [releases 页面](https://github.com/anomalyco/opencode/releases)
+2. 找到最新版本
+3. 下载对应平台的压缩包（如 `opencode-linux-x86_64.tar.gz`）
+4. 解压并移动到 PATH 目录：
+
+```bash
+tar -xzf opencode-linux-x86_64.tar.gz
+mv opencode ~/.local/bin/
+chmod +x ~/.local/bin/opencode
+```
+
+### Windows 安装
+
+Windows 用户可使用 PowerShell 或 WSL2：
+
+```powershell
+# PowerShell 直接安装
+iwr https://opencode.ai/install.ps1 | iex
+
+# 或通过 Scoop
+scoop install opencode
+```
+
+## 验证安装
+
+安装完成后，确认一切正常：
+
+```bash
+opencode --version
+# 应输出版本号，如: 1.16.2
+
+opencode --help
+# 应显示所有可用命令
+```
+
+如果出现 `command not found`，确保安装目录在 PATH 中：
+
+```bash
+# 添加到 ~/.bashrc 或 ~/.zshrc
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+然后重新加载 shell：`source ~/.bashrc`（或打开新终端）。
+
+## 首次配置
+
+### 1. 配置 AI 提供商
+
+OpenCode 默认包含一些免费模型，但为了获得最佳体验，建议连接你自己的 API Key：
+
+```bash
+opencode providers
+```
+
+这会打开交互式界面，你可以添加以下提供商的凭据：
+
+- **OpenAI** — GPT-4、GPT-4o、o1、o3
+- **Anthropic** — Claude Sonnet 4、Claude Opus
+- **Google** — Gemini 2.0 Pro、Gemini 2.0 Flash
+- **OpenRouter** — 统一访问 200+ 模型
+- **本地模型** — Ollama、vLLM、LM Studio
+- **70+ 其他提供商**
+
+你也可以通过环境变量设置提供商凭据：
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-..."
+```
+
+### 2. 启动 OpenCode
+
+进入项目目录并启动会话：
+
+```bash
+cd your-project
+opencode
+```
+
+这会启动 TUI（终端用户界面），你可以在其中与 AI 对话、读写文件和执行命令。
+
+## 核心命令参考
+
+| 命令 | 说明 |
+|------|------|
+| `opencode` | 启动 TUI 交互界面（默认） |
+| `opencode run "提示词"` | 从命令行单次执行任务 |
+| `opencode serve` | 启动无头服务器模式 |
+| `opencode web` | 启动网页界面 |
+| `opencode pr <编号>` | 抓取并检出 GitHub PR 分支 |
+| `opencode session` | 管理对话会话 |
+| `opencode models [提供商]` | 列出可用模型 |
+| `opencode providers` | 管理 AI 提供商配置 |
+| `opencode stats` | 查看 Token 使用统计 |
+| `opencode mcp` | 管理 MCP（模型上下文协议）服务器 |
+| `opencode agent` | 管理自定义 Agent |
+| `opencode upgrade` | 升级到最新版本 |
+| `opencode uninstall` | 从系统中移除 OpenCode |
+
+## TUI 模式详解
+
+TUI（终端用户界面）是 OpenCode 的主要交互模式，专为长时间编码会话设计，支持纯键盘导航。
+
+### 启动 TUI
+
+```bash
+# 在当前目录启动
+cd /path/to/project
+opencode
+
+# 指定项目路径
+opencode /path/to/project
+
+# 继续上次会话
+opencode --continue
+# 或
+opencode -c
+
+# 继续指定会话
+opencode --session ses_abc123
+# 或
+opencode -s ses_abc123
+
+# 启动 TUI 并立即发送提示
+opencode -p "分析这个项目的架构并给出改进建议"
+```
+
+### 常用快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Enter` | 提交消息（偶尔需按两次） |
+| `Tab` | 在 Agent 之间切换（build / plan 等） |
+| `Ctrl+P` | 打开命令面板 |
+| `Ctrl+X L` | 切换当前会话 |
+| `Ctrl+X M` | 切换模型 |
+| `Ctrl+X N` | 新建会话 |
+| `Ctrl+X E` | 打开编辑器 |
+| `Ctrl+C` | 退出 OpenCode |
+
+### TUI 使用技巧
+
+- 使用 `Tab` 在不同 Agent 间快速切换，应对不同类型的任务
+- 命令面板（`Ctrl+P`）提供所有操作的快速入口，无需记忆快捷键
+- 可在后台运行 TUI 以执行长时间任务：`opencode --demo "介绍一下你自己，然后等待指令" &`
+
+## CLI 模式详解
+
+CLI 模式适合自动化脚本和一次性任务。TUI 能做的事情，CLI 也都能做。
+
+### 基本用法
+
+```bash
+# 简单任务
+opencode run "为 API 客户端添加重试逻辑"
+
+# 附加文件提供上下文
+opencode run "审查这个配置文件的安全问题" -f config.yaml -f .env.example
+
+# 显示模型思考过程
+opencode run "调试 CI 测试失败的原因" --thinking
+
+# 指定模型
+opencode run "重构 auth 模块" --model openrouter/anthropic/claude-sonnet-4
+```
+
+### 完整选项
+
+```bash
+opencode run [message..]
+
+选项:
+  --command                   要执行的命令（默认使用提示词）
+  --continue, -c             继续上次会话
+  --session                  按 ID 恢复指定会话
+  --share                    分享会话
+  --model, -m                指定模型（provider/model 格式）
+  --agent                    指定使用的 Agent
+  --format                   输出格式：default 或 json
+  --file, -f                 附加文件（可重复使用）
+  --title                    会话标题
+  --attach                   连接到运行中的 opencode 服务器
+  --port                     本地服务器端口
+  --variant                  模型变体：high / max / minimal
+  --thinking                 显示模型的思考过程
+  --replay                   恢复交互历史（默认：true）
+  --dangerously-skip-permissions   自动批准未明确拒绝的权限（危险！）
+```
+
+## AI 提供商配置
+
+OpenCode 支持 75+ 模型提供商，以下是管理方法。
+
+### 列出可用提供商
+
+```bash
+opencode providers list
+opencode auth list
+```
+
+### 登录提供商
+
+```bash
+# 交互式登录
+opencode providers login
+
+# 或通过环境变量设置（优先级更高）
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-..."
+```
+
+### 提供商配置示例
+
+添加到 `~/.config/opencode/opencode.json`：
+
+```json
+{
+  "provider": {
+    "anthropic": {
+      "api": "https://api.anthropic.com",
+      "env": ["ANTHROPIC_API_KEY"]
+    },
+    "openrouter": {
+      "npm": "@opencode/plugin-openrouter",
+      "env": ["OPENROUTER_API_KEY"]
+    }
+  },
+  "enabled_providers": ["anthropic", "openrouter"],
+  "disabled_providers": ["openai"]
+}
+```
+
+### 查看可用模型
+
+```bash
+# 列出所有模型
+opencode models
+
+# 列出特定提供商的模型
+opencode models openrouter
+```
+
+## MCP 集成
+
+MCP（Model Context Protocol）允许 OpenCode 连接外部工具和服务。可以把 MCP 服务器理解为插件，它们扩展了 OpenCode 的能力——文件系统访问、数据库查询、API 调用等。
+
+### 列出 MCP 服务器
+
+```bash
+opencode mcp list
+opencode mcp ls
+```
+
+### 添加 MCP 服务器
+
+```bash
+# 添加 stdio 服务器
+opencode mcp add filesystem -- "npx -y @modelcontextprotocol/server-filesystem /path/to/data"
+
+# 在自定义端口添加 SSE 服务器
+opencode mcp add --port 3001 -- "node my-mcp-server.js"
+```
+
+### 认证 MCP 服务器
+
+```bash
+opencode mcp auth myserver
+opencode mcp logout myserver
+opencode mcp debug myserver
+```
+
+## Agent 系统
+
+OpenCode 支持创建自定义 Agent——专为特定任务调优的 AI 角色。每个 Agent 可以拥有独立的模型、权限和行为。
+
+### 列出 Agent
+
+```bash
+opencode agent list
+```
+
+### 创建 Agent
+
+```bash
+opencode agent create my-agent \
+  --description "专门处理 React 组件开发" \
+  --mode subagent \
+  --model openrouter/anthropic/claude-sonnet-4
+```
+
+### Agent 配置示例
+
+在 `~/.config/opencode/opencode.json` 中：
+
+```json
+{
+  "agent": {
+    "code-reviewer": {
+      "name": "Code Reviewer",
+      "description": "安全性和正确性审查专家",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4",
+      "color": "#E74C3C",
+      "permissions": ["read", "edit"]
+    },
+    "bug-hunter": {
+      "name": "Bug Hunter",
+      "description": "调试和修复专家",
+      "mode": "subagent",
+      "model": "openai/gpt-4",
+      "variant": "high",
+      "permissions": ["bash", "read", "edit"]
+    }
+  }
+}
+```
+
+### 使用 Agent
+
+```bash
+opencode run "审查这段代码的安全性" --agent code-reviewer
+```
+
+在 TUI 模式下，使用 `Tab` 键在不同 Agent 之间切换。
+
+## 会话管理
+
+OpenCode 中的每次对话都是一个会话。你可以列出、删除、导出和导入会话。
+
+### 列出会话
+
+```bash
+opencode session list
+```
+
+### 删除会话
+
+```bash
+opencode session delete ses_abc123
+```
+
+### 导出会话
+
+```bash
+# 导出当前会话
+opencode export
+
+# 导出特定会话
+opencode export ses_abc123
+
+# 导出并脱敏敏感信息
+opencode export ses_abc123 --sanitize
+```
+
+### 导入会话
+
+```bash
+# 从本地文件导入
+opencode import session.json
+
+# 从分享链接导入
+opencode import https://opencode.ai/share/xxx
+```
+
+## GitHub 集成
+
+OpenCode 可以直接与 GitHub 集成，进行 Pull Request 审查。
+
+### 安装 GitHub Agent
+
+```bash
+opencode github install
+```
+
+### 运行 GitHub Agent
+
+```bash
+opencode github run
+```
+
+### 审查 Pull Request
+
+```bash
+# 抓取 PR #42 并用 opencode 审查
+opencode pr 42
+
+# 克隆到临时目录审查 PR
+REVIEW=$(mktemp -d)
+git clone https://github.com/user/repo.git $REVIEW
+cd $REVIEW
+opencode run "审查此 PR 与 main 分支的差异。报告 bug、安全风险、测试缺口和样式问题。"
+```
+
+## 服务器模式
+
+OpenCode 可以作为服务器运行，支持远程连接和 Web 访问。
+
+### 启动无头服务器
+
+```bash
+# 基本启动
+opencode serve
+
+# 指定端口
+opencode serve --port 4096
+
+# 启用 mDNS 发现
+opencode serve --mdns
+# 可通过 http://opencode.local:4096 访问
+```
+
+### 启动 Web 界面
+
+```bash
+opencode web
+# 或指定端口
+opencode web --port 3096
+```
+
+### 连接到远程服务器
+
+```bash
+opencode attach http://hostname:4096
+```
+
+## 配置详解
+
+OpenCode 配置文件位于 `~/.config/opencode/opencode.json`。该文件使用 JSON Schema 进行验证和 IDE 自动补全。
+
+### 完整配置示例
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "shell": "/bin/bash",
+
+  "logLevel": "INFO",
+
+  "server": {
+    "port": 0,
+    "hostname": "127.0.0.1",
+    "mdns": false,
+    "mdnsDomain": "opencode.local",
+    "cors": []
+  },
+
+  "skills": {
+    "paths": ["~/.config/opencode/skills"]
+  },
+
+  "model": "anthropic/claude-sonnet-4",
+  "small_model": "openai/gpt-3.5-turbo",
+  "default_agent": "build",
+  "username": "developer",
+
+  "share": "manual",
+
+  "agent": {
+    "build": {
+      "name": "Build Agent",
+      "description": "默认的编码助手 Agent",
+      "model": "anthropic/claude-sonnet-4",
+      "mode": "primary"
+    }
+  },
+
+  "mcp": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    }
+  },
+
+  "formatter": true,
+
+  "lsp": true,
+
+  "instructions": [
+    "~/.config/opencode/instructions.md"
+  ],
+
+  "permission": {
+    "read": {
+      "~/**": "allow",
+      "/etc/**": "deny"
+    },
+    "edit": {
+      "**/*.go": "allow",
+      "**/*": "ask"
+    },
+    "bash": "ask"
+  }
+}
+```
+
+### 权限配置说明
+
+| 权限类型 | 说明 | 可选值 |
+|---------|------|--------|
+| `read` | 文件读取权限 | `ask`（询问）、`allow`（允许）、`deny`（拒绝） |
+| `edit` | 文件编辑权限 | `ask`、`allow`、`deny` |
+| `bash` | 终端命令执行权限 | `ask`、`allow`、`deny` |
+
+权限条目支持 Glob 模式匹配。例如：
+- `"~/projects/**": "allow"` — 允许读取 `~/projects` 下的所有文件
+- `"/etc/**": "deny"` — 拒绝访问系统配置文件
+- `"**/*": "ask"` — 其他文件每次询问
+
+`bash` 权限尤其敏感——只有在你完全信任模型和环境时才设为 `"allow"`。
+
+## 进阶技巧
+
+### 1. 调试工具
+
+```bash
+# 查看当前配置
+opencode debug config
+
+# 查看系统调试信息
+opencode debug info
+
+# 检查 LSP 调试信息
+opencode debug lsp
+
+# 查看启动时间
+opencode debug startup
+
+# 查看 Agent 配置
+opencode debug agent build
+```
+
+### 2. 使用统计与成本管理
+
+```bash
+# 查看所有统计
+opencode stats
+
+# 查看最近 7 天
+opencode stats --days 7
+
+# 显示使用最多的 5 个模型
+opencode stats --models 5
+
+# 按项目筛选
+opencode stats --project myproject
+```
+
+### 3. 插件管理
+
+OpenCode 支持通过插件扩展功能：
+
+```bash
+# 安装插件
+opencode plugin opencode-plugin-github
+
+# 全局安装
+opencode plugin --global opencode-plugin-docs
+
+# 强制重新安装
+opencode plugin opencode-plugin-github --force
+```
+
+### 4. 升级与卸载
+
+```bash
+# 升级到最新版本
+opencode upgrade
+
+# 升级到指定版本
+opencode upgrade 1.15.0
+
+# 卸载 OpenCode
+opencode uninstall
+```
+
+### 5. Shell 补全
+
+生成 Shell 自动补全，加快命令输入：
+
+```bash
+# 生成 bash 补全
+opencode completion
+
+# 生成并保存 zsh 补全
+opencode completion >> ~/.zsh/completion/_opencode
+```
+
+确保补全目录已在 `fpath` 中并在 `.zshrc` 中启用。
+
+### 6. ACP (Agent Client Protocol)
+
+启动 ACP 服务器，实现 Agent 间通信：
+
+```bash
+opencode acp
+```
+
+### 7. 并行任务执行
+
+同时运行多个任务：
+
+```bash
+# 两个任务并行
+opencode run "修复 issue #101" -m &
+opencode run "添加解析器回归测试" -m
+wait
+```
+
+`-m` 标志启用最小模式（无 TUI），`&` 将进程推入后台。
+
+### 8. 烟雾测试（Smoke Test）
+
+快速验证 OpenCode 是否正常运行：
+
+```bash
+opencode run '请只回复: OPENCODE_SMOKE_OK'
+# 成功时输出包含: OPENCODE_SMOKE_OK
+```
+
+## 常见问题与踩坑记录
+
+### 坑 1：TUI 需要 PTY 模式
+
+**现象**：TUI 卡住或无法接收输入。
+
+**原因**：交互模式需要伪终端（PTY）。在后台运行或通过某些包装脚本启动时，PTY 分配可能丢失。
+
+**解决**：使用 `--continue` 配合 `-p` 参数在后台运行：
+
+```bash
+# 正确——可在后台工作
+opencode --continue -p "请等待下一指令"
+
+# 错误——前台模式会卡住
+opencode --continue
+```
+
+### 坑 2：不要用 `/exit` 退出
+
+**现象**：输入 `/exit` 会打开 Agent 选择器而不是退出。
+
+**原因**：`/exit` 不是 OpenCode 的有效命令。
+
+**解决**：使用 `Ctrl+C` 或发送 kill 信号：
+
+```bash
+Ctrl+C
+
+# 或从另一个终端
+pkill -f opencode
+```
+
+### 坑 3：PATH 二进制冲突
+
+**现象**：运行 `opencode` 时使用了错误的版本。
+
+**解决**：检查是否安装了多个版本：
+
+```bash
+which -a opencode
+opencode --version
+```
+
+如果看到多个路径，移除多余的版本或调整 PATH 顺序。
+
+### 坑 4：安装后 PATH 未生效
+
+**现象**：安装成功后运行 `opencode` 提示 `command not found`。
+
+**解决**：重新加载 shell 配置或打开新终端：
+
+```bash
+source ~/.bashrc   # 或 ~/.zshrc
+```
+
+如果安装脚本没有自动添加，手动添加：
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### 坑 5：npm 全局安装权限错误
+
+**现象**：`npm install -g @opencode/cli` 报 EACCES 错误。
+
+**解决**：配置 npm 使用个人前缀目录：
+
+```bash
+npm config set prefix ~/.npm-global
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+npm install -g @opencode/cli
+```
+
+### 坑 6：升级时二进制冲突
+
+**现象**：升级失败，提示文件被占用。
+
+**解决**：先关闭所有 OpenCode 进程再升级：
+
+```bash
+pkill opencode
+opencode upgrade
+```
+
+### 坑 7：文件权限错误
+
+**现象**：OpenCode 无法读写需要的文件。
+
+**解决**：在 `~/.config/opencode/opencode.json` 中配置 `permission` 字段：
+
+```json
+{
+  "permission": {
+    "read": {"~/projects/**": "allow"},
+    "bash": "ask"
+  }
+}
+```
+
+尽量使用精确的文件模式以保持安全性。
+
+### 坑 8：curl 安装报 404
+
+**现象**：curl 安装脚本返回 404 错误。
+
+**解决**：安装脚本可能暂时不可用。尝试手动安装（方式四）或稍后重试。
+
+## 总结
+
+OpenCode 是一款强大的开源 AI 编程助手，能显著提升你的开发效率。以下是四种安装方式的对比：
+
+| 方式 | 难度 | 适用场景 |
+|------|------|---------|
+| Curl 脚本 | ⭐ | 新手推荐，全自动 |
+| npm | ⭐⭐ | Node.js 开发者，方便更新 |
+| Homebrew | ⭐ | macOS 用户 |
+| 手动下载 | ⭐⭐⭐ | 特定版本 / 离线安装 |
+
+安装后，最快上手路径：
+
+```bash
+# 1. 安装（选一种）
+curl -fsSL https://opencode.ai/install | bash
+
+# 2. 配置 AI 提供商
+opencode providers login
+
+# 3. 开始编程
+cd your-project
+opencode
+```
+
+之后，探索 TUI 快捷键、尝试 CLI 模式自动化、配置自定义 Agent 处理专业任务、设置 MCP 服务器连接你的工具链。OpenCode 越深入集成到你的工作流中，你获得的价值就越大。
+
+### 核心要点
+
+- **4 种安装方式** — curl 最简便，npm 适合 Node.js 生态，brew 适合 macOS，手动安装最灵活
+- **两种交互模式** — TUI 适合丰富交互会话，CLI 适合脚本和自动化
+- **75+ AI 提供商** — 自带免费模型或接入你自己的 API Key
+- **自定义 Agent** — 为不同任务创建专属 AI 角色
+- **MCP 集成** — 连接外部工具和数据源
+- **会话管理** — 保存、导出、导入和分享对话
+- **服务器模式** — 无头运行或通过 Web 界面访问
+- **GitHub PR 审查** — AI 驱动的自动化代码审查
+
+## 参考资料
+
+- **官方网站**：https://opencode.ai
+- **GitHub**：https://github.com/sst/opencode
+- **配置 Schema**：https://opencode.ai/config.json
+- **npm 包**：`@opencode/cli`
