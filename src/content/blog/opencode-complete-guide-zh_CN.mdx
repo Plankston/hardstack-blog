@@ -1,6 +1,6 @@
 ---
-title: "OpenCode 完全指南：安装、配置与全部功能详解（2026）"
-description: "从零开始安装到精通 OpenCode 的 TUI、CLI、Agent、MCP 及进阶工作流"
+title: "OpenCode 完全指南：2026 年开始使用 OpenCode 必知的一切"
+description: "陪你从零安装到精通 OpenCode 的 TUI、CLI、Agent、MCP 及进阶工作流"
 pubDate: 2026-06-09
 tags: ["opencode", "ai", "cli", "installation", "guide", "features"]
 category: "ai-tools"
@@ -12,13 +12,17 @@ groupKey: "opencode-complete-guide"
 
 ## 什么是 OpenCode
 
-[OpenCode](https://opencode.ai) 是一个开源 AI 编程助手，拥有 160K+ GitHub Stars，每月服务 750 万+ 开发者。它支持在终端（TUI）、IDE 和桌面端运行，兼容 Claude、GPT、Gemini 等 75+ 模型提供商。
+凌晨 2 点，你的 Docker 又挂了。你盯着终端，心想：肯定有更好的办法！这就是 OpenCode 要解决的问题。OpenCode 是一个开源 AI 编程助手，现在已经拥有 160K+ GitHub Stars，每月服务 750 万+ 开发者。
 
-与简单的聊天机器人不同，OpenCode 深度集成到你的开发工作流中。它可以读取和编辑文件、执行 Shell 命令、审查 Pull Request、管理会话，以及编排多 Agent 编码任务——全部在终端中完成。
+这东西不仅能在终端（TUI）、IDE 和桌面端运行，还兼容 Claude、GPT、Gemini 等 75+ 模型提供商。
 
-本文将覆盖从安装到进阶功能的全部内容，让你一次性从零到熟练掌握。
+和一般的聊天机器人不一样，它能深度集成到你的开发工作流。它可以读取和编辑文件、执行 Shell 命令、审查 Pull Request、管理会话，甚至编排多 Agent 编码任务——全部在终端中完成。
 
-## 前置要求
+本文就带你从零开始安装到精通 OpenCode 的各种功能，一次性搞定所有问题。
+
+## 需要什么才能开始
+
+这个问题有点复杂，但没关系，我会一步一步帮你解决。
 
 - **操作系统**：Linux（推荐 Ubuntu/WSL2）、macOS 或 Windows（PowerShell / WSL2）
 - **终端**：Bash、Zsh 或 Fish
@@ -29,7 +33,7 @@ groupKey: "opencode-complete-guide"
 
 ## 安装方法
 
-OpenCode 提供四种安装方式，按你的环境选择最合适的一种。
+OpenCode 提供四种安装方式，按你的环境选择最合适的一种。这里我直接给你最简单的方法。
 
 ### 方式一：一键脚本安装（推荐）
 
@@ -39,7 +43,7 @@ OpenCode 提供四种安装方式，按你的环境选择最合适的一种。
 curl -fsSL https://opencode.ai/install | bash
 ```
 
-该脚本会自动：
+这个脚本会自动帮你做这几件事：
 
 1. 检测你的操作系统和 CPU 架构
 2. 从 GitHub Releases 下载对应版本
@@ -58,7 +62,7 @@ curl -fsSL https://opencode.ai/install | bash -s -- --version 1.0.180
 curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
 ```
 
-#### 实际安装输出示例
+#### 安装时的真实输出示例
 
 ```
 OpenCode Installer v1.0.0
@@ -73,20 +77,20 @@ OpenCode Installer v1.0.0
 
 ### 方式二：npm 安装
 
-如果你已安装 Node.js（18+）和 npm（9+）：
+如果你已经安装了 Node.js（18+）和 npm（9+）：
 
 ```bash
 npm install -g @opencode/cli
 ```
 
-安装后验证：
+安装完成后验证：
 
 ```bash
 opencode --version
 # 输出: 1.16.2
 ```
 
-> **注意**：npm 安装包可能不是最新版本。想获取最新版，建议使用方式一。
+> **注意**：npm 安装包可能不是最新版本。如果你想要最新版本，建议使用方式一。
 
 ### 方式三：Homebrew（macOS）
 
@@ -179,6 +183,8 @@ opencode
 ```
 
 这会启动 TUI（终端用户界面），你可以在其中与 AI 对话、读写文件和执行命令。
+
+> **小贴士**：如果在启动后发现窗口太小，可以调整终端大小，或者使用 `opencode web` 启动网页界面，更方便操作。
 
 ## 核心命令参考
 
@@ -279,7 +285,7 @@ opencode run [message..]
   --agent                    指定使用的 Agent
   --format                   输出格式：default 或 json
   --file, -f                 附加文件（可重复使用）
-  --title                    会话标题
+  --title                    会会话标题
   --attach                   连接到运行中的 opencode 服务器
   --port                     本地服务器端口
   --variant                  模型变体：high / max / minimal
