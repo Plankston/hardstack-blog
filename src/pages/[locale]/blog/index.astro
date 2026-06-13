@@ -47,7 +47,7 @@ function categoryLabel(cat: string | undefined): string {
     <main id="main-content">
       <!-- Archive header -->
       <section class="section-inner">
-        <div class="mx-auto" style="max-width:720px">
+        <div class="mx-auto" style="max-width:960px">
           <p class="post-meta mb-2">{t('blog.archive')}</p>
           <h1 class="font-['Playfair_Display'] text-3xl font-bold text-[var(--text-heading)]">{t('blog.allPosts')}</h1>
           <p class="mt-2 text-sm text-[var(--text-muted)]">
@@ -58,7 +58,7 @@ function categoryLabel(cat: string | undefined): string {
 
       <!-- Post list as cards -->
       <section class="section-inner pt-0">
-        <div class="mx-auto" style="max-width:720px">
+        <div class="mx-auto" style="max-width:960px">
           {posts.length > 0 ? (
             <div class="flex flex-col gap-3">
               {posts.map((post, i) => (
@@ -84,7 +84,7 @@ function categoryLabel(cat: string | undefined): string {
                         <span class="text-[10px] text-[var(--text-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
                       )}
                     </div>
-                    <h2 class="mb-1 text-base font-semibold leading-snug text-[var(--text-heading)]">
+                    <h2 class="text-base font-semibold leading-snug text-[var(--text-heading)] truncate">
                       {post.data.title}
                     </h2>
                     <p class="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">

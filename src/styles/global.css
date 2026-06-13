@@ -51,7 +51,7 @@
   --code-border: #ddd5c8;
   --color-link: #205ea6;
   --color-accent-ui: #c2571a;
-  --prose-max-w: 780px;
+  --prose-max-w: 880px;
   --body-font: var(--font-editorial-body);
   --heading-font: var(--font-editorial-heading);
   --ui-font: var(--font-ui);
@@ -78,7 +78,7 @@ main {
 }
 
 .section-inner {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
 }
@@ -499,7 +499,7 @@ body[data-template="clean"] {
   --code-border: #e5e5e7;
   --color-link: #0071e3;
   --color-accent-ui: #ff6b35;
-  --prose-max-w: 800px;
+  --prose-max-w: 880px;
   --body-font: var(--font-ui);
   --heading-font: var(--font-serif);
 }
@@ -526,7 +526,7 @@ body[data-template="dark"] {
   --code-border: #334155;
   --color-link: #60a5fa;
   --color-accent-ui: #22c55e;
-  --prose-max-w: 760px;
+  --prose-max-w: 880px;
   --body-font: "IBM Plex Sans", "Inter", sans-serif;
   --heading-font: "JetBrains Mono", var(--font-mono);
 }
@@ -570,6 +570,21 @@ body[data-template="dark"] .category-pill-ai-tools { background: #1e3a5f; color:
 body[data-template="dark"] .category-pill-guide { background: #14532d; color: #86efac; }
 body[data-template="dark"] .category-pill-review { background: #451a03; color: #fcd34d; }
 body[data-template="dark"] .category-pill-default { background: #334155; color: #94a3b8; }
+
+body[data-template="dark"] pre {
+  background: #0d1117 !important;
+  border-color: #334155;
+}
+
+body[data-template="dark"] code {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+body[data-template="dark"] .prose p code {
+  background-color: #1e293b;
+  color: #fbbf24;
+}
 
 /* ═══════════════════════════════════════════════
    RESPONSIVE

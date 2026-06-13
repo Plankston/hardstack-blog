@@ -46,36 +46,6 @@ function categoryLabel(cat: string | undefined): string {
   if (!cat) return currentLocale === 'zh-CN' ? '未分类' : 'Uncategorized';
   return cat.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
-
-const templateShowcase = [
-  {
-    id: 'paper' as const,
-    nameEn: 'Editorial',
-    nameZh: '文章',
-    descEn: 'Warm serif body, Playfair Display headings — built for long-form reading.',
-    descZh: '暖色底色 + 衬线正文 + Playfair Display 标题，适合深度阅读。',
-    tags: ['Serif', 'Warm Tone', 'Long-form'],
-    class: 'template-card-paper',
-  },
-  {
-    id: 'clean' as const,
-    nameEn: 'E-Ink',
-    nameZh: '墨水屏',
-    descEn: 'Newsreader font, cream background. Like reading on a Kindle Paperwhite.',
-    descZh: 'Newsreader 字体 + 奶油底色，Kindle Paperwhite 般的阅读体验。',
-    tags: ['Newsreader', 'Cream', 'Kindle-like'],
-    class: 'template-card-eink',
-  },
-  {
-    id: 'dark' as const,
-    nameEn: 'Code',
-    nameZh: '代码',
-    descEn: 'Dark mode, JetBrains Mono headings — terminal-native reading experience.',
-    descZh: '暗色主题 + JetBrains Mono 标题，终端原生阅读体验。',
-    tags: ['Dark', 'Mono', 'Terminal'],
-    class: 'template-card-code',
-  },
-];
 ---
 
 <!doctype html>
@@ -92,21 +62,19 @@ const templateShowcase = [
 
       <!-- ═══ HERO ═══ -->
       <section class="section-inner">
-        <div class="mx-auto max-w-[780px] text-center">
+        <div class="mx-auto max-w-[960px] text-center">
           <p class="post-meta mb-4">
             {currentLocale === 'en' ? 'Vol. I · 2026' : '第一卷 · 2026'}
           </p>
           <h1 class="hero-heading mb-5">
             {t('site.title')}
           </h1>
-          <p class="mx-auto mb-8 max-w-lg text-base leading-relaxed text-[var(--text-muted)]">
-            {t('description') !== 'site.description' ? t('site.description') : currentLocale === 'en'
-              ? 'Every open-source project deserves a proper setup — deep dive installation guides, comparisons & real-world troubleshooting'
-              : '每个开源项目都值得被认真装一遍 — 深度安装教程、横向对比与真实踩坑记录'}
+          <p class="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-[var(--text-muted)]">
+            {currentLocale === 'en' ? 'Every open-source project deserves a proper setup — deep dive installation guides, comparisons & real-world troubleshooting' : '每个开源项目都值得被认真装一遍 — 深度安装教程、横向对比与真实踩坑记录'}
           </p>
 
           <!-- Stats row -->
-          <div class="hero-stats justify-center mb-10">
+          <div class="hero-stats justify-center">
             {stats.map((s) => (
               <div class="hero-stat">
                 <span class="hero-stat-value">{s.value}</span>
@@ -114,33 +82,15 @@ const templateShowcase = [
               </div>
             ))}
           </div>
-
-          <!-- Subscribe CTA -->
-          <div class="mx-auto max-w-md rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 text-left">
-            <p class="mb-2 text-sm font-semibold text-[var(--text-body)]">
-              {currentLocale === 'zh-CN' ? '📬 订阅更新' : '📬 Stay in the loop'}
-            </p>
-            <p class="mb-4 text-xs text-[var(--text-muted)]">
-              {currentLocale === 'zh-CN'
-                ? '第一时间收到新文章推送。不定期，但每次都是深度内容。'
-                : 'Get notified when new guides drop. No spam, just the good stuff.'}
-            </p>
-            <form class="subscribe-form" action="#" onsubmit="return false;">
-              <input type="email" placeholder={currentLocale === 'zh-CN' ? '你的邮箱地址' : 'you@example.com'} class="subscribe-input" required />
-              <button type="submit" class="subscribe-btn">
-                {currentLocale === 'zh-CN' ? '订阅' : 'Subscribe'}
-              </button>
-            </form>
-          </div>
         </div>
       </section>
 
-      <!-- ═══ RECENT POSTS ═══ -->
-      <section class="section-inner">
-        <div class="mx-auto" style="max-width: 720px">
-          <div class="mb-8 flex items-center justify-between">
+      <!-- ═══ ALL POSTS ═══ -->
+      <section class="section-inner pt-0">
+        <div class="mx-auto" style="max-width: 960px">
+          <div class="mb-6 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-[var(--text-body)]">
-              {currentLocale === 'zh-CN' ? '最新文章' : 'Latest Articles'}
+              {currentLocale === 'zh-CN' ? '文章' : 'Articles'}
             </h2>
             {posts.length > 0 && (
               <a href={`/${currentLocale}/blog/`} class="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--color-accent-ui)] no-underline">
@@ -158,12 +108,12 @@ const templateShowcase = [
                 >
                   <span class="article-card-number">{String(i + 1).padStart(2, '0')}</span>
                   <div class="article-card-content">
-                    <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                    <div class="mb-1 flex flex-wrap items-center gap-2">
                       <span class="post-meta text-[10px]">
                         <FormattedDate date={post.data.pubDate} locale={currentLocale} />
                       </span>
                       {post.data.category && (
-                        <span class={`${categoryPillClass(post.data.category)} category-pill-ai-tools article-card-category`}>
+                        <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
                           {categoryLabel(post.data.category)}
                         </span>
                       )}
@@ -174,10 +124,10 @@ const templateShowcase = [
                         <span class="text-[10px] text-[var(--text-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
                       )}
                     </div>
-                    <h3 class="mb-1 text-base font-semibold leading-snug text-[var(--text-heading)]">
+                    <h3 class="text-base font-semibold leading-snug text-[var(--text-heading)] truncate">
                       {post.data.title}
                     </h3>
-                    <p class="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
+                    <p class="mt-1 text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
                       {post.data.description}
                     </p>
                   </div>
@@ -194,34 +144,6 @@ const templateShowcase = [
               </p>
             </div>
           )}
-        </div>
-      </section>
-
-      <!-- ═══ TEMPLATES ═══ -->
-      <section class="section-inner">
-        <div class="mx-auto" style="max-width: 900px">
-          <h2 class="mb-2 text-center text-lg font-semibold text-[var(--text-body)]">
-            {currentLocale === 'zh-CN' ? '阅读风格自由切换' : 'Every article in its own style'}
-          </h2>
-          <p class="mb-8 text-center text-sm text-[var(--text-muted)]">
-            {currentLocale === 'zh-CN'
-              ? '每篇文章可选最适合的阅读模式'
-              : 'Each post picks the template that fits its content'}
-          </p>
-
-          <div class="grid gap-4 sm:grid-cols-3">
-            {templateShowcase.map((tmpl) => (
-              <div class={`template-card ${tmpl.class}`}>
-                <div class="template-card-title">{currentLocale === 'zh-CN' ? tmpl.nameZh : tmpl.nameEn}</div>
-                <div class="template-card-desc">{currentLocale === 'zh-CN' ? tmpl.descZh : tmpl.descEn}</div>
-                <div class="template-card-tags">
-                  {tmpl.tags.map((tag) => (
-                    <span class="template-card-tag">{tag}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
