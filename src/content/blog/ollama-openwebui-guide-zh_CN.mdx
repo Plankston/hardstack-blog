@@ -1,0 +1,213 @@
+---
+title: "Ollama + Open WebUI 本地 AI 全家桶：跑一个属于你自己的 ChatGPT"
+description: "十分钟，一条命令，你就能拥有一个完全私有、离线可用、不限次数的 AI 助手"
+pubDate: 2026-06-13
+tags: ["ollama", "open-webui", "llm", "selfhosted", "ai", "docker", "tutorial"]
+category: "ai-tools"
+difficulty: "beginner"
+timeToRead: 15
+postLang: "zh-CN"
+groupKey: "ollama-openwebui-guide"
+template: "paper"
+---
+
+## 别装本地大模型。真的别装。
+
+装完你会发现两件事。
+
+第一件事：原来你 2023 年花两千块买的显卡不只是用来打《黑神话》的。第二件事：你之前每个月给 OpenAI 交的 20 美元，够干很多别的事。
+
+但已经晚了——你已经读到这里了，说明你心里有数。接着看吧。
+
+## 一句话说清楚这个方案
+
+**Ollama** = 本地跑大模型的引擎。一条命令拉模型，一条命令跑起来。
+
+**Open WebUI** = 给 Ollama 套了个 ChatGPT 的皮。能对话、能传文件、能搜网页、能切模型。
+
+两个加起来，一个完全私有、离线可用、不限次数的 AI 全家桶。
+
+装完的效果：
+
+```
+你：帮我 review 一下这段代码
+你的本地 AI：看完了，第三行有个 off-by-one，第 15 行的逻辑可以简化
+你：好的，再来一个
+你的本地 AI：来，不收钱
+```
+
+## 为什么要自己装？两个理由
+
+### 1. 你的数据不出你的机器
+
+你给 ChatGPT 发的每一条消息都存在别人的服务器上。条款里写了——你的数据可能被拿去训练模型。不是阴谋论，是白纸黑字。
+
+本地跑，物理隔离。不需要信任任何人。
+
+### 2. 算一笔账
+
+| 方案 | 月费 | 限制 |
+|------|------|------|
+| ChatGPT Plus | $20 | 50 条/3h GPT-4 |
+| Claude Pro | $20 | 有限条数 |
+| **Ollama + Open WebUI** | **$0** | **不限次数** |
+| 加上你吃灰的 GPU | 已经付过钱了 | 不用就是浪费 |
+
+### 3（赠品）：想换就换
+
+今天 Llama 3，明天 Qwen 2.5，后天 Mistral。Open WebUI 里下拉菜单一选。不用等任何公司发新版，你跑的就是最新版。
+
+## 你需要什么
+
+- **任意一台电脑**（Windows / macOS / Linux）
+- **Docker**（装 Open WebUI 用，[从这里下载](https://www.docker.com/products/docker-desktop/)）
+- **至少 8GB 内存**（16GB 更好）
+- **GPU 可选**（有 GPU 跑大模型，没 GPU 跑小模型）
+
+没了。
+
+## 开装
+
+### Step 1：装 Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+验证：
+
+```bash
+ollama --version
+# ollama version 0.5.x
+```
+
+Windows 直接下载安装包：[ollama.com/download](https://ollama.com/download)
+
+### Step 2：拉一个模型
+
+开始拉模型。推荐从 7B 起步，内存友好、中文够用：
+
+国内下载慢的话，两个办法（选一个）：
+
+- **有代理**：终端设置 `export HTTPS_PROXY=http://127.0.0.1:7890`，走代理下载
+- **没代理**：从 [hf-mirror.com](https://hf-mirror.com) 手动下载 GGUF 文件，然后用 `ollama create` 导入——见 [Ollama 官方文档](https://github.com/ollama/ollama/blob/main/docs/import.md)
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+大概 4GB，等两分钟就好。
+
+测试一下：
+
+```bash
+ollama run qwen2.5:7b "用一句话解释什么是 Docker"
+```
+
+看到输出了？恭喜，你已经在本地跑大模型了。后面的事就是给它套个界面。
+
+### Step 3：装 Open WebUI
+
+这是给 Ollama 配一个像 ChatGPT 一样的聊天界面。需要先确保 Docker 在运行。
+
+```bash
+docker run -d \
+  --name open-webui \
+  -p 3000:8080 \
+  -v open-webui:/app/backend/data \
+  --restart always \
+  ghcr.io/open-webui/open-webui:main
+```
+
+命令解释：
+- `-p 3000:8080` — 把容器的 8080 端口映射到你电脑的 3000 端口
+- `-v open-webui:/app/backend/data` — 持久化聊天记录和配置，删容器数据不丢
+- `--restart always` — 电脑重启后自动启动
+
+> 拉取慢可以配 Docker 镜像加速：在 `/etc/docker/daemon.json` 中设置 `registry-mirrors`，阿里云/中科大都有提供
+
+浏览器打开 `http://localhost:3000`。注册一个账号（纯本地，数据只存在你机器上），进去就能看到聊天界面了。
+
+### Step 4：连接模型
+
+Open WebUI 会自动检测本机的 Ollama。连上了你会看到**顶部有个绿色的 Ollama 状态指示器**，下拉菜单里能看到你刚才下载的 qwen2.5:7b。
+
+如果没连上，去设置里手动指定：
+
+1. 右上角头像 → **设置** → **外部连接**
+2. **Ollama 服务地址** 填 `http://host.docker.internal:11434`
+3. 点保存，页面马上刷新连接状态
+
+搞定。你现在有了一个完全私有的 ChatGPT。
+
+## 能用它干什么？
+
+### 私有代码助手
+
+Open WebUI 里直接拖代码文件进去，让 AI review。适合那些不能上传到任何第三方服务的私有仓库。
+
+### 文档问答
+
+PDF、Word、TXT 拖进去直接问。
+
+"这份合同的第三条和第七条有冲突吗？"
+"帮我总结这篇论文的核心方法。"
+
+文件不离开你的电脑。
+
+### 日常顺手活用
+
+翻译邮件、写周报、解释技术概念——7B 模型干这些活绰绰有余。
+
+Open WebUI 还支持同时显示多个模型的输出。同一个问题，让 Llama 和 Qwen 各答一次，选最好的。
+
+## 模型怎么选？
+
+| 场景 | 模型 | 内存 | 说明 |
+|------|------|------|------|
+| 入门 | `qwen2.5:7b` | 4GB | 中文最好，7B 性价比之王 |
+| 写代码 | `codellama:7b` | 4GB | 代码专用训练 |
+| 均衡 | `mistral:7b` | 4GB | 英文强、速度快 |
+| 进阶 | `llama3.1:8b` | 8GB | Meta 最新，综合最强 |
+| 性能狂魔 | `qwen2.5:32b` | 24GB | 接近 GPT-4 水平 |
+| 有 A100？ | `llama3.1:70b` | 48GB | 生产级，但你需要一张好卡 |
+
+第一步：挑个 7B 跑起来。跑熟了再想升级的事。
+
+## 进阶玩法
+
+### 联网搜索
+
+Open WebUI 支持 SearXNG 集成，让 AI 能查实时信息：
+
+```yaml
+services:
+  searxng:
+    image: searxng/searxng:latest
+    ports:
+      - "4000:8080"
+```
+
+Open WebUI 设置→网页搜索，填上 SearXNG 地址就行。
+
+### 自定义模型
+
+Open WebUI 里能调整 System Prompt、温度、上下文长度，相当于给自己的 AI 调教人设。
+
+## 实话实说
+
+- **7B 没有 GPT-4 聪明**。写周报、改文案、解释概念完全够，但别让它做架构设计。
+- **没有 GPU 跑不快**。CPU 跑 7B 大概 5-10 token/秒，能用但不算流畅。
+- **大模型吃显存**。32B+ 需要 24GB+，不是谁都跑得动。
+
+但免费的、私有的、不限次数的 AI——这个取舍值不值，你自己最清楚。
+
+## 装好了告诉我一声
+
+跑了什么模型？GPU 利用率涨了多少？有没有发现"哦，这东西真能帮我省钱"的瞬间？
+
+搞定了回来说一声。
+
+---
+
+> 下篇预告：把 Ollama 挂到 Home Assistant 里，让你的智能家居也有个 AI 大脑。
