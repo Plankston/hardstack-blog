@@ -15,6 +15,7 @@ interface Props {
   difficulty?: string;
   timeToRead?: number;
   locale: string;
+  template?: 'paper' | 'clean' | 'dark';
 }
 
 const {
@@ -26,8 +27,16 @@ const {
   difficulty,
   timeToRead,
   locale,
+  template = 'paper',
 } = Astro.props;
 const t = useTranslations(locale);
+
+// Template display names for badge
+const templateLabel: Record<string, string> = {
+  paper: locale === 'zh-CN' ? '纸本' : 'Paper',
+  clean: locale === 'zh-CN' ? '极简' : 'Clean',
+  dark: locale === 'zh-CN' ? '暗色' : 'Dark',
+};
 ---
 
 <!doctype html>
@@ -35,25 +44,32 @@ const t = useTranslations(locale);
   <head>
     <BaseHead title={title} description={description} locale={locale} />
   </head>
-  <body>
+  <body data-template={template}>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
       {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
     </a>
     <Header locale={locale} />
     <main id="main-content">
       <article>
-        <!-- Article header: full-bleed with distinct background -->
+        <!-- Article header: full-bleed with theme-aware background -->
         <div class="bg-[var(--color-paper-light)]">
           <div class="section-inner">
-            <header class="mb-10">
-              <div class="post-meta mb-3">
-                {t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} />
+            <header class="mb-10 max-w-3xl">
+              <!-- Post meta -->
+              <div class="post-meta mb-3 flex flex-wrap items-center gap-x-2">
+                <span>{t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} /></span>
                 {updatedDate && (
-                  <span class="ml-2">· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
+                  <span>· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
                 )}
-                {category && <span class="ml-2">· {category}</span>}
-                {difficulty && <span class="ml-2 text-[var(--color-ink-faint)]">[{difficulty}]</span>}
-                {timeToRead && <span class="ml-2">· {timeToRead} {t('blog.minRead')}</span>}
+                {category && <span class="inline-flex items-center rounded bg-[var(--color-accent)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-accent)]">· {category}</span>}
+                {difficulty && <span class="text-[var(--color-ink-faint)]">[{difficulty}]</span>}
+                {timeToRead && <span>· {timeToRead} {t('blog.minRead')}</span>}
+                <!-- Template badge -->
+                {template !== 'paper' && (
+                  <span class="ml-auto inline-flex items-center rounded border border-[var(--color-border)] px-2 py-0.5 text-xs text-[var(--color-ink-faint)]">
+                    {templateLabel[template]}
+                  </span>
+                )}
               </div>
               <h1 class="font-serif text-3xl leading-tight md:text-4xl">{title}</h1>
               <p class="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
@@ -63,12 +79,19 @@ const t = useTranslations(locale);
           </div>
         </div>
 
-        <!-- Article body: constrained prose -->
+        <!-- Article body: constrained prose with template-defined width -->
         <div class="section-inner">
           <hr class="mt-0 mb-10" />
 
           <div class="prose">
             <slot />
+          </div>
+
+          <!-- Template metadata footer -->
+          <div class="mt-12 text-center text-xs text-[var(--color-ink-faint)]">
+            {locale === 'zh-CN'
+              ? `阅读模式: ${templateLabel[template]}`
+              : `Reading mode: ${templateLabel[template]}`}
           </div>
 
           <Giscus locale={locale} />

@@ -33,6 +33,13 @@ function hreflangUrl(lang: string): string {
 <link rel="alternate" type="application/rss+xml" title={`${SITE_TITLE} (中文)`} href={new URL('zh-CN/rss.xml', Astro.site)} />
 <meta name="generator" content={Astro.generator} />
 
+<!-- Preconnects for third-party services -->
+<link rel="preconnect" href="https://giscus.app" />
+<link rel="preconnect" href="https://avatars.githubusercontent.com" />
+
+<link rel="preload" as="font" href="/src/assets/fonts/atkinson-regular.woff" crossorigin />
+<link rel="preload" as="font" href="/src/assets/fonts/atkinson-bold.woff" crossorigin />
+
 <Font cssVariable="--font-atkinson" preload />
 
 <link rel="canonical" href={canonicalURL} />

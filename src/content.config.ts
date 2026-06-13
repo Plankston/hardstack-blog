@@ -15,6 +15,7 @@ const blog = defineCollection({
     timeToRead: z.number().optional(),
     postLang: z.string().default('en'),
     groupKey: z.string().optional(),
+    template: z.enum(['paper', 'clean', 'dark']).default('paper'),
   }),
 });
 

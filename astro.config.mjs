@@ -3,8 +3,20 @@
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
+import { visit } from 'unist-util-visit';
 
 import tailwindcss from '@tailwindcss/vite';
+
+// Rehype plugin: auto-add loading="lazy" to all <img> tags
+function rehypeLazyLoadImages() {
+  return (tree) => {
+    visit(tree, 'element', (node) => {
+      if (node.tagName === 'img' && !node.properties.loading) {
+        node.properties.loading = 'lazy';
+      }
+    });
+  };
+}
 
 // https://astro.build/config
 export default defineConfig({
@@ -41,6 +53,7 @@ export default defineConfig({
     shikiConfig: {
       theme: 'github-light-default',
     },
+    rehypePlugins: [rehypeLazyLoadImages],
   },
 
   vite: {
