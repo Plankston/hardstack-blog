@@ -18,6 +18,64 @@ const t = useTranslations(currentLocale);
 const posts = (await getCollection('blog'))
   .filter((p) => (p.data.postLang || 'en') === currentLocale)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Compute stats from real data
+const categories = new Set(posts.filter(p => p.data.category).map(p => p.data.category!.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())));
+const totalReadTime = posts.reduce((sum, p) => sum + (p.data.timeToRead || 0), 0);
+const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) : 0;
+const difficulties = new Set(posts.filter(p => p.data.difficulty).map(p => p.data.difficulty!.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())));
+
+const stats = [
+  { value: String(posts.length), label: currentLocale === 'zh-CN' ? '篇文章' : 'Articles' },
+  { value: String(categories.size), label: currentLocale === 'zh-CN' ? '分类' : 'Categories' },
+  { value: `~${avgReadTime}`, label: currentLocale === 'zh-CN' ? '分钟均读' : 'Avg Read' },
+  { value: String(difficulties.size), label: currentLocale === 'zh-CN' ? '难度等级' : 'Levels' },
+];
+
+// Category pill class helper
+function categoryPillClass(cat: string | undefined): string {
+  if (!cat) return 'category-pill-default';
+  const c = cat.toLowerCase();
+  if (c === 'ai-tools') return 'category-pill-ai-tools';
+  if (c === 'guide') return 'category-pill-guide';
+  if (c === 'review') return 'category-pill-review';
+  return 'category-pill-default';
+}
+
+function categoryLabel(cat: string | undefined): string {
+  if (!cat) return currentLocale === 'zh-CN' ? '未分类' : 'Uncategorized';
+  return cat.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const templateShowcase = [
+  {
+    id: 'paper' as const,
+    nameEn: 'Editorial',
+    nameZh: '文章',
+    descEn: 'Warm serif body, Playfair Display headings — built for long-form reading.',
+    descZh: '暖色底色 + 衬线正文 + Playfair Display 标题，适合深度阅读。',
+    tags: ['Serif', 'Warm Tone', 'Long-form'],
+    class: 'template-card-paper',
+  },
+  {
+    id: 'clean' as const,
+    nameEn: 'E-Ink',
+    nameZh: '墨水屏',
+    descEn: 'Newsreader font, cream background. Like reading on a Kindle Paperwhite.',
+    descZh: 'Newsreader 字体 + 奶油底色，Kindle Paperwhite 般的阅读体验。',
+    tags: ['Newsreader', 'Cream', 'Kindle-like'],
+    class: 'template-card-eink',
+  },
+  {
+    id: 'dark' as const,
+    nameEn: 'Code',
+    nameZh: '代码',
+    descEn: 'Dark mode, JetBrains Mono headings — terminal-native reading experience.',
+    descZh: '暗色主题 + JetBrains Mono 标题，终端原生阅读体验。',
+    tags: ['Dark', 'Mono', 'Terminal'],
+    class: 'template-card-code',
+  },
+];
 ---
 
 <!doctype html>
@@ -26,74 +84,147 @@ const posts = (await getCollection('blog'))
     <BaseHead title={t('site.title')} description={t('site.description')} locale={currentLocale} />
   </head>
   <body>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
       {currentLocale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
     </a>
     <Header locale={currentLocale} />
     <main id="main-content">
-      <!-- Hero: full-bleed -->
-      <div class="bg-[var(--color-paper-light)]">
-        <div class="section-inner py-20 text-center">
-          <p class="post-meta mb-3">{currentLocale === 'en' ? 'Vol. I · 2026' : '第一卷 · 2026'}</p>
-          <h1 class="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
+
+      <!-- ═══ HERO ═══ -->
+      <section class="section-inner">
+        <div class="mx-auto max-w-[780px] text-center">
+          <p class="post-meta mb-4">
+            {currentLocale === 'en' ? 'Vol. I · 2026' : '第一卷 · 2026'}
+          </p>
+          <h1 class="hero-heading mb-5">
             {t('site.title')}
           </h1>
-          <p class="mx-auto max-w-md text-base leading-relaxed text-[var(--color-ink-muted)]">
-            {t('site.description')}
+          <p class="mx-auto mb-8 max-w-lg text-base leading-relaxed text-[var(--text-muted)]">
+            {t('description') !== 'site.description' ? t('site.description') : currentLocale === 'en'
+              ? 'Every open-source project deserves a proper setup — deep dive installation guides, comparisons & real-world troubleshooting'
+              : '每个开源项目都值得被认真装一遍 — 深度安装教程、横向对比与真实踩坑记录'}
           </p>
-        </div>
-      </div>
 
-      <!-- Post list -->
-      <div class="section-inner">
-        <hr class="mb-14" />
-
-        {posts.length > 0 ? (
-          <div class="space-y-10">
-            {posts.map((post, i) => (
-              <article>
-                <a
-                  href={new URL(`/${currentLocale}/blog/${getSlug(post)}/`, Astro.site).pathname}
-                  class="group flex items-start gap-5 no-underline md:gap-8"
-                >
-                  <span class="hidden font-serif text-3xl font-bold text-[var(--color-ink-muted)] md:block md:w-12 md:shrink-0">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="post-meta mb-2">
-                      <FormattedDate date={post.data.pubDate} locale={currentLocale} />
-                      {post.data.category && (
-                        <span class="ml-3 text-[var(--color-ink-muted)]">· {post.data.category}</span>
-                      )}
-                      {post.data.difficulty && (
-                        <span class="ml-2 text-[var(--color-ink-faint)]">[{post.data.difficulty}]</span>
-                      )}
-                      {post.data.timeToRead && (
-                        <span class="ml-2 text-[var(--color-ink-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
-                      )}
-                    </div>
-                    <h2 class="mb-2 font-serif text-xl font-bold leading-snug text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-light)]">
-                      {post.data.title}
-                    </h2>
-<p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">
-  {post.data.description}
-</p>
-                  </div>
-                </a>
-              </article>
+          <!-- Stats row -->
+          <div class="hero-stats justify-center mb-10">
+            {stats.map((s) => (
+              <div class="hero-stat">
+                <span class="hero-stat-value">{s.value}</span>
+                <span class="hero-stat-label">{s.label}</span>
+              </div>
             ))}
           </div>
-        ) : (
-          <div class="py-16 text-center text-[var(--color-ink-faint)]">
-            <p class="font-serif text-lg italic">
-              {currentLocale === 'en' ? 'Posts coming soon…' : '文章即将上线……'}
+
+          <!-- Subscribe CTA -->
+          <div class="mx-auto max-w-md rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 text-left">
+            <p class="mb-2 text-sm font-semibold text-[var(--text-body)]">
+              {currentLocale === 'zh-CN' ? '📬 订阅更新' : '📬 Stay in the loop'}
             </p>
-            <p class="mt-4 text-sm">
-              {currentLocale === 'en' ? 'The first issue is in the works.' : '第一期正在筹备中。'}
+            <p class="mb-4 text-xs text-[var(--text-muted)]">
+              {currentLocale === 'zh-CN'
+                ? '第一时间收到新文章推送。不定期，但每次都是深度内容。'
+                : 'Get notified when new guides drop. No spam, just the good stuff.'}
             </p>
+            <form class="subscribe-form" action="#" onsubmit="return false;">
+              <input type="email" placeholder={currentLocale === 'zh-CN' ? '你的邮箱地址' : 'you@example.com'} class="subscribe-input" required />
+              <button type="submit" class="subscribe-btn">
+                {currentLocale === 'zh-CN' ? '订阅' : 'Subscribe'}
+              </button>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
+
+      <!-- ═══ RECENT POSTS ═══ -->
+      <section class="section-inner">
+        <div class="mx-auto" style="max-width: 720px">
+          <div class="mb-8 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-[var(--text-body)]">
+              {currentLocale === 'zh-CN' ? '最新文章' : 'Latest Articles'}
+            </h2>
+            {posts.length > 0 && (
+              <a href={`/${currentLocale}/blog/`} class="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--color-accent-ui)] no-underline">
+                {currentLocale === 'zh-CN' ? '查看全部 →' : 'View all →'}
+              </a>
+            )}
+          </div>
+
+          {posts.length > 0 ? (
+            <div class="flex flex-col gap-3">
+              {posts.map((post, i) => (
+                <a
+                  href={new URL(`/${currentLocale}/blog/${getSlug(post)}/`, Astro.site).pathname}
+                  class="article-card no-underline"
+                >
+                  <span class="article-card-number">{String(i + 1).padStart(2, '0')}</span>
+                  <div class="article-card-content">
+                    <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                      <span class="post-meta text-[10px]">
+                        <FormattedDate date={post.data.pubDate} locale={currentLocale} />
+                      </span>
+                      {post.data.category && (
+                        <span class={`${categoryPillClass(post.data.category)} category-pill-ai-tools article-card-category`}>
+                          {categoryLabel(post.data.category)}
+                        </span>
+                      )}
+                      {post.data.difficulty && (
+                        <span class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">[{post.data.difficulty}]</span>
+                      )}
+                      {post.data.timeToRead && (
+                        <span class="text-[10px] text-[var(--text-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
+                      )}
+                    </div>
+                    <h3 class="mb-1 text-base font-semibold leading-snug text-[var(--text-heading)]">
+                      {post.data.title}
+                    </h3>
+                    <p class="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
+                      {post.data.description}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="py-16 text-center text-[var(--text-faint)]">
+              <p class="font-serif text-lg italic">
+                {currentLocale === 'en' ? 'Posts coming soon…' : '文章即将上线……'}
+              </p>
+              <p class="mt-2 text-sm">
+                {currentLocale === 'en' ? 'The first issue is in the works.' : '第一期正在筹备中。'}
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <!-- ═══ TEMPLATES ═══ -->
+      <section class="section-inner">
+        <div class="mx-auto" style="max-width: 900px">
+          <h2 class="mb-2 text-center text-lg font-semibold text-[var(--text-body)]">
+            {currentLocale === 'zh-CN' ? '阅读风格自由切换' : 'Every article in its own style'}
+          </h2>
+          <p class="mb-8 text-center text-sm text-[var(--text-muted)]">
+            {currentLocale === 'zh-CN'
+              ? '每篇文章可选最适合的阅读模式'
+              : 'Each post picks the template that fits its content'}
+          </p>
+
+          <div class="grid gap-4 sm:grid-cols-3">
+            {templateShowcase.map((tmpl) => (
+              <div class={`template-card ${tmpl.class}`}>
+                <div class="template-card-title">{currentLocale === 'zh-CN' ? tmpl.nameZh : tmpl.nameEn}</div>
+                <div class="template-card-desc">{currentLocale === 'zh-CN' ? tmpl.descZh : tmpl.descEn}</div>
+                <div class="template-card-tags">
+                  {tmpl.tags.map((tag) => (
+                    <span class="template-card-tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </main>
     <Footer locale={currentLocale} />
   </body>

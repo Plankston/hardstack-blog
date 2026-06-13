@@ -18,6 +18,20 @@ const t = useTranslations(currentLocale);
 const posts = (await getCollection('blog'))
   .filter((p) => (p.data.postLang || 'en') === currentLocale)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+function categoryPillClass(cat: string | undefined): string {
+  if (!cat) return 'category-pill-default';
+  const c = cat.toLowerCase();
+  if (c === 'ai-tools') return 'category-pill-ai-tools';
+  if (c === 'guide') return 'category-pill-guide';
+  if (c === 'review') return 'category-pill-review';
+  return 'category-pill-default';
+}
+
+function categoryLabel(cat: string | undefined): string {
+  if (!cat) return currentLocale === 'zh-CN' ? '未分类' : 'Uncategorized';
+  return cat.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 ---
 
 <!doctype html>
@@ -26,64 +40,67 @@ const posts = (await getCollection('blog'))
     <BaseHead title={`${t('blog.allPosts')} — ${t('site.title')}`} description={t('site.description')} locale={currentLocale} />
   </head>
   <body>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
       {currentLocale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
     </a>
     <Header locale={currentLocale} />
     <main id="main-content">
-      <!-- Archive header: full-bleed -->
-      <div class="bg-[var(--color-paper-light)]">
-        <div class="section-inner">
+      <!-- Archive header -->
+      <section class="section-inner">
+        <div class="mx-auto" style="max-width:720px">
           <p class="post-meta mb-2">{t('blog.archive')}</p>
-          <h1 class="font-serif text-3xl">{t('blog.allPosts')}</h1>
+          <h1 class="font-['Playfair_Display'] text-3xl font-bold text-[var(--text-heading)]">{t('blog.allPosts')}</h1>
+          <p class="mt-2 text-sm text-[var(--text-muted)]">
+            {currentLocale === 'zh-CN' ? `共 ${posts.length} 篇文章` : `${posts.length} articles total`}
+          </p>
         </div>
-      </div>
+      </section>
 
-      <!-- Post list -->
-      <div class="section-inner">
-        <hr class="mb-12" />
-
-        {posts.length > 0 ? (
-          <div class="space-y-10">
-            {posts.map((post, i) => (
-              <article>
+      <!-- Post list as cards -->
+      <section class="section-inner pt-0">
+        <div class="mx-auto" style="max-width:720px">
+          {posts.length > 0 ? (
+            <div class="flex flex-col gap-3">
+              {posts.map((post, i) => (
                 <a
                   href={new URL(`/${currentLocale}/blog/${getSlug(post)}/`, Astro.site).pathname}
-                  class="group flex items-start gap-5 no-underline md:gap-8"
+                  class="article-card no-underline"
                 >
-                  <span class="hidden pt-0.5 font-serif text-xl font-bold text-[var(--color-ink-muted)] md:block md:w-10 md:text-right md:text-base">
-                    {String(posts.length - i).padStart(2, '0')}
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="post-meta mb-1">
-                      <FormattedDate date={post.data.pubDate} locale={currentLocale} />
+                  <span class="article-card-number">{String(posts.length - i).padStart(2, '0')}</span>
+                  <div class="article-card-content">
+                    <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                      <span class="post-meta text-[10px]">
+                        <FormattedDate date={post.data.pubDate} locale={currentLocale} />
+                      </span>
                       {post.data.category && (
-                        <span class="ml-2 text-[var(--color-ink-muted)]">· {post.data.category}</span>
+                        <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
+                          {categoryLabel(post.data.category)}
+                        </span>
                       )}
                       {post.data.difficulty && (
-                        <span class="ml-2 text-[var(--color-ink-faint)]">[{post.data.difficulty}]</span>
+                        <span class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">[{post.data.difficulty}]</span>
                       )}
                       {post.data.timeToRead && (
-                        <span class="ml-2 text-[var(--color-ink-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
+                        <span class="text-[10px] text-[var(--text-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
                       )}
                     </div>
-                    <h2 class="font-serif text-lg font-bold leading-snug text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-light)]">
+                    <h2 class="mb-1 text-base font-semibold leading-snug text-[var(--text-heading)]">
                       {post.data.title}
                     </h2>
-                    <p class="mt-1 text-sm text-[var(--color-ink-muted)]">
+                    <p class="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
                       {post.data.description}
                     </p>
                   </div>
                 </a>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div class="py-16 text-center text-[var(--color-ink-faint)]">
-            <p class="font-serif text-lg italic">{currentLocale === 'en' ? 'No posts yet.' : '暂无文章。'}</p>
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <div class="py-16 text-center text-[var(--text-faint)]">
+              <p class="font-serif text-lg italic">{currentLocale === 'en' ? 'No posts yet.' : '暂无文章。'}</p>
+            </div>
+          )}
+        </div>
+      </section>
     </main>
     <Footer locale={currentLocale} />
   </body>

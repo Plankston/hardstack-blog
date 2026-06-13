@@ -12,25 +12,25 @@ const currentLocale = locale as Locale;
 const t = useTranslations(currentLocale);
 ---
 
-<header class="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-paper)]/95 backdrop-blur-sm">
-  <nav class="flex items-center pl-[10px] pr-6 py-3">
-    <a href={`/${currentLocale}/`} class="font-serif text-lg font-bold tracking-tight no-underline text-[var(--color-ink)] hover:text-[var(--color-accent)]">
+<header class="glass-header sticky top-0 z-50">
+  <nav class="mx-auto flex max-w-[1200px] items-center px-6 py-3 md:px-8">
+    <a href={`/${currentLocale}/`} class="font-['Playfair_Display'] text-lg font-bold tracking-tight no-underline text-[var(--text-heading)] hover:text-[var(--color-accent-ui)] whitespace-nowrap">
       {t('site.title')}
     </a>
-    <div class="flex flex-1 items-center justify-end gap-8">
-      <div class="flex items-center gap-6">
+    <div class="flex flex-1 items-center justify-end gap-6">
+      <div class="flex items-center gap-5">
         <HeaderLink href={`/${currentLocale}/blog`} locale={currentLocale}>{t('nav.blog')}</HeaderLink>
         <HeaderLink href={`/${currentLocale}/about`} locale={currentLocale}>{t('nav.about')}</HeaderLink>
       </div>
 
       <Search locale={currentLocale} />
 
-      <div class="flex items-center gap-3 border-l border-[var(--color-border)] pl-5">
+      <div class="flex items-center gap-2 border-l border-[var(--border-color)] pl-4">
         <!-- Locale switcher: dropdown -->
         <div class="relative" id="locale-switcher">
           <button
             id="locale-toggle"
-            class="flex items-center gap-1 rounded border border-[var(--color-border)] px-2 py-1 text-xs font-medium uppercase tracking-wider text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+            class="flex items-center gap-1 rounded-md border border-[var(--border-color)] px-2 py-1 text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] transition-colors hover:text-[var(--text-body)]"
             aria-expanded="false"
             aria-controls="locale-menu"
           >
@@ -43,7 +43,7 @@ const t = useTranslations(currentLocale);
           <div
             id="locale-menu"
             role="menu"
-            class="absolute right-0 top-full z-50 mt-1 hidden min-w-[110px] rounded border border-[var(--color-border)] bg-[var(--color-paper)] py-1 shadow-lg"
+            class="absolute right-0 top-full z-50 mt-1 hidden min-w-[110px] rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] py-1 shadow-lg"
           >
             {Object.entries(LOCALES).map(([code, label]) => (
               <a
@@ -52,8 +52,8 @@ const t = useTranslations(currentLocale);
                 class:list={[
                   'block px-3 py-1.5 text-xs font-medium transition-colors no-underline',
                   code === currentLocale
-                    ? 'text-[var(--color-accent)] bg-[var(--color-paper-light)]'
-                    : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-light)]',
+                    ? 'text-[var(--color-accent-ui)] bg-[var(--bg-header)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-body)] hover:bg-[var(--bg-header)]',
                 ]}
               >
                 {LOCALE_NAMES[code as Locale]}
@@ -62,7 +62,7 @@ const t = useTranslations(currentLocale);
           </div>
         </div>
 
-        <a href="https://github.com/Plankston/hardstack-blog" target="_blank" class="text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors" aria-label="GitHub">
+        <a href="https://github.com/Plankston/hardstack-blog" target="_blank" class="text-[var(--text-faint)] hover:text-[var(--text-body)] transition-colors" aria-label="GitHub">
           <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
         </a>
       </div>

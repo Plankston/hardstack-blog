@@ -31,11 +31,11 @@ const {
 } = Astro.props;
 const t = useTranslations(locale);
 
-// Template display names for badge
+// Template display names
 const templateLabel: Record<string, string> = {
-  paper: locale === 'zh-CN' ? '纸本' : 'Paper',
-  clean: locale === 'zh-CN' ? '极简' : 'Clean',
-  dark: locale === 'zh-CN' ? '暗色' : 'Dark',
+  paper: locale === 'zh-CN' ? '文章' : 'Editorial',
+  clean: locale === 'zh-CN' ? '墨水屏' : 'E-Ink',
+  dark: locale === 'zh-CN' ? '代码' : 'Code',
 };
 ---
 
@@ -45,44 +45,42 @@ const templateLabel: Record<string, string> = {
     <BaseHead title={title} description={description} locale={locale} />
   </head>
   <body data-template={template}>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
       {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
     </a>
     <Header locale={locale} />
     <main id="main-content">
       <article>
-        <!-- Article header: full-bleed with theme-aware background -->
-        <div class="bg-[var(--color-paper-light)]">
+        <!-- Article header -->
+        <div style="background:var(--bg-header)">
           <div class="section-inner">
-            <header class="mb-10">
+            <header class="mx-auto" style="max-width:var(--prose-max-w)">
               <!-- Post meta -->
               <div class="post-meta mb-3 flex flex-wrap items-center gap-x-2">
                 <span>{t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} /></span>
                 {updatedDate && (
                   <span>· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
                 )}
-                {category && <span class="inline-flex items-center rounded bg-[var(--color-accent)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-accent)]">{category}</span>}
-                {difficulty && <span class="text-[var(--color-ink-faint)]">[{difficulty}]</span>}
+                {category && <span class="inline-flex items-center rounded-full bg-[var(--color-accent-ui)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-accent-ui)]">{category}</span>}
+                {difficulty && <span class="text-[var(--text-faint)]">[{difficulty}]</span>}
                 {timeToRead && <span>· {timeToRead} {t('blog.minRead')}</span>}
                 <!-- Template badge -->
-                {template !== 'paper' && (
-                  <span class="ml-auto inline-flex items-center rounded border border-[var(--color-border)] px-2 py-0.5 text-xs text-[var(--color-ink-faint)]">
-                    {templateLabel[template]}
-                  </span>
-                )}
+                <span class="ml-auto inline-flex items-center rounded-full border border-[var(--border-color)] px-2.5 py-0.5 text-xs text-[var(--text-faint)]">
+                  {templateLabel[template]}
+                </span>
               </div>
-              <h1 class="font-serif text-3xl leading-tight md:text-4xl max-w-4xl">{title}</h1>
-              <p class="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              <h1 class="font-['Playfair_Display'] text-3xl leading-tight md:text-4xl" style="font-weight:700">
+                {title}
+              </h1>
+              <p class="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
                 {description}
               </p>
             </header>
           </div>
         </div>
 
-        <!-- Article body: constrained prose with template-defined width -->
+        <!-- Article body -->
         <div class="section-inner">
-          <hr class="mt-0 mb-10" />
-
           <div class="prose">
             <slot />
           </div>
