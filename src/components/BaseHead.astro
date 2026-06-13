@@ -34,7 +34,6 @@ function hreflangUrl(lang: string): string {
 <meta name="generator" content={Astro.generator} />
 
 <!-- Preconnects for third-party services -->
-<link rel="preconnect" href="https://giscus.app" />
 <link rel="preconnect" href="https://avatars.githubusercontent.com" />
 
 <!-- Preconnect Google Fonts for v2 design -->
@@ -72,4 +71,4 @@ function hreflangUrl(lang: string): string {
 <meta property="twitter:image" content={new URL(image.src, Astro.url)} />
 
 <!-- Content Security Policy -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://giscus.app; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://giscus.app; frame-src https://giscus.app; base-uri 'self'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; base-uri 'self'" />
