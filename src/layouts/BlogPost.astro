@@ -92,7 +92,9 @@ const templateLabel: Record<string, string> = {
               : `Reading mode: ${templateLabel[template]}`}
           </div>
 
-          <Giscus locale={locale} />
+          <div style="width:min(80vw,1200px);margin:2rem auto 0">
+            <Giscus locale={locale} />
+          </div>
         </div>
       </article>
     </main>
