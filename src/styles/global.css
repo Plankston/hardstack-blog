@@ -337,6 +337,39 @@ body[data-template="dark"] .text-\[var\(--color-ink\)\] {
 }
 
 /* ═══════════════════════════════════════════════
+   SHIKI CODE HIGHLIGHTING — dual theme support
+   ═══════════════════════════════════════════════ */
+/* Dark template → force Shiki dark tokens */
+body[data-template="dark"] .astro-code,
+body[data-template="dark"] .astro-code span {
+  color: var(--shiki-dark, inherit) !important;
+  background-color: var(--shiki-dark-bg, inherit) !important;
+  font-style: var(--shiki-dark-font-style, inherit);
+  font-weight: var(--shiki-dark-font-weight, inherit);
+  text-decoration: var(--shiki-dark-text-decoration, inherit);
+}
+
+body[data-template="dark"] pre.astro-code {
+  border-color: var(--code-border) !important;
+}
+
+/* System dark mode (paper template) → also use dark Shiki */
+@media (prefers-color-scheme: dark) {
+  body:not([data-template="clean"]):not([data-template="dark"]) .astro-code,
+  body:not([data-template="clean"]):not([data-template="dark"]) .astro-code span {
+    color: var(--shiki-dark, inherit) !important;
+    background-color: var(--shiki-dark-bg, inherit) !important;
+    font-style: var(--shiki-dark-font-style, inherit);
+    font-weight: var(--shiki-dark-font-weight, inherit);
+    text-decoration: var(--shiki-dark-text-decoration, inherit);
+  }
+
+  body:not([data-template="clean"]):not([data-template="dark"]) pre.astro-code {
+    border-color: var(--code-border) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════ */
 @media (max-width: 720px) {

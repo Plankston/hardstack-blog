@@ -54,14 +54,14 @@ const templateLabel: Record<string, string> = {
         <!-- Article header: full-bleed with theme-aware background -->
         <div class="bg-[var(--color-paper-light)]">
           <div class="section-inner">
-            <header class="mb-10 max-w-3xl">
+            <header class="mb-10">
               <!-- Post meta -->
               <div class="post-meta mb-3 flex flex-wrap items-center gap-x-2">
                 <span>{t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} /></span>
                 {updatedDate && (
                   <span>· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
                 )}
-                {category && <span class="inline-flex items-center rounded bg-[var(--color-accent)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-accent)]">· {category}</span>}
+                {category && <span class="inline-flex items-center rounded bg-[var(--color-accent)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-accent)]">{category}</span>}
                 {difficulty && <span class="text-[var(--color-ink-faint)]">[{difficulty}]</span>}
                 {timeToRead && <span>· {timeToRead} {t('blog.minRead')}</span>}
                 <!-- Template badge -->
@@ -71,8 +71,8 @@ const templateLabel: Record<string, string> = {
                   </span>
                 )}
               </div>
-              <h1 class="font-serif text-3xl leading-tight md:text-4xl">{title}</h1>
-              <p class="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              <h1 class="font-serif text-3xl leading-tight md:text-4xl max-w-4xl">{title}</h1>
+              <p class="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
                 {description}
               </p>
             </header>
@@ -88,13 +88,15 @@ const templateLabel: Record<string, string> = {
           </div>
 
           <!-- Template metadata footer -->
-          <div class="mt-12 text-center text-xs text-[var(--color-ink-faint)]">
+          <div style="max-width:var(--prose-max-w);margin:2rem auto 0;text-align:center;font-size:0.75rem;color:var(--text-faint)">
             {locale === 'zh-CN'
               ? `阅读模式: ${templateLabel[template]}`
               : `Reading mode: ${templateLabel[template]}`}
           </div>
 
-          <Giscus locale={locale} />
+          <div style="max-width:var(--prose-max-w);margin:0 auto">
+            <Giscus locale={locale} />
+          </div>
         </div>
       </article>
     </main>

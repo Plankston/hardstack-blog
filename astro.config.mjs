@@ -51,7 +51,10 @@ export default defineConfig({
 
   markdown: {
     shikiConfig: {
-      theme: 'github-light-default',
+      themes: {
+        light: 'github-light-default',
+        dark: 'github-dark-default',
+      },
     },
     rehypePlugins: [rehypeLazyLoadImages],
   },
