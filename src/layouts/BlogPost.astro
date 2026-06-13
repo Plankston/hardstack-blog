@@ -31,23 +31,28 @@ const t = useTranslations(locale);
 ---
 
 <!doctype html>
-<html lang={t('site.lang')}>
+<html lang={t('site.lang')} dir="ltr">
   <head>
-    <BaseHead title={title} description={description} />
+    <BaseHead title={title} description={description} locale={locale} />
   </head>
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+      {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
+    </a>
     <Header locale={locale} />
-    <main>
+    <main id="main-content">
       <article>
         <!-- Article header: full-bleed with distinct background -->
         <div class="bg-[var(--color-paper-light)]">
           <div class="section-inner">
             <header class="mb-10">
               <div class="post-meta mb-3">
-                {t('blog.postedOn')} <FormattedDate date={pubDate} />
+                {t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} />
                 {updatedDate && (
-                  <span class="ml-2">· {t('blog.updatedOn')} <FormattedDate date={updatedDate} /></span>
+                  <span class="ml-2">· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
                 )}
+                {category && <span class="ml-2">· {category}</span>}
+                {difficulty && <span class="ml-2 text-[var(--color-ink-faint)]">[{difficulty}]</span>}
                 {timeToRead && <span class="ml-2">· {timeToRead} {t('blog.minRead')}</span>}
               </div>
               <h1 class="font-serif text-3xl leading-tight md:text-4xl">{title}</h1>

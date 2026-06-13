@@ -23,7 +23,7 @@ const t = useTranslations(currentLocale);
         <HeaderLink href={`/${currentLocale}/about`} locale={currentLocale}>{t('nav.about')}</HeaderLink>
       </div>
 
-      <Search />
+      <Search locale={currentLocale} />
 
       <div class="flex items-center gap-3 border-l border-[var(--color-border)] pl-5">
         <!-- Locale switcher: dropdown -->
@@ -31,6 +31,8 @@ const t = useTranslations(currentLocale);
           <button
             id="locale-toggle"
             class="flex items-center gap-1 rounded border border-[var(--color-border)] px-2 py-1 text-xs font-medium uppercase tracking-wider text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+            aria-expanded="false"
+            aria-controls="locale-menu"
           >
             {LOCALES[currentLocale]}
             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -40,11 +42,13 @@ const t = useTranslations(currentLocale);
 
           <div
             id="locale-menu"
+            role="menu"
             class="absolute right-0 top-full z-50 mt-1 hidden min-w-[110px] rounded border border-[var(--color-border)] bg-[var(--color-paper)] py-1 shadow-lg"
           >
             {Object.entries(LOCALES).map(([code, label]) => (
               <a
                 href={Astro.url.pathname.replace(/^\/(en|zh-CN)/, `/${code}`)}
+                role="menuitem"
                 class:list={[
                   'block px-3 py-1.5 text-xs font-medium transition-colors no-underline',
                   code === currentLocale
@@ -74,12 +78,14 @@ const t = useTranslations(currentLocale);
   if (toggle && menu) {
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      menu.classList.toggle('hidden');
+      const isHidden = menu.classList.toggle('hidden');
+      toggle.setAttribute('aria-expanded', String(!isHidden));
     });
 
     document.addEventListener('click', (e) => {
       if (switcher && !switcher.contains(e.target)) {
         menu.classList.add('hidden');
+        toggle.setAttribute('aria-expanded', 'false');
       }
     });
   }

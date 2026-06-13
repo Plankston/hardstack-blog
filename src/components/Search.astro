@@ -1,11 +1,19 @@
 ---
+interface Props {
+  locale?: string;
+}
+
+const { locale = 'en' } = Astro.props;
+const placeholder = locale === 'zh-CN' ? '搜索文章...' : 'Search articles...';
+const hintText = locale === 'zh-CN' ? '输入关键词搜索...' : 'Type to search...';
+const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results found.';
 ---
 
 <div id="search" class="relative">
   <button
     id="search-toggle"
     class="cursor-pointer border-0 bg-transparent p-1 text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors"
-    aria-label="Search"
+    aria-label={locale === 'zh-CN' ? '搜索' : 'Search'}
     type="button"
   >
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -23,14 +31,14 @@
       <input
         id="search-input"
         type="text"
-        placeholder="Search articles..."
+        placeholder={placeholder}
         class="w-full border-0 bg-transparent text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)]"
         autofocus
       />
       <button id="search-close" class="cursor-pointer border-0 bg-transparent text-sm text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]" type="button">ESC</button>
     </div>
     <div id="search-results" class="mt-4 max-h-60 space-y-2 overflow-y-auto">
-      <p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>
+      <p class="text-sm text-[var(--color-ink-faint)]">{hintText}</p>
     </div>
   </div>
 </div>

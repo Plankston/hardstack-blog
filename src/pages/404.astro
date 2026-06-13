@@ -1,0 +1,30 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title="404 — HardStack" description="Page not found" />
+  </head>
+  <body>
+    <Header locale="en" />
+    <main>
+      <div class="section-inner text-center" style="padding-top: 6rem; padding-bottom: 6rem;">
+        <h1 class="text-6xl font-serif font-bold text-[var(--color-accent)]">404</h1>
+        <p class="mt-4 text-lg text-[var(--color-ink-muted)]">Page not found · 页面未找到</p>
+        <div class="mt-8 flex justify-center gap-4">
+          <a href="/en/" class="rounded border border-[var(--color-border)] px-5 py-2 text-sm font-medium text-[var(--color-ink)] no-underline transition-colors hover:bg-[var(--color-paper-light)]">
+            ← English Home
+          </a>
+          <a href="/zh-CN/" class="rounded border border-[var(--color-border)] px-5 py-2 text-sm font-medium text-[var(--color-ink)] no-underline transition-colors hover:bg-[var(--color-paper-light)]">
+            ← 中文首页
+          </a>
+        </div>
+      </div>
+    </main>
+    <Footer locale="en" />
+  </body>
+</html>

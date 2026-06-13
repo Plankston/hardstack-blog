@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://hardstack.pages.dev',
+  trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
 
   fonts: [

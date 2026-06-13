@@ -9,8 +9,3 @@ export function getLocaleFromParams(locale?: string): Locale {
 export function getSlug(post: { id: string; data: { groupKey?: string } }): string {
   return post.data.groupKey || post.id.replace(/-(en_US|zh_CN)$/, '');
 }
-
-export function getLocalizedUrl(path: string, locale: Locale): string {
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return locale === 'en' ? `/en${cleanPath}` : `/${locale}${cleanPath}`;
-}

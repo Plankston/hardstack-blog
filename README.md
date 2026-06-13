@@ -4,7 +4,7 @@
 
 **HardStack** is a bilingual (English / 中文) technical blog focused on **open-source, self-hosted, and AI tools**. Each post is a deep-dive installation guide with real-world troubleshooting, comparisons, and logs — not just a copy-paste of the README.
 
-[![Deploy to Cloudflare Pages](https://github.com/hardstack/blog/actions/workflows/deploy.yml/badge.svg)](https://github.com/hardstack/blog/actions/workflows/deploy.yml)
+[![Deploy to Cloudflare Pages](https://github.com/Plankston/hardstack-blog/actions/workflows/deploy.yml/badge.svg)](https://github.com/Plankston/hardstack-blog/actions/workflows/deploy.yml)
 
 ## Features
 

@@ -15,13 +15,16 @@ const t = useTranslations(currentLocale);
 ---
 
 <!doctype html>
-<html lang={t('site.lang')}>
+<html lang={t('site.lang')} dir="ltr">
   <head>
-    <BaseHead title={`${t('about.title')} — ${t('site.title')}`} description={t('about.description')} />
+    <BaseHead title={`${t('about.title')} — ${t('site.title')}`} description={t('about.description')} locale={currentLocale} />
   </head>
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+      {currentLocale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
+    </a>
     <Header locale={currentLocale} />
-    <main>
+    <main id="main-content">
       <article>
         <header class="mb-10">
           <p class="post-meta mb-2">{t('nav.about')}</p>

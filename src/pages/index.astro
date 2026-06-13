@@ -1,22 +1,4 @@
 ---
 // Root index — redirect to English
-const lang = 'en';
-const path = '/' + lang + '/';
-const url = new URL(path, Astro.url);
-const href = url.pathname;
+return Astro.redirect('/en/');
 ---
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="refresh" content={`0; url=${href}`} />
-    <link rel="canonical" href={href} />
-    <title>HardStack</title>
-  </head>
-  <body>
-    <p>
-      <a href={href}>HardStack</a>
-    </p>
-  </body>
-</html>

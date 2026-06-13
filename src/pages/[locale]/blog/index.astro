@@ -21,13 +21,16 @@ const posts = (await getCollection('blog'))
 ---
 
 <!doctype html>
-<html lang={t('site.lang')}>
+<html lang={t('site.lang')} dir="ltr">
   <head>
-    <BaseHead title={`${t('blog.allPosts')} — ${t('site.title')}`} description={t('site.description')} />
+    <BaseHead title={`${t('blog.allPosts')} — ${t('site.title')}`} description={t('site.description')} locale={currentLocale} />
   </head>
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--color-paper)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-ink)] focus:shadow-lg focus:outline-none">
+      {currentLocale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
+    </a>
     <Header locale={currentLocale} />
-    <main>
+    <main id="main-content">
       <!-- Archive header: full-bleed -->
       <div class="bg-[var(--color-paper-light)]">
         <div class="section-inner">
@@ -53,7 +56,16 @@ const posts = (await getCollection('blog'))
                   </span>
                   <div class="min-w-0 flex-1">
                     <div class="post-meta mb-1">
-                      <FormattedDate date={post.data.pubDate} />
+                      <FormattedDate date={post.data.pubDate} locale={currentLocale} />
+                      {post.data.category && (
+                        <span class="ml-2 text-[var(--color-ink-muted)]">· {post.data.category}</span>
+                      )}
+                      {post.data.difficulty && (
+                        <span class="ml-2 text-[var(--color-ink-faint)]">[{post.data.difficulty}]</span>
+                      )}
+                      {post.data.timeToRead && (
+                        <span class="ml-2 text-[var(--color-ink-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
+                      )}
                     </div>
                     <h2 class="font-serif text-lg font-bold leading-snug text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-light)]">
                       {post.data.title}
