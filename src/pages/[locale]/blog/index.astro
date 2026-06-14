@@ -48,7 +48,6 @@ function categoryLabel(cat: string | undefined): string {
       <!-- Archive header -->
       <section class="section-inner">
         <div class="mx-auto" style="max-width:960px">
-          <p class="post-meta mb-2">{t('blog.archive')}</p>
           <h1 class="font-['Playfair_Display'] text-3xl font-bold text-[var(--text-heading)]">{t('blog.allPosts')}</h1>
           <p class="mt-2 text-sm text-[var(--text-muted)]">
             {currentLocale === 'zh-CN' ? `共 ${posts.length} 篇文章` : `${posts.length} articles total`}
@@ -60,13 +59,13 @@ function categoryLabel(cat: string | undefined): string {
       <section class="section-inner pt-0">
         <div class="mx-auto" style="max-width:960px">
           {posts.length > 0 ? (
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-3" id="archive-list">
               {posts.map((post, i) => (
                 <a
                   href={new URL(`/${currentLocale}/blog/${getSlug(post)}/`, Astro.site).pathname}
-                  class="article-card no-underline"
+                  class="article-card no-underline reveal"
+                  style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
                 >
-                  <span class="article-card-number">{String(posts.length - i).padStart(2, '0')}</span>
                   <div class="article-card-content">
                     <div class="mb-1.5 flex flex-wrap items-center gap-2">
                       <span class="post-meta text-[10px]">
@@ -105,3 +104,16 @@ function categoryLabel(cat: string | undefined): string {
     <Footer locale={currentLocale} />
   </body>
 </html>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    }
+  }, { rootMargin: '40px' });
+
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+</script>
