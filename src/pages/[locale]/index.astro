@@ -131,6 +131,10 @@ function categoryLabel(cat: string | undefined): string {
                       {post.data.description}
                     </p>
                   </div>
+                  <div class="article-card-views" data-slug={getSlug(post)}>
+                    <span class="views-emoji">👁</span>
+                    <span class="views-count">-</span>
+                  </div>
                 </a>
               ))}
             </div>
@@ -163,4 +167,26 @@ function categoryLabel(cat: string | undefined): string {
   }, { rootMargin: '40px' });
 
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+  // Load view counts for all articles
+  document.addEventListener('DOMContentLoaded', async () => {
+    const cards = document.querySelectorAll('.article-card-views');
+    const slugs = Array.from(cards).map(el => el.getAttribute('data-slug')).filter(Boolean);
+
+    if (slugs.length === 0) return;
+
+    try {
+      const res = await fetch(`/api/views?slugs=${slugs.join(',')}`);
+      const { views } = await res.json();
+
+      cards.forEach(el => {
+        const slug = el.getAttribute('data-slug');
+        const count = views[slug] || 0;
+        const countEl = el.querySelector('.views-count');
+        if (countEl) countEl.textContent = count.toString();
+      });
+    } catch (e) {
+      console.error('Failed to load views:', e);
+    }
+  });
 </script>

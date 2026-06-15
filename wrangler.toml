@@ -1,0 +1,7 @@
+name = "hardstack-blog"
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blog-views"
+database_id = "512fa19f-28e8-4b01-8d63-2c5e5b9e94a6"

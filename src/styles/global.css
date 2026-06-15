@@ -290,6 +290,27 @@ hr {
   min-width: 0;
 }
 
+/* Article Views Badge */
+.article-card-views {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.views-emoji {
+  font-size: 0.85rem;
+}
+
+.views-count {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
 .article-card-category {
   display: inline-flex;
   align-items: center;
@@ -546,6 +567,10 @@ body[data-template="dark"] .article-card {
 body[data-template="dark"] .article-card:hover {
   border-color: #22c55e;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body[data-template="dark"] .article-card-views {
+  color: #64748b;
 }
 
 body[data-template="dark"] .subscribe-input {
