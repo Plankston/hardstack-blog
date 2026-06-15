@@ -237,7 +237,8 @@ hr {
 }
 
 .comment-section {
-  max-width: 100%;
+  max-width: var(--prose-max-w);
+  margin: 0 auto;
   padding: 2rem 0;
 }
 .hero-heading {
