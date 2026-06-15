@@ -20,7 +20,7 @@ function rehypeLazyLoadImages() {
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://hardstack.pages.dev',
+  site: 'https://hardstack-blog.pages.dev',
   trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
 
