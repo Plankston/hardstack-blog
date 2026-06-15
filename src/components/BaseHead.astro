@@ -19,7 +19,12 @@ const localePrefix = locale === 'en' ? 'en' : 'zh-CN';
 // Build hreflang alternate URLs
 function hreflangUrl(lang: string): string {
   const path = Astro.url.pathname;
-  const cleanPath = path.replace(/^\/(en|zh-CN)/, '');
+  // Remove locale prefix from current path
+  const cleanPath = path.replace(/^\/(en|zh-CN)/, '') || '/';
+  // For English, use root path; for Chinese, add /zh-CN prefix
+  if (lang === 'en') {
+    return `${SITE_URL}${cleanPath}`;
+  }
   return `${SITE_URL}/${lang}${cleanPath}`;
 }
 ---
@@ -74,7 +79,7 @@ function hreflangUrl(lang: string): string {
 <script async src="https://plausible.io/js/pa-v9hU51oLTZH6JeoU2lfou.js"></script>
 <script>
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init({url: 'https://hardstack-blog.pages.dev'})
+  plausible.init()
 </script>
 
 <!-- Content Security Policy -->

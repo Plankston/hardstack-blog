@@ -1,0 +1,66 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { useTranslations } from '../i18n/ui';
+
+const currentLocale = 'en';
+const t = useTranslations(currentLocale);
+---
+
+<!doctype html>
+<html lang={t('site.lang')} dir="ltr">
+  <head>
+    <BaseHead title={`${t('about.title')} — ${t('site.title')}`} description={t('about.description')} locale={currentLocale} />
+  </head>
+  <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
+      Skip to content
+    </a>
+    <Header locale={currentLocale} />
+    <main id="main-content">
+      <article>
+        <header class="mb-10">
+          <h1 class="font-serif text-3xl">{t('about.title')}</h1>
+        </header>
+        <hr class="mb-10" />
+        <div class="prose">
+          <p class="text-lg leading-relaxed text-[var(--color-ink-muted)]">
+            <strong class="text-[var(--color-ink)]">HardStack</strong> is a technical blog focused
+            on open-source, self-hosted, and AI tool projects.
+          </p>
+          <p>
+            Every open-source project deserves a proper setup. No armchair reviews here — only real
+            installation logs, annotated error screenshots, and honest comparisons.
+          </p>
+
+          <h2>Our Promise</h2>
+          <ol>
+            <li><strong>Hands-on verified</strong> — not armchair reviews</li>
+            <li><strong>Real error screenshots</strong> — not flawless tutorials</li>
+            <li><strong>Follow-up after 3 months</strong> — not publish-and-forget</li>
+            <li><strong>Honest comparisons</strong> — "I recommend X over Y because…"</li>
+            <li><strong>SEO-friendly</strong> — indexed and searchable</li>
+          </ol>
+
+          <h2>Content Categories</h2>
+          <ul>
+            <li>Installation Guides (50%) — 5k–10k word deep dives</li>
+            <li>Comparisons (20%) — high-search-volume X vs Y</li>
+            <li>Troubleshooting (15%) — real errors with solutions</li>
+            <li>News & Analysis (10%) — stories behind the projects</li>
+            <li>Best-of Lists (5%) — annual self-hosted awards</li>
+          </ul>
+
+          <h2>About the Author</h2>
+          <p>
+            A full-stack developer who loves open-source, self-hosting, and AI tools. Believes
+            that good content deserves to be taken seriously — a single well-written guide can
+            save someone 10 hours.
+          </p>
+        </div>
+      </article>
+    </main>
+    <Footer locale={currentLocale} />
+  </body>
+</html>

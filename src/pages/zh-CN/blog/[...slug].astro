@@ -1,8 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BlogPost from '../../../layouts/BlogPost.astro';
-import { LOCALES } from '../../../i18n/ui';
-import { getLocaleFromParams, getSlug } from '../../../i18n/utils';
+import { getSlug } from '../../../i18n/utils';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -10,10 +9,10 @@ export async function getStaticPaths() {
 
   for (const post of posts) {
     const locale = post.data.postLang || 'en';
-    if (!(locale in LOCALES)) continue;
+    if (locale !== 'zh-CN') continue;
     const slug = getSlug(post);
     paths.push({
-      params: { locale, slug },
+      params: { locale: 'zh-CN', slug },
       props: { post },
     });
   }
@@ -25,8 +24,7 @@ type Props = {
   post: any;
 };
 
-const { locale } = Astro.params;
-const currentLocale = getLocaleFromParams(locale);
+const currentLocale = 'zh-CN';
 const post = Astro.props.post;
 const { Content } = await render(post);
 const slug = getSlug(post);

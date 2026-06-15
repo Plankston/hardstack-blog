@@ -9,6 +9,12 @@ const { locale } = Astro.props;
 const currentLocale = locale as Locale;
 const t = useTranslations(currentLocale);
 const today = new Date();
+
+// Generate correct paths based on locale
+function getLocalePath(path: string): string {
+  if (currentLocale === 'en') return path;
+  return `/${currentLocale}${path}`;
+}
 ---
 
 <footer class="footer-v2">
@@ -23,9 +29,9 @@ const today = new Date();
     <div>
       <div class="footer-v2-heading">{currentLocale === 'zh-CN' ? '导航' : 'Navigate'}</div>
       <ul class="footer-v2-links">
-        <li><a href={`/${currentLocale}/`}>{currentLocale === 'zh-CN' ? '首页' : 'Home'}</a></li>
-        <li><a href={`/${currentLocale}/blog/`}>{t('nav.blog')}</a></li>
-        <li><a href={`/${currentLocale}/about/`}>{t('nav.about')}</a></li>
+        <li><a href={getLocalePath('/')}>{currentLocale === 'zh-CN' ? '首页' : 'Home'}</a></li>
+        <li><a href={getLocalePath('/blog/')}>{t('nav.blog')}</a></li>
+        <li><a href={getLocalePath('/about/')}>{t('nav.about')}</a></li>
       </ul>
     </div>
 
@@ -34,7 +40,7 @@ const today = new Date();
       <div class="footer-v2-heading">{currentLocale === 'zh-CN' ? '联系' : 'Connect'}</div>
       <ul class="footer-v2-links">
         <li><a href="https://github.com/Plankston" target="_blank">GitHub</a></li>
-        <li><a href={`/${currentLocale === 'zh-CN' ? 'zh-CN' : 'en'}/rss.xml`}>RSS</a></li>
+        <li><a href={getLocalePath('/rss.xml')}>RSS</a></li>
         <li><a href="mailto:meng683185@gmail.com">Email</a></li>
       </ul>
     </div>
