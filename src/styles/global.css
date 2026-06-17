@@ -241,6 +241,13 @@ hr {
   margin: 0 auto;
   padding: 2rem 0;
 }
+
+.giscus-wrapper {
+  width: 100%;
+}
+.giscus-wrapper iframe {
+  width: 100% !important;
+}
 .hero-heading {
   font-family: var(--font-editorial-heading);
   font-size: clamp(2.2rem, 5.5vw, 3.5rem);
