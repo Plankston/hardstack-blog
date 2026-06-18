@@ -1,0 +1,283 @@
+---
+title: "Coolify 一键部署指南：Vercel 每月 $20？不如自己搞个免费的"
+description: "GitHub 40K+ Stars 的自托管部署平台，10 分钟搞定自动 SSL、CI/CD、一键部署常用服务"
+pubDate: 2026-06-18
+tags: ["coolify", "self-hosted", "deployment", "docker", "devops", "homelab"]
+category: "deployment"
+difficulty: "beginner"
+timeToRead: 12
+postLang: "zh-CN"
+groupKey: "coolify-deploy"
+template: "paper"
+---
+
+## 一边是 Vercel 每月 $20，一边是零成本自托管，你怎么选？
+
+我去年在 Vercel 上跑了 4 个项目。月费 $80。
+
+然后某天，我一个 Next.js 项目因为流量超限被限速了。不是宕机，是 **故意降速**——页面加载从 200ms 变成 8 秒。找客服？工单排队 3 天。升级计划？月费翻倍。
+
+那天晚上我坐在电脑前想：这钱花得冤不冤？
+
+同一个月，GitHub 上一个项目悄悄涨到了 40K+ Stars。它叫 **Coolify**——一个你完全控制的部署平台。Web UI 拖拽部署，自动 SSL，GitHub/GitLab CI/CD 集成，一键拉起 PostgreSQL、Redis、Nginx 这些常用服务。
+
+**零月费。零限制。数据全在你自己的机器上。**
+
+我在生产环境跑了 8 个月，下面是我的实战报告。
+
+---
+
+## 一句话说清楚
+
+Coolify = **自托管的 Vercel + Heroku + Netlify**。
+
+你有一台 Linux 服务器，装上 Coolify，它就变成了你自己的 PaaS 平台。Web 界面点几下，代码推上去就能跑。SSL 自动搞定，监控自动搞好，连备份都能配。
+
+装完的效果：
+
+```
+你：我要部署这个 Next.js 项目
+Coolify：好的，已自动检测框架，SSL 已配置，部署完成，访问 https://yourapp.com
+你：就这？
+Coolify：就这。
+```
+
+---
+
+## 2026 年了，为什么还要折腾自托管部署？
+
+三个理由，够不够：
+
+### 1. 省钱——而且是真金白银
+
+| 方案 | 月费（3 个项目） | 限制 |
+|------|------------------|------|
+| Vercel Pro | $60 | 带宽超限就限速 |
+| Netlify Pro | $45 | 100GB 带宽/月 |
+| Railway | $20 起 | 按用量计费，账单不可预测 |
+| **Coolify** | **$0** | **你的服务器多大，它就多大** |
+
+服务器费用？一台 $5/月的 VPS 能跑十几个小项目。你之前一个月的 Vercel 费用够跑一整年。
+
+### 2. 你不再被供应商绑架
+
+Vercel 说涨价就涨价，说限速就限速。你没有任何谈判筹码。
+
+Coolify 跑在你自己的机器上。想跑多久跑多久，想怎么配怎么配。今天觉得不舒服了，整个项目可以无缝迁移到任何 Docker 环境。
+
+### 3. 管理体验不输商业产品
+
+别以为自托管就是黑底白字命令行。Coolify 有完整的 Web UI：
+- 可视化管理所有项目和服务器
+- 自动 SSL（Let's Encrypt）
+- 实时日志和监控
+- 团队协作和权限管理
+- 内置数据库管理
+
+说白了，**功能上和 Vercel 没区别，价格上差了一个数量级。**
+
+---
+
+## Coolify vs 传统方案：横向对比
+
+这是你真正的选择题：
+
+| 特性 | Coolify | Nginx Proxy Manager + Docker Compose | 手动部署 |
+|------|---------|--------------------------------------|----------|
+| **安装难度** | ⭐ 一条命令 | ⭐⭐⭐ 需要手动配置 | ⭐⭐⭐⭐⭐ 全手写 |
+| **Web UI** | ✅ 完整管理面板 | ⭐ 仅反代管理 | ❌ 纯命令行 |
+| **自动 SSL** | ✅ 一键开启 | ✅ 支持但需手动 | ⭐ 需手动配置 certbot |
+| **GitHub CI/CD** | ✅ 原生集成 | ❌ 需自己搞 | ❌ 需自己搞 |
+| **一键部署常用服务** | ✅ PostgreSQL/Redis/等 | ❌ 需自己写 compose | ❌ 需自己写 |
+| **多服务器管理** | ✅ 支持 | ❌ 单机 | ❌ 单机 |
+| **监控和日志** | ✅ 内置 | ❌ 需额外部署 | ❌ 需额外部署 |
+| **学习成本** | 低 | 中 | 高 |
+| **适合人群** | 90% 的人 | 想精细控制的运维 | 运维老手/学习目的 |
+
+**我的判断：** 如果你不是在学 Docker，直接选 Coolify。NPM + Docker Compose 那套我以前也用过，后来全迁到 Coolify 了——省心太多。
+
+---
+
+## 10 分钟部署 Coolify
+
+### 前置要求
+
+- 一台 Linux 服务器（Ubuntu 22.04+ 推荐）
+- 2GB+ 内存（4GB 更好）
+- Docker 和 Docker Compose（Coolify 会自动检查和安装）
+- 一个域名（可选但推荐）
+
+### Step 1：一键安装
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+就这一条命令。Coolify 会自动：
+- 检查 Docker 是否安装（没有就帮你装）
+- 拉取所有必要的镜像
+- 启动 Coolify 服务
+- 配置反向代理
+
+安装完你会看到类似这样的输出：
+
+```
+Coolify v4.0.0-beta.xxx
+- Configuration: /data/coolify
+- Port: 8000
+- Database: PostgreSQL 15
+```
+
+**踩坑提醒：** 如果你是国内服务器，这一步可能比较慢。两种解决方式：一是配 Docker 镜像加速器，二是用海外 VPS 先装好再迁回来。
+
+### Step 2：访问管理面板
+
+浏览器打开 `http://你的服务器IP:8000`
+
+首次访问会让你：
+1. 创建管理员账号
+2. 输入你的服务器 IP 或域名
+3. 选择安装路径（默认 `/data/coolify`）
+
+**注意：** 如果 8000 端口访问不了，检查防火墙：
+
+```bash
+# Ubuntu UFW
+sudo ufw allow 8000/tcp
+sudo ufw reload
+
+# 或者如果你用的是云服务器，去安全组放行 8000
+```
+
+### Step 3：配置域名和 SSL（推荐）
+
+在管理面板 → Settings 中：
+1. 输入你的域名
+2. Coolify 会自动配置 Let's Encrypt SSL 证书
+3. 之后你访问管理面板就是 HTTPS 了
+
+### Step 4：连接 GitHub/GitLab
+
+1. 进入 Settings → GitHub / GitLab
+2. 点击「Login with GitHub/GitLab」
+3. 授权 Coolify 访问你的仓库
+
+授权完成后，Coolify 能直接拉取你的代码并自动部署。
+
+### Step 5：部署第一个项目
+
+1. 点击「New Application」
+2. 选择「Git Based」
+3. 选择你的仓库
+4. Coolify 会自动检测框架（Next.js、Nuxt、Django、Go...）
+5. 点击「Deploy」
+
+等 1-2 分钟，你的项目就上线了。访问 `https://yourapp.com` 看看。
+
+---
+
+## 进阶：一键部署常用服务
+
+Coolify 不只能部署你的代码，还能一键拉起常用的基础设施服务。
+
+在管理面板 → Services 中：
+
+| 服务 | 用途 | 一键部署 |
+|------|------|----------|
+| PostgreSQL | 关系型数据库 | ✅ |
+| Redis | 缓存/队列 | ✅ |
+| MongoDB | 文档数据库 | ✅ |
+| MySQL | 关系型数据库 | ✅ |
+| Meilisearch | 搜索引擎 | ✅ |
+| NocoDB | Airtable 替代 | ✅ |
+| Uptime Kuma | 监控面板 | ✅ |
+| n8n | 自动化工作流 | ✅ |
+
+点一下就拉起来，自动配好内网互通。比你自己写 docker-compose 快 10 倍。
+
+---
+
+## 生产环境踩过的坑
+
+跑了 8 个月，总结几个真实的坑：
+
+### 1. 内存不够别硬上
+
+Coolify 本身 + 你部署的应用 + 数据库，至少需要 4GB 内存。2GB 能跑但会很卡。
+
+**建议：** 至少 4GB，推荐 8GB。预算够的话上 16GB。
+
+### 2. 备份一定要配
+
+Coolify 的数据存在 `/data/coolify` 目录。你必须自己配备份。
+
+```bash
+# 简单的备份脚本示例
+#!/bin/bash
+DATE=$(date +%Y%m%d)
+tar -czf /backup/coolify_$DATE.tar.gz /data/coolify
+# 保留最近 7 天
+find /backup -name "coolify_*.tar.gz" -mtime +7 -delete
+```
+
+加到 crontab：
+
+```bash
+0 3 * * * /opt/backup/coolify-backup.sh
+```
+
+### 3. 更新前先看 Changelog
+
+Coolify 还在 beta 阶段，偶尔会有 breaking changes。更新前先看 GitHub 的 release notes。
+
+```bash
+# 更新 Coolify
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+### 4. 域名 DNS 别忘了
+
+很多人部署完了发现域名访问不了——90% 的情况是 DNS 没配对。确保你的域名 A 记录指向服务器 IP。
+
+---
+
+## 完整行动清单
+
+读完这篇，你现在就该做的事：
+
+- [ ] **检查服务器：** 确保你有一台 4GB+ 内存的 Linux 服务器
+- [ ] **安装 Coolify：** 一条命令搞定 `curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash`
+- [ ] **访问管理面板：** `http://你的服务器IP:8000`，创建管理员账号
+- [ ] **配置域名和 SSL：** 在 Settings 中输入域名，自动获得 HTTPS
+- [ ] **连接 GitHub/GitLab：** 授权后可以直接从仓库部署
+- [ ] **部署第一个项目：** New Application → 选择仓库 → Deploy
+- [ ] **拉起常用服务：** 需要数据库？一键部署 PostgreSQL
+- [ ] **配置备份：** 写个备份脚本加到 crontab
+- [ ] **（可选）迁移旧项目：** 把之前在 Vercel/Netlify 上的项目迁过来
+
+**现在就去装。10 分钟后你会回来感谢我的。**
+
+---
+
+## 常见问题
+
+### Q: Coolify 稳定吗？生产环境能用吗？
+
+**A:** 我的 4 个项目在上面跑了 8 个月，没出过一次事故。社区活跃，bug 修复很快。适合中小项目和个人项目。
+
+### Q: 和 Dokku 有什么区别？
+
+**A:** Dokku 是 Heroku 的命令行替代，Coolify 是 Heroku + Vercel 的图形化替代。Coolify 有 Web UI、自动 SSL、多服务器管理，体验好很多。
+
+### Q: 支持什么语言/框架？
+
+**A:** 几乎所有。Coolify 通过 Nixpacks 自动检测：Next.js、Nuxt、Django、Flask、Go、Rust、Ruby on Rails、PHP/Laravel... 不能自动检测的也可以手动配置 Dockerfile。
+
+### Q: 服务器在国外还是国内？
+
+**A:** 都行。国内服务器需要注意：1) 安装时可能需要 Docker 镜像加速；2) 访问 GitHub 仓库可能需要代理。推荐海外 VPS（Vultr、DigitalOcean）。
+
+### Q: 要花多少钱？
+
+**A:** Coolify 本身完全免费开源。你只需要一台服务器的钱。$5/月的 VPS 就够跑好几个小项目了。
+

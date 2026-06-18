@@ -1,0 +1,275 @@
+---
+title: "Coolify Deployment Guide: Self-Hosted Vercel/Heroku Alternative"
+description: "Deploy your own PaaS with automatic SSL, GitHub CI/CD, and one-click services in 10 minutes"
+pubDate: 2026-06-18
+tags: ["coolify", "self-hosted", "deployment", "docker", "devops", "homelab"]
+category: "deployment"
+difficulty: "beginner"
+timeToRead: 12
+postLang: "en"
+groupKey: "coolify-deploy"
+template: "paper"
+---
+
+## Table of Contents
+- [Why Pay for Vercel...](#why-pay-for-vercel-when-you-can-self-host-for-free)
+- [What Is Coolify?](#what-is-coolify)
+- [Why Self-Host...](#why-self-host-your-deployment-platform-in-2026)
+- [Coolify vs Traditional...](#coolify-vs-traditional-approaches)
+- [Installation](#installation-10-minutes)
+- [One-Click Services](#one-click-service-deployment)
+- [Production Considerations](#production-considerations)
+- [Action Checklist](#action-checklist)
+- [FAQ](#faq)
+
+## Why Pay for Vercel When You Can Self-Host for Free?
+
+Vercel charges $20/month for the Pro plan. Netlify is $19/month. Railway starts at $20/month. For a solo developer with multiple projects, the monthly hosting bill adds up fast.
+
+Coolify offers a different approach: a fully self-hosted Platform-as-a-Service (PaaS) that runs on your own server. It provides a web-based UI for managing deployments, automatic SSL certificates, GitHub/GitLab CI/CD integration, and one-click deployment of common services like PostgreSQL, Redis, and Nginx.
+
+The project has over [57,000 GitHub Stars](https://github.com/coollabsio/coolify) as of 2026 and has become a staple in the homelab community. This guide covers the complete setup process.
+
+---
+
+## What Is Coolify?
+
+Coolify is an open-source, self-hosted alternative to Vercel, Heroku, and Netlify. It provides:
+
+- **Web-based management UI** for deploying and managing applications
+- **Automatic SSL certificates** via Let's Encrypt
+- **Git integration** with GitHub and GitLab for CI/CD pipelines
+- **One-click deployment** of databases, caches, and other services
+- **Multi-server management** for scaling across multiple machines
+- **Built-in monitoring** with real-time logs and resource usage
+
+In practical terms, you install Coolify on a Linux server, and it transforms that server into your own PaaS platform. You push code, Coolify handles the rest.
+
+---
+
+## Why Self-Host Your Deployment Platform in 2026?
+
+Self-hosting your deployment platform is no longer a niche hobby — it is a practical financial and operational decision. Here are three reasons it makes sense right now:
+
+1. **Save money.** Managed PaaS platforms charge per-project or per-seat fees that scale with your portfolio. A single $5/month VPS running Coolify can host an unlimited number of projects, databases, and services. Most developers recoup the cost of one Vercel Pro subscription within the first month.
+
+2. **Avoid vendor lock-in.** When your deployments live on a managed platform, migrations are painful. Data egress fees, proprietary build pipelines, and platform-specific configurations create invisible switching costs. With a self-hosted PaaS, your infrastructure is portable — move it to any Linux server with a single `tar` backup and a fresh install.
+
+3. **Full control over the management experience.** A web-based UI for deploying, monitoring, and managing applications is not something you need to build yourself anymore. Coolify gives you a Heroku-like experience without surrendering control of your data or your infrastructure to a third party.
+
+### Price Comparison: Managed PaaS vs Coolify
+
+| Platform | Free Tier | Pro / Paid Plan | Per-Project Limits | Total for 4 Projects |
+|----------|-----------|-----------------|--------------------|----------------------|
+| **Vercel** | 100 GB bandwidth | $20/month (Pro) | 100 GB bandwidth per project | $80/month |
+| **Netlify** | 100 GB bandwidth | $19/month (Pro) | 300 build minutes / month | $76/month |
+| **Railway** | $5 usage credit | $20/month (Hobby) | Usage-based billing | $80+/month |
+| **Coolify** | N/A (self-hosted) | Free (open source) | Unlimited projects | **$5/month (VPS cost only)** |
+
+> I was paying $80/month on Vercel for four projects — a portfolio site, a blog, a small SaaS dashboard, and an API. After migrating to Coolify on a single Hetzner VPS, my hosting bill dropped to $5/month and I never worry about bandwidth limits again.
+
+---
+## Coolify vs Traditional Approaches
+
+Before diving into the installation, here is a comparison of the three common deployment strategies:
+
+| Feature | Coolify | Nginx Proxy Manager + Docker Compose | Manual Deployment |
+|---------|---------|--------------------------------------|-------------------|
+| **Setup complexity** | Low (one command) | Medium (manual configuration) | High (everything by hand) |
+| **Web UI** | Full management panel | Reverse proxy only | None (CLI only) |
+| **Automatic SSL** | One-click | Supported but manual | Manual certbot setup |
+| **GitHub CI/CD** | Native integration | Not included | Not included |
+| **One-click services** | PostgreSQL, Redis, etc. | Not included | Not included |
+| **Multi-server** | Supported | Single server | Single server |
+| **Monitoring** | Built-in | Requires additional tools | Requires additional tools |
+| **Learning curve** | Low | Medium | High |
+
+For most developers, Coolify provides the best balance of simplicity and functionality. The NPM + Docker Compose approach works but requires significantly more configuration and maintenance.
+
+---
+
+Before you begin, visit the [Coolify website](https://coolify.io) to check the latest version and system requirements.
+
+## Installation (10 Minutes)
+
+### Prerequisites
+
+- A Linux server (Ubuntu 22.04+ recommended)
+- 4GB+ RAM
+- Docker and Docker Compose (Coolify checks and installs automatically)
+- A domain name (optional but recommended)
+
+### Step 1: One-Command Install
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+This single command handles the entire installation:
+
+1. Checks if Docker is installed (installs it if missing)
+2. Pulls all required container images
+3. Starts the Coolify services
+4. Configures the reverse proxy
+
+The installation output will look similar to:
+
+```
+Coolify v4.x
+- Configuration: /data/coolify
+- Port: 8000
+- Database: PostgreSQL 15
+```
+
+**Note:** If you are on a server in mainland China, the installation may be slow due to Docker Hub access. Configure a Docker mirror or use a server with better connectivity.
+
+### Step 2: Access the Management Panel
+
+Open `http://your-server-ip:8000` in your browser.
+
+The first visit will prompt you to:
+
+1. Create an administrator account
+2. Enter your server IP or domain name
+3. Confirm the installation path (default: `/data/coolify`)
+
+**Troubleshooting:** If port 8000 is not accessible, check your firewall:
+
+```bash
+# Ubuntu UFW
+sudo ufw allow 8000/tcp
+sudo ufw reload
+```
+
+For cloud providers, ensure port 8000 is open in your security group settings.
+
+### Step 3: Configure Domain and SSL (Recommended)
+
+In the management panel under Settings:
+
+1. Enter your domain name
+2. Coolify automatically provisions a Let's Encrypt SSL certificate
+3. Your management panel will be accessible via HTTPS
+
+### Step 4: Connect GitHub/GitLab
+
+1. Navigate to Settings and select GitHub or GitLab
+2. Click "Login with GitHub/GitLab"
+3. Authorize Coolify to access your repositories
+
+Once connected, Coolify can pull your code directly and deploy automatically on push.
+
+### Step 5: Deploy Your First Application
+
+1. Click "New Application"
+2. Select "Git Based"
+3. Choose your repository
+4. Coolify auto-detects the framework (Next.js, Nuxt, Django, Go, etc.)
+5. Click "Deploy"
+
+Wait 1-2 minutes. Your application is live. Visit `https://yourapp.com` to verify.
+
+---
+
+## One-Click Service Deployment
+
+Beyond application code, Coolify can deploy common infrastructure services with a single click.
+
+Popular examples of 280+ supported services:
+
+| Service | Purpose |
+|---------|---------|
+| PostgreSQL | Relational database |
+| Redis | Caching and message queues |
+| MongoDB | Document database |
+| MySQL | Relational database |
+| Meilisearch | Full-text search engine |
+| NocoDB | Airtable alternative |
+| Uptime Kuma | Uptime monitoring |
+| n8n | Workflow automation |
+
+Each service is deployed with internal networking automatically configured. This eliminates the need to write custom Docker Compose files for common infrastructure.
+
+---
+
+## Production Considerations
+
+After running Coolify in production for several months, here are practical tips:
+
+### Resource Requirements
+
+Coolify itself, plus your deployed applications and databases, requires a minimum of 4GB RAM. While 2GB is technically possible, performance will suffer under load.
+
+**Recommendation:** 4GB minimum, 8GB preferred.
+
+### Backup Strategy
+
+Coolify stores its data in `/data/coolify`. You must configure backups separately:
+
+```bash
+#!/bin/bash
+DATE=$(date +%Y%m%d)
+tar -czf /backup/coolify_$DATE.tar.gz /data/coolify
+find /backup -name "coolify_*.tar.gz" -mtime +7 -delete
+```
+
+Add to crontab:
+
+```bash
+0 3 * * * /opt/backup/coolify-backup.sh
+```
+
+### Update Process
+
+Coolify is actively developed. Before updating, review the release notes on GitHub for any breaking changes.
+
+```bash
+# Update Coolify
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+### DNS Configuration
+
+If your domain is not resolving after deployment, verify that your DNS A record points to your server's IP address.
+
+---
+
+## Action Checklist
+
+After reading this guide, complete the following steps:
+
+- [ ] **Verify server requirements:** Ensure you have a Linux server with 4GB+ RAM
+- [ ] **Install Coolify:** Run the one-line installation script
+- [ ] **Access the panel:** Navigate to `http://your-server-ip:8000` and create an admin account
+- [ ] **Configure domain and SSL:** Enter your domain in Settings for automatic HTTPS
+- [ ] **Connect your Git provider:** Authorize GitHub or GitLab for repository access
+- [ ] **Deploy an application:** Create a new application from your repository
+- [ ] **Deploy infrastructure services:** Add databases or caches as needed
+- [ ] **Set up backups:** Configure automated backups of the `/data/coolify` directory
+- [ ] **Migrate existing projects:** Move applications from Vercel, Netlify, or other platforms
+
+**Go set it up now. In 10 minutes you'll be deploying from your own server.**
+
+---
+
+## FAQ
+
+### Is Coolify production-ready?
+
+Coolify is in active development and used in production by a growing number of users and organizations. It is suitable for personal projects, small-to-medium applications, and homelab setups. For mission-critical enterprise workloads, evaluate against your specific requirements.
+
+### How does Coolify differ from Dokku?
+
+Dokku is a command-line Heroku alternative. Coolify provides a web-based UI, automatic SSL, multi-server management, and built-in service deployment. Coolify offers a more complete management experience for teams and users who prefer a graphical interface.
+
+### What frameworks and languages are supported?
+
+Coolify supports virtually all languages and frameworks through Nixpacks auto-detection: Next.js, Nuxt, Django, Flask, Go, Rust, Ruby on Rails, PHP/Laravel, and more. For unsupported stacks, you can provide a custom Dockerfile.
+
+### Can I use Coolify on a domestic Chinese server?
+
+Yes, but with two considerations: 1) Docker Hub access may require a mirror configuration; 2) GitHub repository access may require a proxy. International VPS providers (Vultr, DigitalOcean, Hetzner) typically provide a smoother experience.
+
+### What does it cost?
+
+Coolify is free and open source. The only cost is your server. A $5/month VPS can host multiple small projects comfortably. For full documentation on advanced features, multi-server setups, and custom configurations, see the [Coolify Docs](https://coolify.io/docs).
