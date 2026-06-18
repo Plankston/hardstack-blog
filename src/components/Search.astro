@@ -7,6 +7,8 @@ const { locale = 'en' } = Astro.props;
 const placeholder = locale === 'zh-CN' ? '搜索文章...' : 'Search articles...';
 const hintText = locale === 'zh-CN' ? '输入关键词搜索...' : 'Type to search...';
 const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results found.';
+const loadingText = locale === 'zh-CN' ? '加载中...' : 'Loading...';
+const errorText = locale === 'zh-CN' ? '搜索加载失败，请刷新页面重试。' : 'Search failed to load. Please refresh and try again.';
 ---
 
 <div id="search" class="relative">
@@ -38,7 +40,9 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
       <button id="search-close" class="cursor-pointer border-0 bg-transparent text-sm text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]" type="button">ESC</button>
     </div>
     <div id="search-results" class="mt-4 max-h-60 space-y-2 overflow-y-auto">
-      <p class="text-sm text-[var(--color-ink-faint)]">{hintText}</p>
+      <p id="search-hint" class="text-sm text-[var(--color-ink-faint)]">{hintText}</p>
+      <p id="search-loading" class="hidden text-sm text-[var(--color-ink-faint)]">{loadingText}</p>
+      <p id="search-error" class="hidden text-sm text-red-500">{errorText}</p>
     </div>
   </div>
 </div>
@@ -49,26 +53,58 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   const close = document.getElementById('search-close');
+  const hint = document.getElementById('search-hint');
+  const loading = document.getElementById('search-loading');
+  const error = document.getElementById('search-error');
 
   let pagefind = null;
+  let pagefindLoadFailed = false;
+
+  function showState(state) {
+    hint?.classList.add('hidden');
+    loading?.classList.add('hidden');
+    error?.classList.add('hidden');
+    if (state === 'hint') hint?.classList.remove('hidden');
+    if (state === 'loading') loading?.classList.remove('hidden');
+    if (state === 'error') error?.classList.remove('hidden');
+  }
 
   async function getPagefind() {
-    if (!pagefind) {
-      const script = document.createElement('script');
-      script.src = '/pagefind/pagefind.js';
-      document.head.appendChild(script);
-      pagefind = await new Promise((resolve) => {
-        script.onload = () => resolve(window.pagefind);
-      });
+    if (pagefindLoadFailed) return null;
+    if (pagefind) return pagefind;
+
+    showState('loading');
+
+    const script = document.createElement('script');
+    script.src = '/pagefind/pagefind.js';
+    document.head.appendChild(script);
+
+    const timeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Pagefind load timeout')), 5000);
+    });
+
+    const load = new Promise((resolve, reject) => {
+      script.onload = () => resolve(window.pagefind);
+      script.onerror = () => reject(new Error('Failed to load pagefind.js'));
+    });
+
+    try {
+      pagefind = await Promise.race([load, timeout]);
+      return pagefind;
+    } catch (e) {
+      console.error('Pagefind load error:', e);
+      pagefindLoadFailed = true;
+      showState('error');
+      return null;
     }
-    return pagefind;
   }
 
   function openSearch() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     input.value = '';
-    results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
+    showState('hint');
+    results.querySelectorAll('a').forEach(a => a.remove());
     input.focus();
   }
 
@@ -91,26 +127,39 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
       clearTimeout(debounceTimer);
       const term = input.value.trim();
       if (!term) {
-        results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
+        showState('hint');
+        results.querySelectorAll('a').forEach(a => a.remove());
         return;
       }
       debounceTimer = setTimeout(async () => {
         const pf = await getPagefind();
         if (!pf) return;
-        const searchResults = await pf.search(term);
-        if (!searchResults || searchResults.results.length === 0) {
-          results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">No results found.</p>';
-          return;
+
+        showState('loading');
+        results.querySelectorAll('a').forEach(a => a.remove());
+
+        try {
+          const searchResults = await pf.search(term);
+          showState('hint');
+
+          if (!searchResults || searchResults.results.length === 0) {
+            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
+            return;
+          }
+
+          let html = '';
+          for (const r of searchResults.results.slice(0, 10)) {
+            const data = await r.data();
+            html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
+              <div class="font-medium text-[var(--color-ink)]">${data.meta.title}</div>
+              <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt}</div>
+            </a>`;
+          }
+          results.innerHTML = html;
+        } catch (e) {
+          console.error('Search error:', e);
+          showState('error');
         }
-        let html = '';
-        for (const r of searchResults.results.slice(0, 10)) {
-          const data = await r.data();
-          html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
-            <div class="font-medium text-[var(--color-ink)]">${data.meta.title}</div>
-            <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt}</div>
-          </a>`;
-        }
-        results.innerHTML = html;
       }, 200);
     });
   }
