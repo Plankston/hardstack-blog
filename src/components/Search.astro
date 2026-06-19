@@ -7,6 +7,8 @@ const { locale = 'en' } = Astro.props;
 const placeholder = locale === 'zh-CN' ? '搜索文章...' : 'Search articles...';
 const hintText = locale === 'zh-CN' ? '输入关键词搜索...' : 'Type to search...';
 const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results found.';
+const loadingText = locale === 'zh-CN' ? '搜索中...' : 'Searching...';
+const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search error, please try again.';
 ---
 
 <div id="search" class="relative">
@@ -54,12 +56,26 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
 
   async function getPagefind() {
     if (!pagefind) {
-      const script = document.createElement('script');
-      script.src = '/pagefind/pagefind.js';
-      document.head.appendChild(script);
-      pagefind = await new Promise((resolve) => {
-        script.onload = () => resolve(window.pagefind);
-      });
+      try {
+        const script = document.createElement('script');
+        script.src = '/pagefind/pagefind.js';
+        
+        // Promise that resolves when script loads, rejects on error
+        await new Promise((resolve, reject) => {
+          script.onload = () => resolve(window.pagefind);
+          script.onerror = () => reject(new Error('Failed to load pagefind script'));
+          document.head.appendChild(script);
+        });
+        
+        pagefind = window.pagefind;
+        if (!pagefind) {
+          throw new Error('Pagefind library not found after script load');
+        }
+      } catch (error) {
+        console.error('Error loading pagefind:', error);
+        results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
+        throw error;
+      }
     }
     return pagefind;
   }
@@ -68,7 +84,7 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     input.value = '';
-    results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
+    results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${hintText}</p>`;
     input.focus();
   }
 
@@ -91,26 +107,61 @@ const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results fo
       clearTimeout(debounceTimer);
       const term = input.value.trim();
       if (!term) {
-        results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">Type to search...</p>';
+        results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${hintText}</p>`;
         return;
       }
+      
+      // Show loading state
+      results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${loadingText}</p>`;
+      
       debounceTimer = setTimeout(async () => {
-        const pf = await getPagefind();
-        if (!pf) return;
-        const searchResults = await pf.search(term);
-        if (!searchResults || searchResults.results.length === 0) {
-          results.innerHTML = '<p class="text-sm text-[var(--color-ink-faint)]">No results found.</p>';
-          return;
+        try {
+          const pf = await getPagefind();
+          if (!pf) {
+            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
+            return;
+          }
+          
+          const searchResults = await pf.search(term);
+          
+          // Validate search results
+          if (!searchResults || !Array.isArray(searchResults.results)) {
+            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
+            return;
+          }
+          
+          if (searchResults.results.length === 0) {
+            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
+            return;
+          }
+          
+          // Build results HTML with error handling
+          let html = '';
+          try {
+            for (const r of searchResults.results.slice(0, 10)) {
+              try {
+                const data = await r.data();
+                html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
+                  <div class="font-medium text-[var(--color-ink)]">${data.meta.title || 'Untitled'}</div>
+                  <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt || ''}</div>
+                </a>`;
+              } catch (dataError) {
+                console.error('Error fetching search result data:', dataError);
+                // Skip this result but continue with others
+                continue;
+              }
+            }
+          } catch (loopError) {
+            console.error('Error processing search results:', loopError);
+            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
+            return;
+          }
+          
+          results.innerHTML = html;
+        } catch (error) {
+          console.error('Search error:', error);
+          results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
         }
-        let html = '';
-        for (const r of searchResults.results.slice(0, 10)) {
-          const data = await r.data();
-          html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
-            <div class="font-medium text-[var(--color-ink)]">${data.meta.title}</div>
-            <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt}</div>
-          </a>`;
-        }
-        results.innerHTML = html;
       }, 200);
     });
   }
