@@ -57,20 +57,9 @@ const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search e
   async function getPagefind() {
     if (!pagefind) {
       try {
-        const script = document.createElement('script');
-        script.src = '/pagefind/pagefind.js';
-        
-        // Promise that resolves when script loads, rejects on error
-        await new Promise((resolve, reject) => {
-          script.onload = () => resolve(window.pagefind);
-          script.onerror = () => reject(new Error('Failed to load pagefind script'));
-          document.head.appendChild(script);
-        });
-        
-        pagefind = window.pagefind;
-        if (!pagefind) {
-          throw new Error('Pagefind library not found after script load');
-        }
+        const module = await import('/pagefind/pagefind.js');
+        await module.init();
+        pagefind = module;
       } catch (error) {
         console.error('Error loading pagefind:', error);
         results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
