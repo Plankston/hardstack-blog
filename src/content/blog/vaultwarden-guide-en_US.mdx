@@ -1,0 +1,203 @@
+---
+title: "Vaultwarden Self-Hosted Guide: The Complete Setup in 10 Minutes"
+description: "Deploy your own password manager with Bitwarden compatibility, full sync, and zero subscription fees"
+pubDate: 2026-06-16
+tags: ["self-hosted", "password", "security", "vaultwarden", "docker"]
+category: "security"
+difficulty: "beginner"
+timeToRead: 15
+postLang: "en"
+groupKey: "vaultwarden-guide"
+template: "clean"
+---
+
+## Why Self-Host Your Password Manager?
+
+In 2026, you have more password managers than ever. 1Password, Dashlane, Bitwarden, NordPass — the list goes on. But here's the thing: **all of them require you to trust a third party with your most sensitive data.**
+
+What if you could run your own password manager on a $5/month VPS, with full Bitwarden compatibility, and zero monthly fees?
+
+That's Vaultwarden — a lightweight, open-source Bitwarden server implementation. Self-hosted, free, and fully compatible with all Bitwarden clients.
+
+---
+
+## Quick Deployment (10 Minutes)
+
+### Prerequisites
+
+- Linux server (Ubuntu 22.04+ recommended)
+- Docker and Docker Compose installed
+- Domain name (optional but recommended)
+
+### Step 1: Create Directory
+
+```bash
+mkdir -p /opt/vaultwarden
+cd /opt/vaultwarden
+```
+
+### Step 2: Create docker-compose.yml
+
+```yaml
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      # Admin Token (for admin panel)
+      ADMIN_TOKEN: "your-admin-password"
+      # Website URL (important!)
+      DOMAIN: "https://vault.yourdomain.com"
+      # Optional: SMTP configuration
+      SMTP_HOST: "smtp.example.com"
+      SMTP_PORT: 587
+      SMTP_FROM: "vaultwarden@yourdomain.com"
+      SMTP_USER: "your-email"
+      SMTP_PASS: "your-email-password"
+    volumes:
+      - ./data:/vw-data
+    ports:
+      - "80:80"
+```
+
+### Step 3: Start the Service
+
+```bash
+docker-compose up -d
+```
+
+### Step 4: Access and Configure
+
+1. Open `http://your-server-ip` in your browser
+2. First visit will prompt you to create an admin account
+3. After setup, download the Bitwarden client and configure self-hosted server
+
+**Configure the client:**
+- Browser extension: Click Settings → Server Options → Self-hosted → Enter `https://vault.yourdomain.com`
+- iOS/Android: On login page, tap gear icon → Server Options → Self-hosted → Enter URL
+- Desktop client: Settings → Server → Self-hosted → Enter URL
+
+**That's it.** 10 minutes for a complete password management system.
+
+**Pro tip:** I once forgot to set `ADMIN_TOKEN` and couldn't access the admin panel. Also, if you're using a cloud server, make sure to open port 80 in your security group.
+
+### Verify Deployment
+
+```bash
+# Test if the service is running
+curl -I http://localhost
+# Should return 200 or 301
+
+# Check container status
+docker ps | grep vaultwarden
+# Should show vaultwarden container running
+```
+
+---
+
+## Advanced Configuration (Optional but Recommended)
+
+### Enable HTTPS
+
+If you have a domain, HTTPS is strongly recommended. Use Caddy as reverse proxy:
+
+```bash
+# Install Caddy
+sudo apt install -y caddy
+
+# Edit Caddyfile
+sudo nano /etc/caddy/Caddyfile
+```
+
+Add this configuration:
+
+```
+vault.yourdomain.com {
+    reverse_proxy localhost:80
+}
+```
+
+Restart Caddy:
+
+```bash
+sudo systemctl restart caddy
+```
+
+### Enable 2FA
+
+In the Vaultwarden admin panel (`/admin`):
+
+1. Log in with admin credentials
+2. Go to Settings → Security
+3. Enable "Two-Step Login"
+4. Supports TOTP (free), YubiKey (free), Duo (free tier available)
+
+### Automated Backups
+
+Create a backup script (note: these are host paths, not container paths):
+
+```bash
+#!/bin/bash
+# backup.sh
+
+BACKUP_DIR="/backup/vaultwarden"
+DATE=$(date +%Y%m%d)
+
+mkdir -p $BACKUP_DIR
+
+# Backup database (host path: /opt/vaultwarden/data/ maps to container /vw-data/)
+cp /opt/vaultwarden/data/db.sqlite3 $BACKUP_DIR/db_$DATE.sqlite3
+
+# Backup config
+cp /opt/vaultwarden/data/config.json $BACKUP_DIR/config_$DATE.json
+
+# Keep only last 7 days of backups
+find $BACKUP_DIR -name "*.sqlite3" -mtime +7 -delete
+find $BACKUP_DIR -name "*.json" -mtime +7 -delete
+
+echo "Backup complete: $DATE"
+```
+
+Add to crontab:
+
+```bash
+# Run backup daily at 3 AM
+0 3 * * * /opt/vaultwarden/backup.sh
+```
+
+---
+
+## Frequently Asked Questions
+
+### Q: What's the difference between Vaultwarden and Bitwarden?
+
+**A:** Vaultwarden is a third-party implementation of the Bitwarden server, fully compatible with Bitwarden clients. Key differences:
+- Vaultwarden is community-maintained, Bitwarden is company-maintained
+- Vaultwarden is completely free, Bitwarden has paid features
+- Vaultwarden has lower resource usage
+
+### Q: Is my data secure?
+
+**A:** Data is stored on your own server, accessible only by you. Vaultwarden supports end-to-end encryption, so even if the server is compromised, attackers cannot read your passwords.
+
+### Q: How do I migrate existing passwords?
+
+**A:** Export a CSV file from Bitwarden or other password managers, then import it in Vaultwarden.
+
+### Q: How many users does it support?
+
+**A:** Unlimited. Vaultwarden supports multiple users, organizations, and teams — suitable for individuals, families, or small teams.
+
+---
+
+## Summary
+
+If you're still using a cloud password manager, it's time to consider self-hosting. Vaultwarden makes it incredibly simple:
+
+1. **Free** - No subscription fees
+2. **Simple** - 10-minute deployment
+3. **Secure** - Data stays under your control
+4. **Compatible** - Works with all Bitwarden clients
+
+**Deploy it now. Come back and tell me how it went.**

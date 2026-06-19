@@ -91,12 +91,12 @@ const templateLabel: Record<string, string> = {
               ? `阅读模式: ${templateLabel[template]}`
               : `Reading mode: ${templateLabel[template]}`}
           </div>
-
-          <div style="width:min(80vw,1200px);margin:2rem auto 0">
-            <Giscus locale={locale} />
-          </div>
         </div>
-      </article>
+        </article>
+        <hr class="comment-divider" />
+        <div class="comment-section">
+          <Giscus locale={locale} />
+        </div>
     </main>
     <Footer locale={locale} />
   </body>

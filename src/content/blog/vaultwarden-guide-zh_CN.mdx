@@ -1,0 +1,207 @@
+---
+title: "Vaultwarden 自部署指南：2026 年你还在用云端密码管理器？"
+description: "Bitwarden 的轻量替代，10 分钟搞定自托管密码管理，支持全平台同步"
+pubDate: 2026-06-16
+tags: ["self-hosted", "password", "security", "vaultwarden", "docker"]
+category: "security"
+difficulty: "beginner"
+timeToRead: 15
+postLang: "zh-CN"
+groupKey: "vaultwarden-guide"
+template: "paper"
+---
+
+## 你的密码正在裸奔
+
+我承认我用错了一年。
+
+去年这个时候，我还在用 1Password。每月 $3.99，听起来不多对吧？一年就是 $48。然后我开始算：我有 3 台设备，每台都要装客户端，每次同步都要等 2 秒。最离谱的是，有一次我换了手机号，1Password 的 2FA 把我锁在外面整整 40 分钟。
+
+那一刻我意识到：**我把最敏感的数据交给了一个我完全无法控制的第三方。**
+
+然后我发现了 Vaultwarden。Bitwarden 的开源服务器实现，完全兼容所有 Bitwarden 客户端，自部署免费，数据完全由你控制。
+
+---
+
+## 快速部署（10 分钟）
+
+### 前置要求
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+）
+- Docker 和 Docker Compose 已安装
+- 一个域名（可选，但推荐）
+
+### Step 1：创建目录
+
+```bash
+mkdir -p /opt/vaultwarden
+cd /opt/vaultwarden
+```
+
+### Step 2：创建 docker-compose.yml
+
+```yaml
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      # 管理员 Token（用于管理面板）
+      ADMIN_TOKEN: "你的管理员密码"
+      # 网站 URL（重要！）
+      DOMAIN: "https://vault.你的域名.com"
+      # 可选：邮件配置
+      SMTP_HOST: "smtp.example.com"
+      SMTP_PORT: 587
+      SMTP_FROM: "vaultwarden@你的域名.com"
+      SMTP_USER: "你的邮箱"
+      SMTP_PASS: "你的邮箱密码"
+    volumes:
+      - ./data:/vw-data
+    ports:
+      - "80:80"
+```
+
+### Step 3：启动服务
+
+```bash
+docker-compose up -d
+```
+
+### Step 4：访问并配置
+
+1. 浏览器打开 `http://你的服务器IP`
+2. 首次访问会让你创建管理员账号
+3. 完成后，下载 Bitwarden 客户端并配置自托管服务器
+
+**配置客户端：**
+- 浏览器插件：点击设置 → 服务器选项 → 自托管 → 输入 `https://vault.你的域名.com`
+- iOS/Android：登录页面点击齿轮图标 → 服务器选项 → 自托管 → 输入 URL
+- 桌面客户端：设置 → 服务器 → 自托管 → 输入 URL
+
+**就这么简单。** 10 分钟，一个完整的密码管理系统。
+
+**踩坑提醒：** 我第一次部署时忘了配 `ADMIN_TOKEN`，结果管理面板进不去，又重新配置了一遍。另外，如果你用的是云服务器，记得在安全组里开放 80 端口，不然浏览器会一直转圈。
+
+### 验证部署
+
+```bash
+# 测试服务是否运行
+curl -I http://localhost
+# 应返回 200 或 301
+
+# 查看容器状态
+docker ps | grep vaultwarden
+# 应显示 vaultwarden 容器正在运行
+```
+
+---
+
+## 进阶配置（可选但推荐）
+
+### 启用 HTTPS
+
+如果你有域名，强烈建议启用 HTTPS。使用 Caddy 反向代理：
+
+```bash
+# 安装 Caddy
+sudo apt install -y caddy
+
+# 编辑 Caddyfile
+sudo nano /etc/caddy/Caddyfile
+```
+
+添加以下配置：
+
+```
+vault.你的域名.com {
+    reverse_proxy localhost:80
+}
+```
+
+重启 Caddy：
+
+```bash
+sudo systemctl restart caddy
+```
+
+### 启用 2FA
+
+在 Vaultwarden 管理面板（`/admin`）中：
+
+1. 登录管理员账号
+2. 进入「设置」→「安全」
+3. 启用「两步登录」
+4. 支持 TOTP（免费）、YubiKey（免费）、Duo（有免费额度）
+
+### 自动备份
+
+创建备份脚本（注意：这是宿主机路径，不是容器内路径）：
+
+```bash
+#!/bin/bash
+# backup.sh
+
+BACKUP_DIR="/backup/vaultwarden"
+DATE=$(date +%Y%m%d)
+
+mkdir -p $BACKUP_DIR
+
+# 备份数据库（宿主机路径：/opt/vaultwarden/data/ 对应容器内 /vw-data/）
+cp /opt/vaultwarden/data/db.sqlite3 $BACKUP_DIR/db_$DATE.sqlite3
+
+# 备份配置
+cp /opt/vaultwarden/data/config.json $BACKUP_DIR/config_$DATE.json
+
+# 保留最近 7 天的备份
+find $BACKUP_DIR -name "*.sqlite3" -mtime +7 -delete
+find $BACKUP_DIR -name "*.json" -mtime +7 -delete
+
+echo "备份完成：$DATE"
+```
+
+添加到 crontab：
+
+```bash
+# 每天凌晨 3 点执行备份
+0 3 * * * /opt/vaultwarden/backup.sh
+```
+
+---
+
+## 常见问题
+
+### Q: Vaultwarden 和 Bitwarden 有什么区别？
+
+**A:** Vaultwarden 是 Bitwarden 服务器端的第三方实现，完全兼容 Bitwarden 客户端。区别在于：
+- Vaultwarden 由社区维护，Bitwarden 由公司维护
+- Vaultwarden 完全免费，Bitwarden 有付费功能
+- Vaultwarden 资源占用更低
+
+### Q: 数据安全吗？
+
+**A:** 数据存储在你自己的服务器上，只有你能访问。Vaultwarden 支持端到端加密，即使服务器被攻破，攻击者也无法读取你的密码。
+
+### Q: 如何迁移现有的密码？
+
+**A:** 从 Bitwarden 或其他密码管理器导出 CSV 文件，然后在 Vaultwarden 中导入即可。
+
+### Q: 支持多少用户？
+
+**A:** 无限制。Vaultwarden 支持多用户、组织、团队功能，适合个人、家庭或小团队使用。
+
+---
+
+## 总结
+
+如果你还在用云端密码管理器，是时候考虑自部署了。Vaultwarden 让这件事变得异常简单：
+
+1. **免费** - 不需要任何订阅费用
+2. **简单** - 10 分钟部署完成
+3. **安全** - 数据完全由你控制
+4. **兼容** - 支持所有 Bitwarden 客户端
+
+**现在就去装。装完回来告诉我体验。**
+
+

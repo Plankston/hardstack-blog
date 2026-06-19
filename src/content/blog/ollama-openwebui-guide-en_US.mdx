@@ -1,0 +1,252 @@
+---
+title: "Ollama + Open WebUI: Your Private ChatGPT Alternative"
+description: "Run LLMs locally with a ChatGPT-like interface — fully private, offline-capable, and free"
+pubDate: 2026-06-13
+tags: ["ollama", "open-webui", "llm", "selfhosted", "ai", "docker", "tutorial"]
+category: "ai-tools"
+difficulty: "beginner"
+timeToRead: 14
+postLang: "en"
+groupKey: "ollama-openwebui-guide"
+template: "clean"
+---
+
+## What Is the Local AI Stack?
+
+Two projects, one purpose: a private, offline AI assistant that never charges per query.
+
+- **[Ollama](https://ollama.com)** — runs LLMs locally. One command to pull a model, one to run it.
+- **[Open WebUI](https://openwebui.com)** — a ChatGPT-like interface for Ollama. Chat, upload files, search the web, switch models.
+
+Together they form the most accessible local AI stack in 2026. No cloud dependency, no subscription, no data leaving your machine.
+
+## What You'll Get
+
+- A fully private ChatGPT alternative running on your own hardware
+- A 10-minute install with every command verified
+- A ready-to-use Docker Compose configuration
+- Room to grow: web search, multi-user, Home Assistant integration
+
+## Why Self-Host an LLM?
+
+### Data Privacy
+
+Every message sent to ChatGPT or Claude lives on someone else's server. Terms of service allow training on your data. For sensitive code, business documents, or personal information, local inference eliminates that exposure entirely.
+
+### Cost
+
+| Service | Monthly | Limits |
+|---------|---------|--------|
+| ChatGPT Plus | $20 | 50 msgs/3h on GPT-4 |
+| Claude Pro | $20 | Limited |
+| **Ollama + Open WebUI** | **$0** | **Unlimited** |
+
+Your GPU is already paid for.
+
+### Model Flexibility
+
+Switch between Llama 3, Qwen 2.5, Mistral, Gemma — any model Ollama supports — with a dropdown. No waitlists, no forced upgrades.
+
+Enough reasons. Let's install.
+
+## Prerequisites
+
+- **Any computer** (Linux, macOS, Windows)
+- **Docker** ([download here](https://www.docker.com/products/docker-desktop/))
+- **8GB RAM minimum** (16GB recommended)
+- **GPU optional** — accelerates inference; CPU works for smaller models
+
+## Installation
+
+### Step 1: Install Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+Verify:
+
+```bash
+ollama --version
+# ollama version 0.5.x
+```
+
+Windows: download from [ollama.com/download](https://ollama.com/download).
+
+Keep your terminal open — the next step uses it.
+
+### Step 2: Pull a Model
+
+Start with a solid 7B model:
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+~4GB download. If downloads are slow (e.g., in China), either:
+
+- **Via proxy**: set `export HTTPS_PROXY=http://127.0.0.1:7890` in your terminal before pulling
+- **Manual import**: download GGUF files from [hf-mirror.com](https://hf-mirror.com) and import via `ollama create` — see [Ollama import docs](https://github.com/ollama/ollama/blob/main/docs/import.md)
+
+Test it:
+
+```bash
+ollama run qwen2.5:7b "Explain Docker in one sentence"
+```
+
+If you see output, you're running LLMs locally.
+
+### Step 3: Install Open WebUI
+
+Make sure Docker is running, then pick one method.
+
+**Method A: One-liner (fast)**
+
+```bash
+docker run -d \
+  --name open-webui \
+  -p 3000:8080 \
+  -v open-webui:/app/backend/data \
+  --restart always \
+  ghcr.io/open-webui/open-webui:main
+```
+
+What this does:
+- `-p 3000:8080` — maps container port 8080 to your machine's port 3000
+- `-v open-webui:/app/backend/data` — persists chat history and config
+- `--restart always` — auto-starts on boot
+
+**Method B: docker-compose.yml (recommended — easier to add services later)**
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    restart: always
+
+volumes:
+  open-webui:
+```
+
+Then run:
+
+```bash
+docker compose up -d
+```
+
+Open `http://localhost:3000`. Create a local account (data stays on your machine), and you'll see the chat interface.
+
+### Step 4: Connect to Ollama
+
+Open WebUI auto-detects Ollama on the same host. When connected, you'll see a **green status indicator at the top** and your model (`qwen2.5:7b`) in the model dropdown.
+
+If it doesn't connect:
+
+1. Avatar → **Settings** → **External Connections**
+2. **Ollama Base URL**: `http://host.docker.internal:11434`
+3. Save — the status refreshes immediately.
+
+Done. You now have a private ChatGPT.
+
+## What Can You Do With It?
+
+### Private Code Review
+
+Drag a source file into Open WebUI for AI review. Your code never leaves your network — suitable for proprietary projects where GitHub Copilot or ChatGPT aren't options.
+
+### Document Q&A
+
+Upload PDFs, Word docs, or text files. Ask questions about their content:
+
+- "Summarize the key findings in this report."
+- "Extract all technical requirements from pages 12-18."
+
+### Daily Tasks
+
+Draft emails, generate reports from bullet points, explain technical concepts. A 7B model handles these comfortably.
+
+Open WebUI also supports multi-model mode — ask the same question to Llama and Qwen side by side, pick the best answer.
+
+## Model Selection
+
+| Use Case | Model | RAM | Notes |
+|----------|-------|-----|-------|
+| Entry | `qwen2.5:7b` | 4GB | Strong Chinese, best value |
+| Code | `codellama:7b` | 4GB | Code-specific training |
+| Balanced | `mistral:7b` | 4GB | Fast, strong in English |
+| Advanced | `llama3.1:8b` | 8GB | Meta's latest, best all-round |
+| High-end | `qwen2.5:32b` | 24GB | Approaches GPT-4 |
+| Production | `llama3.1:70b` | 48GB | Needs A100-class GPU |
+
+Start with a 7B model. Upgrade when you know what you need.
+
+## FAQ
+
+### Can't connect to Ollama — no green indicator
+
+Most likely the Docker container can't reach your host. Make sure Ollama is running, then check the Ollama URL in Open WebUI settings:
+
+- Windows/macOS: `http://host.docker.internal:11434`
+- Linux: `http://172.17.0.1:11434`
+
+### Model download keeps failing
+
+Ollama supports resumable downloads. Just re-run `ollama pull qwen2.5:7b` — it continues where it left off. If it keeps failing, switch to manual GGUF import.
+
+### Open WebUI shows a blank page after starting
+
+Clear your browser cache or open an incognito window. Check Docker logs:
+
+```bash
+docker logs open-webui
+```
+
+If you see `Uvicorn running on http://0.0.0.0:8080`, the service is healthy — the issue is browser-side.
+
+### Model responses are poor quality
+
+For Chinese content, `qwen2.5:7b` is the best 7B option. If quality is still lacking, try `qwen2.5:14b` (needs 8GB RAM) or verify you've selected the correct model in the Open WebUI dropdown.
+
+## Going Further
+
+### Web Search
+
+Open WebUI supports SearXNG integration for live internet access. Add this to your `docker-compose.yml` and run `docker compose up -d`:
+
+```yaml
+services:
+  searxng:
+    image: searxng/searxng:latest
+    ports:
+      - "4000:8080"
+```
+
+Configure the URL in Open WebUI settings under Web Search.
+
+### Custom Models
+
+Adjust system prompts, temperature, and context length from the Open WebUI interface.
+
+## Limitations
+
+- **7B models aren't GPT-4**. Fine for drafting and explaining; don't expect architectural insights.
+- **CPU is slow** — roughly 5-10 tokens/second for a 7B model.
+- **Large models need VRAM** — 32B+ requires 24GB+ GPU memory.
+
+A free, private, unlimited AI assistant is a meaningful tradeoff. Judge for yourself.
+
+## Next Steps
+
+Install it. Try a few models. See what works on your hardware.
+
+Coming up next: hooking Ollama into Home Assistant for an AI-powered smart home.
+
+---
+
+> **Further reading**: New to Docker? Start with [Docker's official get-started guide](https://docs.docker.com/get-started/). For the OpenCode AI coding assistant tutorial, see [OpenCode Complete Guide](/en/blog/opencode-complete-guide-en_us).

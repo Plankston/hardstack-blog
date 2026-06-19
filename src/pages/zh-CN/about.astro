@@ -1,0 +1,65 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { useTranslations } from '../../i18n/ui';
+
+const currentLocale = 'zh-CN' as const;
+const t = useTranslations(currentLocale);
+---
+
+<!doctype html>
+<html lang={t('site.lang')} dir="ltr">
+  <head>
+    <BaseHead title={`${t('about.title')} — ${t('site.title')}`} description={t('about.description')} locale={currentLocale} />
+  </head>
+  <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
+      跳到主要内容
+    </a>
+    <Header locale={currentLocale} />
+    <main id="main-content">
+      <article>
+        <header class="mb-10">
+          <h1 class="font-serif text-3xl">{t('about.title')}</h1>
+        </header>
+        <hr class="mb-10" />
+        <div class="prose">
+          <p class="text-lg leading-relaxed text-[var(--color-ink-muted)]">
+            <strong class="text-[var(--color-ink)]">HardStack</strong> 是一个专注开源、自托管
+            与 AI 工具类项目的深度技术博客。
+          </p>
+          <p>
+            每个开源项目都值得被认真装一遍。这里没有云测评，只有亲自装过、踩过坑、
+            拍过截图的真实记录。
+          </p>
+
+          <h2>我们承诺</h2>
+          <ol>
+            <li><strong>亲自装过</strong> — 不是云测评</li>
+            <li><strong>真实报错截图</strong> — 不是完美教程</li>
+            <li><strong>3 个月后回访更新</strong> — 不是发完就忘</li>
+            <li><strong>有对比有推荐</strong> — "X vs Y 我推荐 X，因为…"</li>
+            <li><strong>可被搜索引擎搜到</strong> — SEO 友好</li>
+          </ol>
+
+          <h2>内容方向</h2>
+          <ul>
+            <li>安装教程（50%）— 完整 5000-10000 字深度指南</li>
+            <li>横向对比（20%）— X vs Y 类高搜索量内容</li>
+            <li>踩坑合集（15%）— 真实报错与解决方案</li>
+            <li>新闻解读（10%）— 开源项目背后的故事</li>
+            <li>盘点榜单（5%）— 年度最佳自托管项目</li>
+          </ul>
+
+          <h2>关于作者</h2>
+          <p>
+            热爱开源、自托管和 AI 工具的全栈开发者。相信好内容值得被认真对待，
+            一篇好教程能帮人省 10 个小时。
+          </p>
+        </div>
+      </article>
+    </main>
+    <Footer locale={currentLocale} />
+  </body>
+</html>

@@ -19,7 +19,12 @@ const localePrefix = locale === 'en' ? 'en' : 'zh-CN';
 // Build hreflang alternate URLs
 function hreflangUrl(lang: string): string {
   const path = Astro.url.pathname;
-  const cleanPath = path.replace(/^\/(en|zh-CN)/, '');
+  // Remove locale prefix from current path
+  const cleanPath = path.replace(/^\/(en|zh-CN)/, '') || '/';
+  // For English, use root path; for Chinese, add /zh-CN prefix
+  if (lang === 'en') {
+    return `${SITE_URL}${cleanPath}`;
+  }
   return `${SITE_URL}/${lang}${cleanPath}`;
 }
 ---
@@ -34,7 +39,6 @@ function hreflangUrl(lang: string): string {
 <meta name="generator" content={Astro.generator} />
 
 <!-- Preconnects for third-party services -->
-<link rel="preconnect" href="https://giscus.app" />
 <link rel="preconnect" href="https://avatars.githubusercontent.com" />
 
 <!-- Preconnect Google Fonts for v2 design -->
@@ -71,5 +75,12 @@ function hreflangUrl(lang: string): string {
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image.src, Astro.url)} />
 
+<!-- Plausible Analytics -->
+<script is:inline async src="https://plausible.io/js/pa-v9hU51oLTZH6JeoU2lfou.js"></script>
+<script is:inline>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+
 <!-- Content Security Policy -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://giscus.app; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://giscus.app; frame-src https://giscus.app; base-uri 'self'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' plausible.io giscus.app; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' plausible.io api.github.com; frame-src giscus.app; base-uri 'self'" />

@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from 'astro:content';
+import BlogPost from '../../layouts/BlogPost.astro';
+import { getSlug } from '../../i18n/utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const paths = [];
+
+  for (const post of posts) {
+    const locale = post.data.postLang || 'en';
+    if (locale !== 'en') continue;
+    const slug = getSlug(post);
+    paths.push({
+      params: { slug },
+      props: { post },
+    });
+  }
+
+  return paths;
+}
+
+type Props = {
+  post: any;
+};
+
+const currentLocale = 'en';
+const post = Astro.props.post;
+const { Content } = await render(post);
+const slug = getSlug(post);
+---
+
+<BlogPost {...post.data} locale={currentLocale} template={post.data.template}>
+  <Content />
+</BlogPost>
+
+<script define:vars={{ slug }}>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      await fetch('/api/views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+    } catch (e) {
+      console.error('Failed to record view:', e);
+    }
+  });
+</script>
