@@ -45,7 +45,7 @@ const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search e
   </div>
 </div>
 
-<script>
+<script is:inline define:vars={{ hintText, noResultsText, loadingText, errorText }}>
   const toggle = document.getElementById('search-toggle');
   const modal = document.getElementById('search-modal');
   const input = document.getElementById('search-input');
@@ -99,10 +99,10 @@ const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search e
         results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${hintText}</p>`;
         return;
       }
-      
+
       // Show loading state
       results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${loadingText}</p>`;
-      
+
       debounceTimer = setTimeout(async () => {
         try {
           const pf = await getPagefind();
@@ -110,20 +110,20 @@ const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search e
             results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
             return;
           }
-          
+
           const searchResults = await pf.search(term);
-          
+
           // Validate search results
           if (!searchResults || !Array.isArray(searchResults.results)) {
             results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
             return;
           }
-          
+
           if (searchResults.results.length === 0) {
             results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
             return;
           }
-          
+
           // Build results HTML with error handling
           let html = '';
           try {
@@ -145,7 +145,7 @@ const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search e
             results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
             return;
           }
-          
+
           results.innerHTML = html;
         } catch (error) {
           console.error('Search error:', error);
