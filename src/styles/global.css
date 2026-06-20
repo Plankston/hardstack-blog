@@ -620,6 +620,20 @@ body[data-template="dark"] pre {
   border-color: var(--code-border);
 }
 
+body[data-template="dark"] pre.astro-code {
+  background-color: #1a1614 !important;
+}
+
+body[data-template="dark"] pre.astro-code code {
+  color: #e6edf3 !important;
+  background: none !important;
+}
+
+body[data-template="dark"] pre.astro-code span {
+  color: var(--shiki-dark, inherit) !important;
+  background-color: transparent !important;
+}
+
 body[data-template="dark"] code {
   background-color: var(--bg-code);
   color: #e8d5c4;

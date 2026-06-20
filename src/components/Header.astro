@@ -115,6 +115,14 @@ function getLocalePath(path: string): string {
       iconPaper.classList.toggle('hidden', theme !== 'paper');
       iconDark.classList.toggle('hidden', theme !== 'dark');
     }
+    // Sync Giscus theme
+    const giscusFrame = document.querySelector('iframe.giscus-frame') as HTMLIFrameElement;
+    if (giscusFrame) {
+      giscusFrame.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: theme === 'dark' ? 'dark' : 'light' } } },
+        'https://giscus.app'
+      );
+    }
   }
 
   // Apply stored theme immediately
