@@ -32,6 +32,21 @@ function getLocalePath(path: string): string {
       <Search locale={currentLocale} />
 
       <div class="flex items-center gap-2 border-l border-[var(--border-color)] pl-4">
+        <!-- Theme toggle -->
+        <button
+          id="theme-toggle"
+          class="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-color)] text-[var(--text-muted)] transition-colors hover:text-[var(--text-body)]"
+          aria-label="Toggle theme"
+        >
+          <svg id="theme-icon-paper" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+          <svg id="theme-icon-dark" class="hidden h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+        </button>
+
         <!-- Locale switcher: dropdown -->
         <div class="relative" id="locale-switcher">
           <button
@@ -84,6 +99,33 @@ function getLocalePath(path: string): string {
 </header>
 
 <script>
+  // Theme toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const iconPaper = document.getElementById('theme-icon-paper');
+  const iconDark = document.getElementById('theme-icon-dark');
+
+  function getTheme(): string {
+    return localStorage.getItem('theme') || 'paper';
+  }
+
+  function applyTheme(theme: string) {
+    document.body.dataset.template = theme;
+    localStorage.setItem('theme', theme);
+    if (iconPaper && iconDark) {
+      iconPaper.classList.toggle('hidden', theme !== 'paper');
+      iconDark.classList.toggle('hidden', theme !== 'dark');
+    }
+  }
+
+  // Apply stored theme immediately
+  applyTheme(getTheme());
+
+  themeToggle?.addEventListener('click', () => {
+    const next = getTheme() === 'dark' ? 'paper' : 'dark';
+    applyTheme(next);
+  });
+
+  // Locale switcher
   const toggle = document.getElementById('locale-toggle');
   const menu = document.getElementById('locale-menu');
   const switcher = document.getElementById('locale-switcher');
