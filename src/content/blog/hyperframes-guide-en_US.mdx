@@ -1,0 +1,304 @@
+---
+title: "HyperFrames: Write HTML, Render Video, Let AI Do the Work"
+description: "28K Stars and counting — the framework that turns HTML/CSS into video, with full AI Agent support. Here's why it matters."
+pubDate: 2026-06-20
+tags: ["hyperframes", "video", "html", "ai-agent", "open-source", "content-creation"]
+category: "content-creation"
+difficulty: "intermediate"
+timeToRead: 18
+postLang: "en"
+groupKey: "hyperframes-guide"
+template: "paper"
+---
+
+## Still manually editing videos in 2026?
+
+28K Stars. HeyGen open-sourced it. Apache 2.0 license.
+
+This isn't "another video tool." This is a framework that lets you write HTML and have AI Agents render videos for you.
+
+I know what you're thinking: "Another wheel?" Don't close this tab yet. By the end of this article, you'll realize — **your old video production workflow is probably obsolete.**
+
+---
+
+## Wrong way to start: don't do this
+
+Most people see HyperFrames and immediately download → install dependencies → write Hello World → render → get stuck → give up.
+
+**That's wrong.**
+
+The correct approach is understanding the core concepts first. Otherwise, you'll get lost in `compositions`, `tracks`, and `clips`.
+
+---
+
+## Understand these concepts before you code
+
+HyperFrames has a simple architecture, but a few terms need clarification:
+
+| Concept | One-line explanation | Analogy |
+|---------|---------------------|---------|
+| **Composition** | A complete video project | Like a "sequence" in Premiere |
+| **Track** | A timeline track | Video track, audio track, subtitle track |
+| **Clip** | A segment on a track | A video, image, or text block |
+| **Animation** | Effects on a clip | Entrance, exit, emphasis animations |
+| **Render** | Final video output | Export to MP4 |
+
+**Key insight**: Each Composition is an HTML file. You write layouts in HTML/CSS, interaction logic in JS, and HyperFrames renders it into video.
+
+```html
+<!-- A minimal composition -->
+<html>
+  <body>
+    <div class="title">Hello HyperFrames</div>
+  </body>
+</html>
+```
+
+That simple. No FFmpeg commands. No After Effects expressions. **If you can write HTML, you can make videos.**
+
+---
+
+## 5-minute setup: avoid these pitfalls
+
+### The right way
+
+```bash
+# Initialize project
+npx hyperframes init my-video
+cd my-video
+
+# Local preview
+npx hyperframes preview
+
+# Render to video
+npx hyperframes render compositions/index.html -o output.mp4
+
+# Verify output
+ls -la output.mp4
+```
+
+### Pitfall checklist
+
+| Problem you'll hit | Solution |
+|-------------------|----------|
+| `command not found: npx` | Install Node.js 18+ first, nvm recommended |
+| Render error `FFmpeg not found` | `apt install ffmpeg` or `brew install ffmpeg` |
+| Puppeteer won't start | Linux servers need `chromium-browser` and dependencies |
+| Rendered video is black screen | Check CSS `width` and `height` — must be fixed pixels |
+
+**Hard-won lesson**: I spent 30 minutes staring at black screens before realizing I used `100vw` instead of fixed pixels. Video rendering isn't a browser — there's no "responsive" concept.
+
+### Verify installation
+
+After setup, run this to confirm everything's ready:
+
+```bash
+npx hyperframes doctor
+```
+
+This checks Node.js, FFmpeg, and Puppeteer. All green? You're good to go.
+
+---
+
+## Core architecture: how it actually works
+
+```
+HTML Composition
+    ↓
+Puppeteer (headless browser) parses HTML/CSS/JS
+    ↓
+Frame-by-frame screenshots
+    ↓
+FFmpeg composes video
+    ↓
+Output MP4/WebM
+```
+
+**That's the entire secret.** No magic. No black tech. Just a browser running your HTML, taking screenshots frame by frame, then stitching them into video.
+
+Sounds simple? It is. But simple things are often the most powerful.
+
+---
+
+## Package structure: what these dependencies do
+
+HyperFrames isn't a single package — it's a toolchain:
+
+| Package | Purpose | Do you use it directly? |
+|---------|---------|------------------------|
+| `hyperframes` | CLI tool for init/preview/render | ✅ The only one you need |
+| `@hyperframes/core` | Core API and type definitions | ❌ Internal use |
+| `@hyperframes/engine` | Puppeteer + FFmpeg render engine | ❌ Internal use |
+| `@hyperframes/producer` | Video composition logic | ❌ Internal use |
+| `@hyperframes/studio` | Local dev server | ❌ Auto-called during preview |
+| `@hyperframes/player` | Web video player | ⚠️ Maybe for embedding |
+
+**Bottom line**: Just remember one command: `npx hyperframes`. The framework handles the rest.
+
+---
+
+## AI Agent integration: this is the killer feature
+
+Traditional video tools: you drag-and-drop in the software, AI generates assets for you.
+
+HyperFrames: you tell AI in natural language what video you want, AI writes the HTML code directly, then renders it.
+
+### Connect your AI Agent
+
+```bash
+# Install HyperFrames AI skills
+npx skills add heygen-com/hyperframes
+```
+
+This injects HyperFrames knowledge into your AI Agent. Supports:
+- **Claude Code** — conversational coding in terminal
+- **Cursor** — IDE-integrated AI assistance
+- **Gemini CLI** — Google's command-line AI
+
+### Real-world usage
+
+You tell the AI:
+
+> "Write a 30-second product intro video with fade-in title, gradient background, and logo fade effect"
+
+AI automatically generates:
+```html
+<!-- compositions/product-intro.html -->
+<html>
+  <head>
+    <style>
+      .title {
+        animation: fadeIn 2s ease-in;
+        font-size: 48px;
+        color: white;
+      }
+      .logo {
+        animation: fadeIn 3s ease-in 1s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title">Product Name</div>
+    <img class="logo" src="logo.png" />
+  </body>
+</html>
+```
+
+Then `npx hyperframes render` to output. **The entire process — no video editing software opened.**
+
+---
+
+## Animation support: beyond CSS animations
+
+HyperFrames supports multiple animation approaches:
+
+| Approach | Best for | Difficulty |
+|----------|----------|------------|
+| **CSS/WAAPI** | Simple entrance, exit, emphasis | ⭐ |
+| **GSAP** | Complex timeline animations, physics | ⭐⭐ |
+| **Lottie** | Vector animations exported from AE | ⭐⭐ |
+| **Three.js** | 3D scenes, particle effects | ⭐⭐⭐ |
+
+**Recommended path**: Start with CSS animations. That's enough for most cases. GSAP when you need it. Three.js is a nuclear weapon — but you don't use nukes for kitchen knives.
+
+---
+
+## DESIGN.md: make AI understand your design system
+
+This is the killer feature most people overlook.
+
+Create a `DESIGN.md` file in your project root:
+
+```markdown
+# Design System
+
+## Colors
+- Primary: #FF6B35
+- Secondary: #004E89
+- Background: #1A1A2E
+
+## Typography
+- Headings: Inter Bold 48px
+- Body: Inter Regular 24px
+
+## Animations
+- Default entrance: fadeIn 0.5s ease-in
+- Default exit: fadeOut 0.3s ease-out
+```
+
+AI Agents automatically read this file and generate videos matching your brand style. **It's like giving AI your design guidelines — it won't go rogue.**
+
+---
+
+## Distributed rendering: AWS Lambda solution
+
+Local rendering too slow? Need batch production? HyperFrames has Lambda distributed rendering.
+
+The principle is simple:
+1. Upload HTML Composition to S3
+2. Lambda function starts Puppeteer rendering
+3. Rendered video saved back to S3
+4. SQS queue coordinates multiple Lambda parallel renders
+
+**Best for**:
+- E-commerce product video batch generation
+- Social media content automation
+- A/B testing different ad video versions
+
+Configuration? The Lambda deployment docs are clear — follow them. **But I'll say: if you're at this level, you probably don't need a tutorial anyway.**
+
+---
+
+## HyperFrames vs traditional video tools
+
+| Dimension | HyperFrames | Premiere/After Effects | CapCut |
+|-----------|-------------|----------------------|--------|
+| **Learning curve** | Know HTML | Months to start | Days |
+| **Automation** | ✅ AI Agent full-auto | ❌ Manual only | ⚠️ Limited templates |
+| **Batch production** | ✅ Script batch render | ❌ Export one by one | ❌ Export one by one |
+| **Version control** | ✅ Git management | ❌ Filename versioning | ❌ Same |
+| **Collaboration** | ✅ Code collaboration | ⚠️ Needs Creative Cloud | ❌ None |
+| **Customization** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| **For who** | Developers/automation needs | Professional editors | General users |
+
+**My take**: If you're a video editor, keep using Premiere. If you're a developer who needs batch video content generation, HyperFrames is a paradigm shift.
+
+---
+
+## Real project: 30-second product video
+
+```bash
+# 1. Initialize project
+npx hyperframes init product-video
+
+# 2. Edit compositions/product.html
+# (Write your HTML/CSS/JS)
+
+# 3. Preview
+npx hyperframes preview
+
+# 4. Render
+npx hyperframes render compositions/product.html -o product.mp4
+
+# 5. Verify output
+ls -la product.mp4
+```
+
+**Zero to video output in 5 commands.**
+
+---
+
+## Go install it now
+
+After you install it, come back and tell me what your first video is.
+
+If you get stuck, it's almost certainly environment issues — Node.js version, FFmpeg, or Puppeteer dependencies. Tell me in the comments where you're stuck and I'll help debug.
+
+**Next up: advanced techniques — GSAP timeline animations + Three.js 3D scenes. Let's push this framework to its limits.**
+
+---
+
+**Related links**
+- [HyperFrames GitHub](https://github.com/heygen-com/hyperframes) — 28K Stars, Apache 2.0 license
+- [Official docs](https://hyperframes.heygen.com/quickstart) — Quickstart + full API reference
+- [Playground](https://www.hyperframes.dev/) — Online preview and render
