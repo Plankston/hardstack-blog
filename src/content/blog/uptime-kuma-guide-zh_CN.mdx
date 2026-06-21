@@ -1,0 +1,224 @@
+---
+title: "Uptime Kuma 自部署指南：你的自托管服务还活着吗？"
+description: "GitHub 88K+ Stars 的自托管监控面板，5 分钟部署，90+ 通知渠道，自带状态页面"
+pubDate: 2026-06-21
+tags: ["self-hosted", "monitoring", "uptime-kuma", "docker", "homelab", "devops"]
+category: "infrastructure"
+difficulty: "beginner"
+timeToRead: 10
+postLang: "zh-CN"
+groupKey: "uptime-kuma-guide"
+template: "paper"
+---
+
+## 你搭了十几个自托管服务，但你知道它们现在还活着吗？
+
+我花了 2000 多个小时搭的 homelab——Coolify、Ollama、Open WebUI、Vaultwarden、n8n，12 个服务——被一个过期的 TLS 证书搞崩了 6 个小时。
+
+不是宕机。服务本身还在跑，但 HTTPS 握手全失败了。我直到晚上想用手机登录 Vaultwarden 才发现不对劲。打开浏览器一看，502 Bad Gateway。
+
+**12 个服务，没有一个有监控。** 我发现它们挂了的方式是：等到需要用的时候才发现。
+
+---
+
+## 一句话说清楚
+
+**Uptime Kuma** 是一个自托管的监控面板，GitHub 88K+ Stars，MIT 协议。它能监控你的 HTTP 服务、TCP 端口、DNS 记录、Docker 容器、甚至 Steam 游戏服务器——然后在挂掉的那一刻通过 Telegram、邮件、Discord 等 90+ 渠道通知你。
+
+**一句话总结：自托管界的 Uptime Robot，但数据完全属于你。**
+
+---
+
+## 5 分钟部署
+
+### 前置要求
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+）
+- Docker 和 Docker Compose 已安装
+
+没有 Docker？一行搞定：
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose 部署（推荐）
+
+```bash
+mkdir -p ~/uptime-kuma && cd ~/uptime-kuma
+```
+
+创建 `compose.yaml`：
+
+```yaml
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai  # 根据你的服务器时区修改
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+打开浏览器访问 `http://你的服务器IP:3001`，注册管理员账号，完事。
+
+### Docker 一行命令（快速试用）
+
+不想写 compose 文件？直接跑：
+
+```bash
+docker run -d \
+  --restart=always \
+  -p 3001:3001 \
+  -v uptime-kuma:/app/data \
+  --name uptime-kuma \
+  louislam/uptime-kuma:2
+```
+
+> ⚠️ **踩坑提醒**：数据目录不要挂载到 NFS 网络存储。Uptime Kuma 的 SQLite 数据库对 NFS 的文件锁支持不好，会导致数据损坏。用本地磁盘或 Docker volume。
+
+---
+
+## 配置第一个监控
+
+登录后，点 **"+ 添加新的监控"**。
+
+### HTTP 监控（最常用）
+
+| 字段 | 填什么 | 示例 |
+|------|--------|------|
+| 监控类型 | HTTP(s) | — |
+| 名称 | 你的服务名 | `Vaultwarden` |
+| URL | 要监控的地址 | `https://vault.example.com` |
+| 间隔 | 多久检查一次 | `60 秒` |
+
+点保存，立刻看到结果。绿色 = 正常，红色 = 挂了。
+
+### 其他监控类型
+
+- **TCP Port** — 监控端口是否可达（适合非 HTTP 服务，如数据库）
+- **DNS Record** — 检查 DNS 解析是否正确
+- **Docker Container** — 监控容器是否在运行
+- **Ping** — 检查主机是否在线
+- **Push** — 主动上报模式（适合内网服务，由服务主动 push 状态）
+
+> 💡 **实战建议**：每个自托管服务至少配一个 HTTP 监控。如果你的服务需要登录才能访问，用关键词监控——设置一个"登录页面"特有的关键词（如 `<title>登录</title>`），比单纯检查 HTTP 200 更准确。
+
+---
+
+## 通知渠道配置
+
+监控发现异常后，怎么通知你？Uptime Kuma 支持 90+ 通知渠道。下面是最常用的几个：
+
+### Telegram（推荐）
+
+1. 打开 Telegram，找 @BotFather，发送 `/newbot`，按提示创建 Bot，拿到 Token
+2. 把这个 Bot 拉进一个群（或直接私聊），发送 `/start` 激活
+3. 找 @userinfobot，转发一条消息给它，它会回复你的 Chat ID
+4. 在 Uptime Kuma → 设置 → 通知 → 添加 Telegram
+5. 填入 Token 和 Chat ID，点测试确认能收到消息
+
+### 邮件（SMTP）
+
+填入 SMTP 服务器地址、端口、用户名、密码。推荐用 Gmail 应用专用密码（Google 账号 → 安全 → 两步验证 → 应用专用密码）或自建邮件服务器。Uptime Kuma 支持 STARTTLS 和 SSL/TLS。
+
+### Discord / Slack / 飞书
+
+都是 Webhook 模式：在对应平台创建 Incoming Webhook，拿到 URL，粘贴到 Uptime Kuma 的通知配置里即可。三个平台的操作流程几乎一样，2 分钟搞定。
+
+> 💡 **我的配置**：Telegram 做主通知（手机推送快），邮件做备份（防止 Telegram 抽风）。重要服务两个都开。
+
+---
+
+## 状态页面：让别人也能看到
+
+Uptime Kuma 自带状态页面功能，你可以创建一个公开页面展示所有服务的状态。
+
+### 创建步骤
+
+1. 左侧菜单 → **状态页面** → 添加
+2. 选择要展示的监控项
+3. 绑定域名（可选）
+
+效果类似 `status.example.com`，打开就能看到所有服务的实时状态和历史 uptime。对于给客户用的服务，放一个状态页显得专业；对于自己的 homelab，手机上快速查看也很方便。
+
+---
+
+## 进阶玩法
+
+### 反向代理（HTTPS）
+
+裸跑 `3001` 端口不安全。用 Caddy 或 Nginx 反代 + 自动 SSL：
+
+**Caddy（一行搞定）：**
+
+```bash
+# Caddyfile
+monitor.example.com {
+    reverse_proxy localhost:3001
+}
+```
+
+Caddy 自动申请和续期 Let's Encrypt 证书，零配置。
+
+### 与 Coolify 搭配
+
+如果你用 Coolify 部署服务，在 Coolify 的 Docker Compose 部署里加一个 Uptime Kuma 服务即可。然后在 Uptime Kuma 里手动添加 Coolify 管理的每个服务的 URL 作为监控项。Coolify 不会自动注册监控，但 Uptime Kuma 的 HTTP 监控不依赖部署平台——只要你能访问到服务的 URL，就能监控。
+
+### 多实例备份
+
+Uptime Kuma 的数据存在 SQLite 文件里。定期备份 `data` 目录即可：
+
+```bash
+# 简单的 cron 备份
+0 3 * * * tar -czf /backup/uptime-kuma-$(date +\%F).tar.gz ~/uptime-kuma/data/
+```
+
+---
+
+## 常见坑
+
+### 1. 误报：服务确实挂了但你以为没有
+
+最常见原因：Docker 容器 OOM 被杀。检查 `docker logs uptime-kuma` 和 `dmesg`。另一个常见原因是反向代理层挂了但后端服务还在跑——Uptime Kuma 检查的是代理层的响应，所以如果 Caddy/Nginx 报 502，它会正确告警。
+
+### 2. 监控间隔太短导致大量通知
+
+如果你有 50 个监控项，每个 20 秒检查一次，服务器压力不小。建议：
+- 普通服务：60 秒间隔
+- 关键服务：20 秒间隔
+- 非关键：300 秒间隔
+
+### 3. NFS 挂载导致数据库损坏
+
+前面提过了，但值得再说一遍：**不要用 NFS**。用本地磁盘或 Docker volume。
+
+---
+
+## 实用清单
+
+搭完 homelab 后，按这个顺序做：
+
+1. ✅ 部署 Uptime Kuma（Docker Compose，5 分钟）
+2. ✅ 为每个自托管服务添加 HTTP 监控
+3. ✅ 配置至少一个通知渠道（Telegram 推荐）
+4. ✅ 设置证书过期告警（HTTP 监控内置 SSL 检测，确认已勾选）
+5. ✅ 搞一个反向代理（Caddy 最省心）
+6. ✅ 做一次模拟宕机测试：停掉一个服务，确认 60 秒内收到通知
+7. ✅ 定期备份 `data` 目录（一行 cron 搞定）
+
+做完这 7 步，你的 homelab 就有了基本的可观测性。下次服务挂了，你会在 60 秒内收到通知——而不是等到需要用的时候才发现。
+
+---
+
+*Uptime Kuma 是我 homelab 里最后装的工具，却是每天看的最多的。装完之后你会发现，之前那些"偶尔打不开"的服务，其实一直在默默挂着。*

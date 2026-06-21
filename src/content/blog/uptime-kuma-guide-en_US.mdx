@@ -1,0 +1,221 @@
+---
+title: "Uptime Kuma Self-Hosted Guide: Monitor Everything in 5 Minutes"
+description: "GitHub 88K+ Stars self-hosted monitoring dashboard with 90+ notification channels, status pages, and zero vendor lock-in"
+pubDate: 2026-06-21
+tags: ["self-hosted", "monitoring", "uptime-kuma", "docker", "homelab", "devops"]
+category: "infrastructure"
+difficulty: "beginner"
+timeToRead: 10
+postLang: "en"
+groupKey: "uptime-kuma-guide"
+template: "paper"
+---
+
+## You run a dozen self-hosted services. Do you know if they're actually running?
+
+I spent over 2,000 hours building my homelab — Coolify, Ollama, Open WebUI, Vaultwarden, n8n, twelve services total — and a single expired TLS certificate took it all down for six hours.
+
+Not crashed. The service was still running, but every HTTPS handshake failed. I didn't notice until I tried to log in from my phone that evening. Opened the browser: 502 Bad Gateway.
+
+**Twelve services, zero monitoring.** The way I found out they were down: I tried to use them.
+
+---
+
+## What is Uptime Kuma?
+
+**Uptime Kuma** is a self-hosted monitoring dashboard with 88K+ GitHub stars and an MIT license. It monitors HTTP endpoints, TCP ports, DNS records, Docker containers, Steam game servers, and more — then notifies you the moment something goes down via Telegram, email, Discord, or any of 90+ supported channels.
+
+**In one sentence: a self-hosted Uptime Robot, but you own all the data.**
+
+---
+
+## 5-Minute Deployment
+
+### Prerequisites
+
+- A Linux server (Ubuntu 22.04+ recommended)
+- Docker and Docker Compose installed
+
+No Docker yet? One command:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose (Recommended)
+
+```bash
+mkdir -p ~/uptime-kuma && cd ~/uptime-kuma
+```
+
+Create `compose.yaml`:
+
+```yaml
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=UTC  # Change to your server timezone
+```
+
+Start it:
+
+```bash
+docker compose up -d
+```
+
+Open `http://your-server-ip:3001`, register an admin account, done.
+
+### Docker One-Liner (Quick Trial)
+
+```bash
+docker run -d \
+  --restart=always \
+  -p 3001:3001 \
+  -v uptime-kuma:/app/data \
+  --name uptime-kuma \
+  louislam/uptime-kuma:2
+```
+
+> ⚠️ **Pitfall**: Do not mount the data directory to NFS network storage. Uptime Kuma's SQLite database relies on file locking that NFS does not handle properly, which can corrupt your data. Use local disks or Docker volumes.
+
+---
+
+## Adding Your First Monitor
+
+After logging in, click **"Add New Monitor"**.
+
+### HTTP Monitor (Most Common)
+
+| Field | Value | Example |
+|-------|-------|---------|
+| Monitor Type | HTTP(s) | — |
+| Name | Your service name | `Vaultwarden` |
+| URL | Endpoint to check | `https://vault.example.com` |
+| Interval | Check frequency | `60 seconds` |
+
+Save and you'll see results immediately. Green = up, red = down.
+
+### Other Monitor Types
+
+- **TCP Port** — checks if a port is reachable (useful for databases, non-HTTP services)
+- **DNS Record** — verifies DNS resolution is correct
+- **Docker Container** — checks if a container is running
+- **Ping** — host reachability
+- **Push** — active reporting mode (for internal services that push their own status)
+
+> 💡 **Best practice**: Set up an HTTP monitor for every self-hosted service. If the service requires authentication, use keyword monitoring — look for a string unique to the login page (e.g., `<title>Login</title>`) instead of relying solely on HTTP 200 status codes.
+
+---
+
+## Notification Channels
+
+When something goes down, how do you get notified? Uptime Kuma supports 90+ notification channels. Here are the most common:
+
+### Telegram (Recommended)
+
+1. Open Telegram, find @BotFather, send `/newbot`, follow prompts to create a bot, get the token
+2. Add the bot to a group (or DM it directly), send `/start` to activate
+3. Find @userinfobot, forward a message to it, get your Chat ID
+4. In Uptime Kuma → Settings → Notifications → Add Telegram
+5. Enter token and Chat ID, click Test to confirm delivery
+
+### Email (SMTP)
+
+Fill in SMTP server address, port, username, and password. Gmail app passwords (Google Account → Security → 2-Step Verification → App Passwords) or a self-hosted mail server both work. Uptime Kuma supports STARTTLS and SSL/TLS.
+
+### Discord / Slack / Others
+
+All webhook-based: create an Incoming Webhook in the platform, get the URL, paste it into Uptime Kuma's notification config. The workflow is nearly identical across all three platforms, takes about 2 minutes.
+
+> 💡 **My setup**: Telegram as primary (fast mobile push), email as backup (in case Telegram has issues). Both enabled for critical services.
+
+---
+
+## Status Pages
+
+Uptime Kuma includes a built-in status page feature. Create a public page that displays the real-time status and uptime history of selected services.
+
+### Setup
+
+1. Sidebar → **Status Pages** → Add
+2. Select which monitors to include
+3. Optionally bind a custom domain
+
+The result looks like `status.example.com` — anyone can check your service health at a glance. For client-facing services, a status page looks professional. For personal homelab use, it's convenient for quick mobile checks.
+
+---
+
+## Advanced Usage
+
+### Reverse Proxy (HTTPS)
+
+Running on port 3001 without TLS is not ideal. Use Caddy or Nginx for reverse proxying with automatic SSL:
+
+**Caddy (one-liner):**
+
+```Caddyfile
+monitor.example.com {
+    reverse_proxy localhost:3001
+}
+```
+
+Caddy handles Let's Encrypt certificate issuance and renewal automatically.
+
+### Coolify Integration
+
+If you deploy services via Coolify, add Uptime Kuma as a Docker Compose service in Coolify. Then manually add each Coolify-managed service's URL as a monitor in Uptime Kuma. Coolify doesn't auto-register monitors, but Uptime Kuma's HTTP monitoring doesn't depend on the deployment platform — as long as you can reach the service URL, you can monitor it.
+
+### Backup Strategy
+
+Uptime Kuma stores everything in a SQLite file. Simply back up the `data` directory:
+
+```bash
+# Cron backup
+0 3 * * * tar -czf /backup/uptime-kuma-$(date +\%F).tar.gz ~/uptime-kuma/data/
+```
+
+---
+
+## Common Pitfalls
+
+### 1. False Negatives: Service Is Down But You Think It's Up
+
+Most common cause: Docker container killed by OOM. Check `docker logs uptime-kuma` and `dmesg`. Another common scenario: the reverse proxy layer is down but the backend is still running — Uptime Kuma checks the proxy's response, so if Caddy/Nginx returns 502, it will correctly alert you.
+
+### 2. Too Many Alerts from Tight Intervals
+
+50 monitors checking every 20 seconds adds up. Recommended intervals:
+- Normal services: 60 seconds
+- Critical services: 20 seconds
+- Non-essential: 300 seconds
+
+### 3. NFS Mount Corruption
+
+Worth repeating: **do not use NFS**. Use local disks or Docker volumes.
+
+---
+
+## Quick Reference Checklist
+
+After setting up your homelab, follow this sequence:
+
+1. ✅ Deploy Uptime Kuma (Docker Compose, 5 minutes)
+2. ✅ Add HTTP monitors for every self-hosted service
+3. ✅ Configure at least one notification channel (Telegram recommended)
+4. ✅ Enable certificate expiry alerts (HTTP monitors include built-in SSL detection, verify it's checked)
+5. ✅ Set up a reverse proxy (Caddy is the easiest)
+6. ✅ Run a mock downtime test: stop one service, confirm you get notified within 60 seconds
+7. ✅ Schedule regular backups of the `data` directory (one cron line)
+
+Once these seven steps are done, your homelab has basic observability. Next time a service goes down, you'll know within 60 seconds — not when you try to use it and find it broken.
+
+---
+
+*Uptime Kuma was the last tool I installed in my homelab, but it's the one I check most often. After setting it up, you'll discover that services you thought were "偶尔 slow" have actually been silently down for hours.*
