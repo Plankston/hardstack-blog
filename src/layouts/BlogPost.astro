@@ -16,6 +16,7 @@ interface Props {
   timeToRead?: number;
   locale: string;
   template?: 'paper' | 'clean' | 'dark';
+  slug?: string;
 }
 
 const {
@@ -28,8 +29,35 @@ const {
   timeToRead,
   locale,
   template = 'paper',
+  slug,
 } = Astro.props;
 const t = useTranslations(locale);
+
+// Generate JSON-LD structured data for Article schema
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description: description,
+  datePublished: pubDate.toISOString(),
+  dateModified: updatedDate ? updatedDate.toISOString() : pubDate.toISOString(),
+  author: {
+    '@type': 'Organization',
+    name: 'HardStack',
+    url: 'https://hardstack.org',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'HardStack',
+    url: 'https://hardstack.org',
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': `https://hardstack.org${Astro.url.pathname}`,
+  },
+  inLanguage: locale === 'zh-CN' ? 'zh-CN' : 'en',
+  keywords: [],
+};
 
 // Template display names
 const templateLabel: Record<string, string> = {
@@ -42,7 +70,13 @@ const templateLabel: Record<string, string> = {
 <!doctype html>
 <html lang={t('site.lang')} dir="ltr">
   <head>
-    <BaseHead title={title} description={description} locale={locale} />
+    <BaseHead 
+      title={title} 
+      description={description} 
+      locale={locale} 
+      ogImage={slug ? `/og/${slug}.png` : undefined}
+    />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body data-template={template}>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">

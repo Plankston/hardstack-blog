@@ -30,7 +30,7 @@ const { Content } = await render(post);
 const slug = getSlug(post);
 ---
 
-<BlogPost {...post.data} locale={currentLocale} template={post.data.template}>
+<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug}>
   <Content />
 </BlogPost>
 

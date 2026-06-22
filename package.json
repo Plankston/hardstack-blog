@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build && npx pagefind --site dist",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "og:generate": "node scripts/generate-og-image.js",
+    "og:generate:all": "node scripts/generate-all-og-images.js"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.2",

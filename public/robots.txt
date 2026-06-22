@@ -1,0 +1,16 @@
+# robots.txt for HardStack Blog
+# https://hardstack.org
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin/api paths
+Disallow: /api/
+Disallow: /_astro/
+
+# Sitemap location
+Sitemap: https://hardstack.org/sitemap-index.xml
+
+# Crawl-delay for polite bots (optional)
+# Crawl-delay: 10
