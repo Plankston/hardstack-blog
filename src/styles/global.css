@@ -38,17 +38,17 @@
   --box-shadow: 0 1px 3px rgba(28, 24, 20, 6%), 0 4px 12px rgba(28, 24, 20, 4%);
 
   /* Template defaults = editorial (upgraded paper) */
-  --bg-body: #fafafa;
-  --bg-header: #f5f0e4;
-  --bg-card: #ffffff;
+  --bg-body: #F5F0E4;
+  --bg-header: #EDE7D9;
+  --bg-card: #FDFAF5;
   --bg-article: transparent;
-  --bg-code: #f5f3f0;
+  --bg-code: #EDE7D9;
   --text-body: #1c1814;
   --text-heading: #1c1814;
   --text-muted: #5c5548;
   --text-faint: #6b6356;
-  --border-color: #e8e0d4;
-  --code-border: #ddd5c8;
+  --border-color: #D4C9B3;
+  --code-border: #CDC0A8;
   --color-link: #205ea6;
   --color-accent-ui: #c2571a;
   --prose-max-w: 880px;
