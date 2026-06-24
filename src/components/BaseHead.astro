@@ -74,11 +74,11 @@ function hreflangUrl(lang: string): string {
 <meta property="og:image" content={ogImageUrl} />
 <meta property="og:locale" content={locale === 'zh-CN' ? 'zh_CN' : 'en_US'} />
 
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={Astro.url} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl} />
 
 <!-- Plausible Analytics -->
 <script is:inline async src="https://plausible.io/js/pa-v9hU51oLTZH6JeoU2lfou.js"></script>
