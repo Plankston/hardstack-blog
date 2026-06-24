@@ -1,0 +1,173 @@
+---
+title: "DBX：15MB 支持 50+ 数据库的开源客户端"
+description: "DBX 是开源跨平台数据库客户端，仅 15MB 支持 50+ 数据库，内置 AI SQL 助手，支持自托管部署。本文手把手教你从安装到精通。"
+pubDate: 2026-06-24
+tags: ["database", "dbx", "self-hosted", "developer-tools", "tauri"]
+category: "tools"
+difficulty: "beginner"
+timeToRead: 12
+postLang: "zh-CN"
+groupKey: "dbx-database-client"
+slug: "dbx-database-client-zh_CN"
+template: "paper"
+---
+
+## 我为什么放弃了 DBeaver
+
+我第一次用 DBeaver 的时候，JVM 启动等了 2 分钟。不是因为我电脑烂，是因为 DBeaver 就是这么重。每次打开都像在等一个不愿意动弹的老爷爷起床。
+
+后来试了 DataGrip，功能确实强，但一年 200 刀的订阅费让我怀疑自己是不是在给 JetBrains 打工。TablePlus 倒是轻，但免费版限制太多，Pro 版又贵得离谱。
+
+直到我发现了 DBX。15MB 的安装包，启动不到 1 秒，支持 50 多种数据库，还内置了 AI 助手。这不是在开玩笑吧？
+
+## DBX 是什么
+
+一句话：DBX 是一个开源、轻量、跨平台的数据库客户端，基于 Rust + Tauri 2 构建。
+
+核心卖点：
+- 仅 15MB，比一张高清图片还小
+- 支持 50+ 种数据库（MySQL、PostgreSQL、SQLite、Redis、MongoDB、ClickHouse 等）
+- 内置 AI SQL 助手（支持 Claude、OpenAI、Ollama）
+- ER 关系图、拖拽文件预览、行内数据编辑
+- 桌面版 + Docker 自托管 + Web 版
+- GitHub 6K+ Stars，Apache-2.0 许可
+
+## 为什么选 DBX
+
+来，直接抄答案。看这张对比表：
+
+| 特性 | DBX | DBeaver | DataGrip | TablePlus |
+|------|-----|---------|----------|-----------|
+| **体积** | 15MB | 200MB+ | 500MB+ | 30MB |
+| **启动速度** | < 1 秒 | 10-30 秒 | 5-10 秒 | 1-2 秒 |
+| **数据库支持** | 50+ | 80+ | 30+ | 20+ |
+| **价格** | 免费开源 | 免费/收费 | 200 刀/年 | 89 刀 |
+| **AI 助手** | ✅ 内置 | ❌ | ❌ | ❌ |
+| **自托管** | ✅ Docker | ❌ | ❌ | ❌ |
+| **跨平台** | ✅ | ✅ | ✅ | ❌ (仅 Mac/Win) |
+
+看到没？DBX 在轻量、价格、AI 助手这几个维度直接碾压。DBeaver 虽然数据库支持最多，但你真的用得到 80 种吗？
+
+## 快速上手
+
+别废话，先装上再说。
+
+**macOS 用户**：
+```bash
+brew install --cask t8y2/tap/dbx
+```
+
+**Windows 用户**：
+```bash
+scoop install dbx
+```
+
+**Linux 用户**：
+```bash
+# Homebrew
+brew install --cask dbx
+
+# 或从 GitHub Releases 下载 AppImage
+# chmod +x dbx-*.AppImage && ./dbx-*.AppImage
+# https://github.com/t8y2/dbx/releases
+```
+
+装完打开，第一个连接怎么建？
+
+1. 点左上角「+」号
+2. 选数据库类型（比如 PostgreSQL）
+3. 填连接信息（主机、端口、用户名、密码、数据库名）
+4. 点「测试连接」
+5. 成功后点「保存」
+
+就这么简单。比 DBeaver 的「新建连接向导」少点 10 次鼠标。
+
+## 核心功能展示
+
+### AI SQL 助手
+
+这是 DBX 最骚的功能。写 SQL 不会？直接问 AI。
+
+```sql
+-- 你随便写个需求
+SELECT * FROM users WHERE created_at > '2024-01-01'
+
+-- AI 帮你优化成：只选需要的字段、加筛选条件、排序、限制条数
+SELECT 
+    id,
+    name,
+    email,
+    created_at
+FROM users 
+WHERE created_at > '2024-01-01'
+AND status = 'active'
+ORDER BY created_at DESC
+LIMIT 100;
+```
+
+支持 Claude、OpenAI、Ollama 本地模型。数据不出本机，安全感拉满。
+
+### ER 关系图
+
+点一下「ER 图」按钮，整个数据库结构一目了然。谁关联谁，一清二楚。再也不用对着一堆 `CREATE TABLE` 语句脑补关系了。
+
+### 拖拽文件预览
+
+CSV、JSON、SQL 文件直接拖进去就能预览。不用打开 Excel，不用装专门的查看器。拖进去，看一眼，关掉。就这么丝滑。
+
+### 行内数据编辑
+
+双击单元格直接改数据，改完自动保存。不用写 `UPDATE` 语句，不用开新窗口。对于快速修数据的场景，效率提升 10 倍不夸张。
+
+## 自托管部署
+
+公司数据不敢传第三方？Docker 一键部署：
+
+```bash
+# 启动 DBX Web 版，映射端口 4224，数据持久化到本地 volume
+docker run -d --name dbx -p 4224:4224 -v dbx-data:/app/data t8y2/dbx
+```
+
+然后浏览器访问 `http://localhost:4224`，全功能 Web 版直接用。数据完全在你自己的服务器上，审计、合规、安全全搞定。
+
+## MCP 集成
+
+如果你用 AI 编程工具（比如 Cursor、Windsurf），DBX 支持 MCP 协议，可以直接集成进去。AI 能直接读取你的数据库结构，写代码的时候自动感知表结构、字段类型。
+
+具体配置：
+1. 在 DBX 设置里开启 MCP 服务
+2. 启动 MCP server：
+```bash
+npx @dbx-app/mcp-server
+```
+3. 在 AI 工具的 `.mcp.json` 中添加：
+```json
+{
+  "mcpServers": {
+    "dbx": {
+      "command": "npx",
+      "args": ["-y", "@dbx-app/mcp-server"]
+    }
+  }
+}
+```
+4. 重启 AI 工具
+
+就这么四步。具体文档看官网：https://dbxio.com
+
+## 总结
+
+DBX 不是万能的，但它解决了我最大的痛点：**轻量 + 免费 + AI 助手**。
+
+如果你：
+- 受够了 DBeaver 的龟速启动
+- 不想为 DataGrip 交智商税
+- 需要一个支持多种数据库的统一客户端
+- 想要 AI 帮你写 SQL
+
+那就去装一个试试。
+
+**现在就去装。装完回来告诉我体验。**
+
+GitHub 地址：https://github.com/t8y2/dbx
+官网：https://dbxio.com
