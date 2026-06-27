@@ -1,0 +1,310 @@
+---
+title: "Tailscale + Headscale Self-Hosting Guide: Zero-Config VPN for Homelab Remote Access"
+description: "Deploy Headscale (open-source Tailscale control server) in 30 minutes with Docker. Configure Tailscale for zero-config VPN and homelab remote access."
+pubDate: 2026-06-27
+tags: ["tailscale", "headscale", "wireguard", "vpn", "remote-access", "homelab", "self-hosted", "networking"]
+category: "infrastructure"
+difficulty: "intermediate"
+timeToRead: 20
+postLang: "en-US"
+groupKey: "tailscale-headscale-guide"
+template: "paper"
+---
+
+## Why Tailscale + Headscale?
+
+Remote access to homelab services remains a common challenge for self-hosters. Traditional approaches—SSH tunneling, manual port forwarding, or hand-configured WireGuard—each introduce friction: fragile connections, security concerns, or configuration overhead.
+
+**Tailscale** solves this with a zero-config VPN built on WireGuard. It handles key exchange, NAT traversal, and access control automatically. **Headscale** extends this by providing an open-source implementation of Tailscale's control server, enabling fully self-hosted deployments where no data passes through third-party infrastructure.
+
+This guide walks through deploying Headscale with Docker, configuring Tailscale clients across platforms, and implementing practical access patterns for homelab environments.
+
+---
+
+## Architecture Overview
+
+### Tailscale
+
+Tailscale wraps WireGuard with several critical improvements:
+
+- **Automatic key exchange**: No manual public/private key generation
+- **NAT traversal**: Automatic hole-punching, no public IP required
+- **ACL control**: Fine-grained access policies
+- **MagicDNS**: Device-to-device access by name instead of IP
+
+The trade-off: Tailscale's official control server is proprietary, and coordination data passes through their infrastructure.
+
+### Headscale
+
+Headscale reimplements the Tailscale control server as open-source software. Once deployed, client behavior remains identical to official Tailscale—the only difference is that the control plane runs on your own server.
+
+---
+
+## Deploying Headscale
+
+### Prerequisites
+
+- A public-facing server (Ubuntu 22.04+ recommended, 1 vCPU / 1GB RAM minimum)
+- A domain name with DNS resolution (for HTTPS)
+- Docker and Docker Compose
+
+### Step 1: Domain and TLS Setup
+
+Headscale requires HTTPS. Caddy provides automatic certificate management:
+
+```bash
+sudo apt install -y caddy
+
+cat > /etc/caddy/Caddyfile << 'EOF'
+headscale.your-domain.com {
+    reverse_proxy localhost:8080
+}
+EOF
+
+sudo systemctl reload caddy
+```
+
+### Step 2: Deploy Headscale
+
+```bash
+mkdir -p ~/headscale && cd ~/headscale
+```
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  headscale:
+    image: headscale/headscale:latest
+    container_name: headscale
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/var/lib/headscale
+      - ./config:/etc/headscale
+    command: serve
+```
+
+Create `config/config.yaml`:
+
+```yaml
+server_url: https://headscale.your-domain.com
+listen_addr: 0.0.0.0:8080
+private_key_path: /var/lib/headscale/private.key
+derp:
+  server:
+    enabled: false  # Use Tailscale's DERP servers instead
+
+db_type: sqlite3
+db_path: /var/lib/headscale/db.sqlite
+
+log_level: info
+```
+
+Start the service:
+
+```bash
+docker compose up -d
+```
+
+### Step 3: Create Namespace and User
+
+```bash
+docker exec -it headscale headscale namespaces create default
+
+# Or use the user-based system (v0.22+)
+docker exec -it headscale headscale users create myuser
+```
+
+### Step 4: Generate Registration Key
+
+```bash
+docker exec -it headscale headscale preauthkeys create --user 1 --reusable
+```
+
+Save the generated key for client registration.
+
+---
+
+## Configuring Tailscale Clients
+
+### Linux Servers
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+
+tailscale up --login-server https://headscale.your-domain.com --authkey YOUR_AUTH_KEY
+```
+
+### macOS, Windows, iOS, Android
+
+1. Install the Tailscale client from the official app store
+2. Navigate to Settings → "Use a custom coordination server"
+3. Enter your Headscale URL: `https://headscale.your-domain.com`
+4. Authenticate with the generated authkey
+
+### Verify Connectivity
+
+```bash
+docker exec -it headscale headscale nodes list
+
+tailscale ping another-device
+```
+
+---
+
+## Access Patterns for Homelab Services
+
+### MagicDNS + HTTPS (Recommended)
+
+Enable device-name resolution across your tailnet:
+
+```bash
+tailscale set --advertise-dns=true
+
+# Access devices by name
+ssh user@homelab
+curl http://homelab:8080
+```
+
+### Tailscale Funnel (Public Exposure)
+
+Expose a homelab service to the public internet:
+
+```bash
+tailscale funnel 8080
+
+# Service accessible at: https://your-device.tailnet-name.ts.net
+```
+
+### Subnet Routing (Full Network Access)
+
+Expose an entire subnet behind a homelab server:
+
+```bash
+tailscale up --advertise-routes=192.168.1.0/24 --accept-routes
+
+# All 192.168.1.x devices now accessible via Tailscale
+```
+
+---
+
+## ACL Configuration
+
+Headscale supports access control policies. Create `config/acl.json`:
+
+```json
+{
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["group:homelab"],
+      "dst": ["group:homelab:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["group:mobile"],
+      "dst": ["group:web-services:443,80,8080"]
+    }
+  ],
+  "groups": {
+    "group:homelab": ["user1"],
+    "group:mobile": ["user1"],
+    "group:web-services": ["homelab-server"]
+  }
+}
+```
+
+Apply the policy:
+
+```bash
+docker cp config/acl.json headscale:/etc/headscale/acl.json
+docker exec -it headscale headscale policy reload
+```
+
+---
+
+## Common Issues and Solutions
+
+### Docker Container NAT Traversal Failure
+
+**Symptom**: Tailscale inside Docker containers cannot establish direct connections; high DERP relay latency.
+
+**Solution**: Run Tailscale with host networking:
+
+```bash
+docker run -it --network=host tailscale/tailscale
+```
+
+### Nodes Offline After Headscale Update
+
+**Symptom**: Registered nodes show offline status after Headscale version upgrades.
+
+**Solution**: Re-run `tailscale up` on the client—no re-registration required.
+
+### MagicDNS Resolution Failures
+
+**Symptom**: `ping device-name` returns "cannot resolve".
+
+**Solution**: Verify MagicDNS is enabled and client version is ≥ 1.40.
+
+### Mobile Client Disconnections
+
+**Symptom**: iOS/Android clients lose connection when backgrounded.
+
+**Solution**: Disable background restrictions for Tailscale in system settings. iOS users should also disable low power mode restrictions.
+
+### Status Display Mismatch
+
+**Symptom**: `tailscale status` shows offline, but `tailscale ping` succeeds.
+
+**Solution**: This is a known Headscale synchronization delay. Restart the Headscale container to refresh state.
+
+---
+
+## Comparison with Alternative Approaches
+
+| Approach | Setup Complexity | NAT Traversal | Data Control | Use Case |
+|----------|-----------------|---------------|--------------|----------|
+| SSH Tunnel | Low | Manual | Third-party | Temporary access |
+| Port Forwarding | Low | Not supported | Partial | Fixed service exposure |
+| Manual WireGuard | High | Manual | Full | Learning/evaluation |
+| Tailscale (Official) | Minimal | Automatic | Third-party | Quick setup |
+| **Tailscale + Headscale** | **Medium** | **Automatic** | **Full** | **Production homelab** |
+
+---
+
+## Frequently Asked Questions
+
+### What is the difference between Headscale and official Tailscale?
+
+The functionality is nearly identical. The distinction lies in the control server: official Tailscale routes coordination data through their infrastructure, while Headscale provides fully self-hosted control. Client behavior and user experience remain the same.
+
+### Is a public IP required?
+
+The Headscale server requires a public IP (for client registration), but homelab nodes do not. Tailscale automatically handles NAT traversal.
+
+### How does performance compare to manual WireGuard?
+
+Performance is equivalent to native WireGuard. Tailscale wraps WireGuard with control traffic over HTTPS and data traffic over WireGuard UDP. In production use, latency is comparable to direct WireGuard connections.
+
+### Can Tailscale coexist with existing WireGuard configurations?
+
+Yes. Tailscale operates on its own virtual interface (`tailscale0`) and does not interfere with existing network configurations.
+
+---
+
+## Conclusion
+
+Tailscale combined with Headscale provides a robust solution for homelab remote access:
+
+1. **Zero configuration** - No manual WireGuard setup required
+2. **Automatic NAT traversal** - No public IP needed on client nodes
+3. **Self-hosted control plane** - Full data sovereignty with Headscale
+4. **Cross-platform support** - Linux, macOS, Windows, iOS, Android
+5. **Fine-grained access control** - ACL-based policies for team environments
+
+The deployment takes approximately 30 minutes and provides production-grade remote access with minimal ongoing maintenance.

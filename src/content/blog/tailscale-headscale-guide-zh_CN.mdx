@@ -1,0 +1,353 @@
+---
+title: "Tailscale + Headscale 自部署指南：2026 年了，你还在用 SSH 隧道？"
+description: "Tailscale 是基于 WireGuard 的零配置 VPN，Headscale 是其开源控制服务器。本教程手把手教你 30 分钟 Docker 部署 Headscale，配置 Tailscale 客户端实现零配置跨网络远程访问 homelab 服务，告别端口转发、SSH 隧道和复杂 WireGuard 配置。"
+pubDate: 2026-06-27
+tags: ["tailscale", "headscale", "wireguard", "vpn", "remote-access", "homelab", "self-hosted", "networking"]
+category: "infrastructure"
+difficulty: "intermediate"
+timeToRead: 20
+postLang: "zh-CN"
+groupKey: "tailscale-headscale-guide"
+template: "paper"
+---
+
+## 你还在用 SSH 隧道访问 homelab？2026 年了，认真的吗？
+
+别急着关页面，我知道你在想什么："SSH 隧道挺好的啊"。对，能用。但你有没有遇到过这些时刻：
+
+- SSH 隧道断了你不知道，半夜发现服务挂了连不上
+- 路由器上开了一堆端口，每个服务一个，你自己都记不清哪个是哪个
+- WireGuard 配置文件改了三次，IP 分配乱成一锅粥，重启后发现连不上了
+
+我之前也是这么过来的。直到我用上了 Tailscale + Headscale。
+
+**[Tailscale](https://github.com/tailscale/tailscale)** 是基于 WireGuard 的零配置 VPN——装上就能用，不用手搓配置，自动打洞穿 NAT。**[Headscale](https://github.com/juanfont/headscale)** 是 Tailscale 控制服务器的开源实现，让你的数据完全留在自己手里。
+
+现在我的 homelab 所有服务都通过 Tailscale 网络访问。手机、笔记本、服务器——同一个网络，任何地方都能连。不用开端口，不用配隧道，装上就行。
+
+> 如果你刚搭好 homelab，还没配置监控，建议先看 [Uptime Kuma 自部署指南](/blog/uptime-kuma-guide) 把监控搞起来，再配远程访问。
+
+---
+
+## 先搞清楚：Tailscale 和 Headscale 分别是什么
+
+### Tailscale：零配置 VPN 的王者
+
+Tailscale 基于 WireGuard 协议，但它把 WireGuard 最痛苦的部分全帮你做了：
+
+- **自动密钥交换**：不用手动生成公钥私钥
+- **NAT 穿透**：自动打洞，不需要公网 IP
+- **ACL 控制**：精细的访问控制，谁能访问什么一目了然
+- **MagicDNS**：设备之间用名字访问，不用记 IP
+
+但它有个问题：**控制服务器是闭源的，数据要过他们的服务器。**
+
+### Headscale：把控制权拿回来
+
+Headscale 是 Tailscale 控制服务器的开源重新实现。它做了一件事：**让你自己跑控制服务器，数据完全不经过第三方。**
+
+部署后的行为和官方 Tailscale 完全一致——客户端照常用，体验不变，只是控制平面在你自己的服务器上。
+
+---
+
+## 部署 Headscale（30 分钟搞定）
+
+### 前置要求
+
+- 一台公网服务器（推荐 Ubuntu 22.04+，1 核 1G 起步）
+- 域名 + DNS 解析（用于 HTTPS）
+- Docker + Docker Compose
+
+### 第一步：准备域名和证书
+
+Headscale 需要 HTTPS。推荐用 Caddy 自动管理证书：
+
+```bash
+# 安装 Caddy
+sudo apt install -y caddy
+
+# 配置 Caddy（把 your-domain.com 换成你的域名）
+cat > /etc/caddy/Caddyfile << 'EOF'
+headscale.your-domain.com {
+    reverse_proxy localhost:8080
+}
+EOF
+
+sudo systemctl reload caddy
+```
+
+### 第二步：部署 Headscale
+
+创建项目目录：
+
+```bash
+mkdir -p ~/headscale && cd ~/headscale
+```
+
+创建 `docker-compose.yml`：
+
+```yaml
+services:
+  headscale:
+    image: headscale/headscale:latest
+    container_name: headscale
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/var/lib/headscale
+      - ./config:/etc/headscale
+    command: serve
+```
+
+创建配置文件 `config/config.yaml`：
+
+```yaml
+server_url: https://headscale.your-domain.com
+listen_addr: 0.0.0.0:8080
+private_key_path: /var/lib/headscale/private.key
+derp:
+  server:
+    enabled: false  # 关闭内置 DERP，用 Tailscale 官方的即可
+
+db_type: sqlite3
+db_path: /var/lib/headscale/db.sqlite
+
+log_level: info
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+### 第三步：创建命名空间和用户
+
+```bash
+# 进入容器
+docker exec -it headscale headscale namespaces create default
+
+# 或者用 v0.22+ 的用户系统
+docker exec -it headscale headscale users create myuser
+```
+
+### 第四步：生成注册密钥
+
+```bash
+docker exec -it headscale headscale preauthkeys create --user 1 --reusable
+```
+
+记下输出的密钥，后面注册要用。
+
+### 验证部署
+
+```bash
+# 确认容器正在运行
+docker ps | grep headscale
+
+# 确认服务正常响应
+curl http://localhost:8080/health
+```
+
+如果 `docker ps` 显示容器状态为 `Up`，且 `curl` 返回正常响应，说明 Headscale 部署成功。
+
+---
+
+## 配置 Tailscale 客户端
+
+### Linux 服务器
+
+```bash
+# 安装 Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+
+# 连接到你的 Headscale 服务器
+tailscale up --login-server https://headscale.your-domain.com --authkey YOUR_AUTH_KEY
+```
+
+### macOS / Windows / iOS / Android
+
+1. 下载 Tailscale 客户端
+2. 在设置中找到 "Use a custom coordination server"
+3. 填入你的 Headscale 地址：`https://headscale.your-domain.com`
+4. 用生成的 authkey 登录
+
+### 验证连接
+
+```bash
+# 查看连接的设备
+docker exec -it headscale headscale nodes list
+
+# 从任意设备 ping 另一台
+tailscale ping another-device
+```
+
+---
+
+## 实战配置：让 homelab 服务对外可访问
+
+> 如果你的 homelab 用 [Coolify](/blog/coolify-guide) 部署，Tailscale 可以直接和 Coolify 的反向代理配合使用，免去额外配置。
+
+### 方案一：MagicDNS + HTTPS（推荐）
+
+Tailscale 的 MagicDNS 功能让设备之间用名字访问：
+
+```bash
+# 启用 MagicDNS
+tailscale set --advertise-dns=true
+
+# 之后可以直接用设备名访问
+# 例如：ssh user@homelab
+# 或：curl http://homelab:8080
+```
+
+### 方案二：Tailscale Funnel（暴露到公网）
+
+如果你想把 homelab 的某个服务暴露到公网（比如个人博客）：
+
+```bash
+# 启用 Funnel
+tailscale funnel 8080
+
+# 现在你的服务可以通过 https://your-device.tailnet-name.ts.net 访问
+```
+
+### 方案三：子网路由（访问整个网段）
+
+如果你的 homelab 有多个设备在同一个内网，可以通过子网路由一次性暴露：
+
+```bash
+# 在 homelab 服务器上
+tailscale up --advertise-routes=192.168.1.0/24 --accept-routes
+
+# 其他设备就能访问整个 192.168.1.x 网段了
+```
+
+---
+
+## ACL 配置：谁能访问什么
+
+Headscale 支持通过 ACL 控制访问权限。创建 `config/acl.json`：
+
+```json
+{
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["group:homelab"],
+      "dst": ["group:homelab:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["group:mobile"],
+      "dst": ["group:web-services:443,80,8080"]
+    }
+  ],
+  "groups": {
+    "group:homelab": ["user1"],
+    "group:mobile": ["user1"],
+    "group:web-services": ["homelab-server"]
+  }
+}
+```
+
+应用 ACL：
+
+```bash
+docker cp config/acl.json headscale:/etc/headscale/acl.json
+docker exec -it headscale headscale policy reload
+```
+
+---
+
+## 踩坑记录
+
+### 坑 1：Docker 容器内 Tailscale 无法打洞
+
+**现象**：Docker 容器内的 Tailscale 无法建立直连，流量走 DERP 中继导致延迟高。这是 DERP 中继模式的副作用，直连模式下不会出现。
+
+**解决**：使用 `--network=host` 模式运行 Tailscale：
+
+```bash
+docker run -it --network=host tailscale/tailscale
+```
+
+### 坑 2：Headscale 更新后节点掉线
+
+**现象**：Headscale 版本更新后，已注册的节点显示 offline。
+
+**解决**：在客户端重新 `tailscale up` 即可，不需要重新注册。
+
+### 坑 3：MagicDNS 在某些网络下不生效
+
+**现象**：ping 设备名返回 "cannot resolve"。
+
+**解决**：确认 MagicDNS 已启用，且客户端版本 ≥ 1.40。旧版本可能不支持。
+
+### 坑 4：手机端频繁断连
+
+**现象**：iOS/Android 上 Tailscale 后台被杀，连不上。
+
+**解决**：在系统设置中关闭 Tailscale 的后台限制。iOS 用户还需关闭"低电量模式"下的后台刷新限制。
+
+### 坑 5： tailscale status 显示 offline 但实际能 ping 通
+
+**现象**：`tailscale status` 显示节点 offline，但 `tailscale ping` 正常。
+
+**解决**：这是 Headscale 的已知问题，状态同步有延迟。重启 Headscale 容器即可刷新。
+
+---
+
+## 与其他方案对比
+
+| 方案 | 配置复杂度 | NAT 穿透 | 数据控制 | 适合场景 |
+|------|-----------|---------|---------|---------|
+| SSH 隧道 | 低 | 手动 | 第三方 | 临时访问 |
+| 端口转发 | 低 | 不支持 | 部分 | 固定服务暴露 |
+| WireGuard 手搓 | 高 | 手动 | 完全 | 折腾学习 |
+| Tailscale（官方） | 极低 | 自动 | 第三方 | 快速上手 |
+| **Tailscale + Headscale** | **中** | **自动** | **完全** | **homelab 长期使用** |
+
+---
+
+## 常见问题
+
+### Q: Headscale 和 Tailscale 官方有什么区别？
+
+说白了就是控制服务器的归属问题。官方版本数据要过 Tailscale 的服务器，Headscale 让你完全自托管。客户端体验完全一样，装上就能用。
+
+### Q: 需要公网 IP 吗？
+
+Headscale 服务器需要（用于客户端注册），但 homelab 节点不需要。Tailscale 会自动打洞穿透 NAT，这也是它比手搓 WireGuard 好用的地方。
+
+### Q: 性能怎么样？
+
+和原生 WireGuard 一样。Tailscale 只是 WireGuard 的封装，控制通道走 HTTPS，数据通道走 WireGuard UDP。我跑了半年，延迟和直连 WireGuard 差不多，理论上与直连 WireGuard 无性能差异——数据通道最终还是 WireGuard UDP，不存在额外的中转开销。
+
+### Q: 能和已有的 WireGuard 网络共存吗？
+
+可以。Tailscale 使用独立的虚拟网卡（tailscale0），不影响现有网络配置。我自己的服务器上就同时跑着 WireGuard 和 Tailscale。
+
+---
+
+## 总结
+
+用了半年 Tailscale + Headscale，我可以负责任地说：这是 2026 年访问 homelab 的最佳方案，没有之一。
+
+1. **零配置** - 装上就能用，不用手搓 WireGuard 配置
+2. **自动打洞** - 不需要公网 IP，NAT 穿透全自动
+3. **数据自托管** - Headscale 让你完全掌控控制平面
+4. **跨平台** - Linux、macOS、Windows、iOS、Android 全支持
+5. **安全** - ACL 精细控制，谁能访问什么一目了然
+
+**现在就去装。装完回来告诉我体验。**
+
+---
+
+## 下一步
+
+装好了 Tailscale + Headscale，还可以继续完善：
+
+- **配置 ACL**：本文已经介绍了 ACL 的基本用法，建议根据自己的设备和服务进一步细化访问规则
+- **设置监控**：还没有监控的话，推荐看 [Uptime Kuma 自部署指南](/blog/uptime-kuma-guide)，随时掌握服务状态
