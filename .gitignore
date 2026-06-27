@@ -25,3 +25,4 @@ pnpm-debug.log*
 
 # 建设文档
 规划文档.md
+.agents/
