@@ -5,7 +5,7 @@ import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { useTranslations } from '../../i18n/ui';
-import { getSlug } from '../../i18n/utils';
+import { getSlug, categoryPillClass, categoryLabel } from '../../i18n/utils';
 
 const currentLocale = 'zh-CN' as const;
 const t = useTranslations(currentLocale);
@@ -18,27 +18,6 @@ const categories = new Set(posts.filter(p => p.data.category).map(p => p.data.ca
 const totalReadTime = posts.reduce((sum, p) => sum + (p.data.timeToRead || 0), 0);
 const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) : 0;
 const difficulties = new Set(posts.filter(p => p.data.difficulty).map(p => p.data.difficulty!.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())));
-
-const stats = [
-  { value: String(posts.length), label: '篇文章' },
-  { value: String(categories.size), label: '个分类' },
-  { value: `~${avgReadTime}`, label: '分钟阅读' },
-  { value: String(difficulties.size), label: '个难度' },
-];
-
-function categoryPillClass(cat: string | undefined): string {
-  if (!cat) return 'category-pill-default';
-  const c = cat.toLowerCase();
-  if (c === 'ai-tools') return 'category-pill-ai-tools';
-  if (c === 'guide') return 'category-pill-guide';
-  if (c === 'review') return 'category-pill-review';
-  return 'category-pill-default';
-}
-
-function categoryLabel(cat: string | undefined): string {
-  if (!cat) return '未分类';
-  return cat.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
 ---
 
 <!doctype html>
@@ -55,92 +34,107 @@ function categoryLabel(cat: string | undefined): string {
 
       <!-- HERO -->
       <section class="section-inner">
-        <div class="mx-auto max-w-[960px] text-center">
-          <p class="post-meta mb-4">
-            第一卷 · 2026
-          </p>
-          <h1 class="hero-heading mb-5">
-            {t('site.title')}
-          </h1>
-          <p class="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-[var(--text-muted)]">
-            {t('home.hero')}
-          </p>
+        <div class="hero-grid">
+          <div>
+            <p class="hero-eyebrow">
+              hardstack ~/blog
+            </p>
+            <h1 class="hero-heading mb-5">
+              {t('site.title')}
+            </h1>
+            <p class="mb-8 max-w-[480px] text-[1.05rem] leading-relaxed text-[var(--text-muted)]">
+              {t('home.hero')}
+            </p>
+            <a href="#article-list" class="hero-cta">
+              阅读最新文章 →
+            </a>
+          </div>
 
-          <div class="hero-stats justify-center">
-            {stats.map((s) => (
-              <div class="hero-stat">
-                <span class="hero-stat-value">{s.value}</span>
-                <span class="hero-stat-label">{s.label}</span>
+          <div>
+            <div class="terminal-card">
+              <div class="terminal-header">
+                <span class="terminal-dot terminal-dot-red"></span>
+                <span class="terminal-dot terminal-dot-yellow"></span>
+                <span class="terminal-dot terminal-dot-green"></span>
+                <span class="terminal-title">hardstack — stats</span>
               </div>
-            ))}
+              <div class="terminal-body">
+                <span class="label">$</span> <span class="highlight">cat</span> blog.stats<br />
+                <span class="label">articles:</span> <span class="value">{posts.length}</span><br />
+                <span class="label">categories:</span> <span class="value-warm">{categories.size}</span><br />
+                <span class="label">avg_read:</span> <span class="value">~{avgReadTime} min</span><br />
+                <span class="label">languages:</span> <span class="value-warm">EN, 中文</span><br />
+                <span class="label">status:</span> <span class="value">active</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- ALL POSTS -->
-      <section class="section-inner pt-0">
-        <div class="mx-auto" style="max-width: 960px">
-          <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-[var(--text-body)]">
-              {t('blog.allPosts')}
-            </h2>
-            {posts.length > 0 && (
-              <a href="/zh-CN/blog/" class="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--color-accent-ui)] no-underline">
-                查看全部 →
-              </a>
-            )}
-          </div>
-
-          {posts.length > 0 ? (
-            <div class="flex flex-col gap-3" id="article-list">
-              {posts.map((post, i) => (
-                <a
-                  href={new URL(`/zh-CN/blog/${getSlug(post)}/`, Astro.site).pathname}
-                  class="article-card no-underline reveal"
-                  style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
-                >
-                  <div class="article-card-content">
-                    <div class="mb-1 flex flex-wrap items-center gap-2">
-                      <span class="post-meta text-[10px]">
-                        <FormattedDate date={post.data.pubDate} locale={currentLocale} />
-                      </span>
-                      {post.data.category && (
-                        <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
-                          {categoryLabel(post.data.category)}
-                        </span>
-                      )}
-                      {post.data.difficulty && (
-                        <span class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">[{post.data.difficulty}]</span>
-                      )}
-                      {post.data.timeToRead && (
-                        <span class="text-[10px] text-[var(--text-faint)]">· {post.data.timeToRead} {t('blog.minRead')}</span>
-                      )}
-                    </div>
-                    <h3 class="text-base font-semibold leading-snug text-[var(--text-heading)] truncate">
-                      {post.data.title}
-                    </h3>
-                    <p class="mt-1 text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
-                      {post.data.description}
-                    </p>
-                  </div>
-                  <div class="article-card-views" data-slug={getSlug(post)}>
-                    <span class="views-emoji">👁</span>
-                    <span class="views-count">-</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div class="py-16 text-center text-[var(--text-faint)]">
-              <p class="font-serif text-lg italic">
-                文章即将推出…
-              </p>
-              <p class="mt-2 text-sm">
-                第一期正在制作中。
-              </p>
-            </div>
+      <section class="section-inner pt-0" id="article-list">
+        <div class="section-header">
+          <h2 class="section-title">
+            // {t('blog.allPosts')}
+          </h2>
+          {posts.length > 0 && (
+            <a href="/zh-CN/blog/" class="section-link">
+              查看全部 →
+            </a>
           )}
         </div>
+
+        {posts.length > 0 ? (
+          <div class="article-list" id="article-list-items">
+            {posts.map((post, i) => (
+              <a
+                href={new URL(`/zh-CN/blog/${getSlug(post)}/`, Astro.site).pathname}
+                class="article-card reveal"
+                style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
+              >
+                <span class="article-card-number">{String(i + 1).padStart(2, '0')}</span>
+                <div class="article-card-content">
+                  <div class="article-card-meta">
+                    <span class="article-card-date">
+                      <FormattedDate date={post.data.pubDate} locale={currentLocale} />
+                    </span>
+                    {post.data.category && (
+                      <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
+                        {categoryLabel(post.data.category)}
+                      </span>
+                    )}
+                    {post.data.difficulty && (
+                      <span class="article-card-difficulty">[{post.data.difficulty}]</span>
+                    )}
+                  </div>
+                  <h3 class="article-card-title">
+                    {post.data.title}
+                  </h3>
+                  <p class="article-card-desc">
+                    {post.data.description}
+                  </p>
+                </div>
+                <div class="article-card-right">
+                  {post.data.timeToRead && (
+                    <div class="article-card-readtime">{post.data.timeToRead} min</div>
+                  )}
+                  <div class="article-card-views" data-slug={getSlug(post)}>
+                    <span>-</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="py-16 text-center text-[var(--text-faint)]">
+            <p class="font-serif text-lg italic">
+              文章即将推出…
+            </p>
+            <p class="mt-2 text-sm">
+              第一期正在制作中。
+            </p>
+          </div>
+        )}
       </section>
 
     </main>
@@ -157,7 +151,6 @@ function categoryLabel(cat: string | undefined): string {
       }
     }
   }, { rootMargin: '40px' });
-
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -173,7 +166,7 @@ function categoryLabel(cat: string | undefined): string {
       cards.forEach(el => {
         const slug = el.getAttribute('data-slug');
         const count = views[slug] || 0;
-        const countEl = el.querySelector('.views-count');
+        const countEl = el.querySelector('span');
         if (countEl) countEl.textContent = count.toString();
       });
     } catch (e) {

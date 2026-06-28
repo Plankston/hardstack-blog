@@ -1,14 +1,17 @@
 ---
+import { useTranslations } from '../i18n/ui';
+
 interface Props {
   locale?: string;
 }
 
 const { locale = 'en' } = Astro.props;
-const placeholder = locale === 'zh-CN' ? '搜索文章...' : 'Search articles...';
-const hintText = locale === 'zh-CN' ? '输入关键词搜索...' : 'Type to search...';
-const noResultsText = locale === 'zh-CN' ? '未找到结果。' : 'No results found.';
-const loadingText = locale === 'zh-CN' ? '搜索中...' : 'Searching...';
-const errorText = locale === 'zh-CN' ? '搜索出错，请重试。' : 'Search error, please try again.';
+const t = useTranslations(locale);
+const placeholder = t('search.placeholder');
+const hintText = t('search.hint');
+const noResultsText = t('search.noResults');
+const loadingText = t('search.loading');
+const errorText = t('search.error');
 ---
 
 <div id="search" class="relative">

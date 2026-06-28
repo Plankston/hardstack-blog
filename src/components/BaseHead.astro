@@ -2,8 +2,6 @@
 import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
 import FallbackImage from '../assets/blog-placeholder-1.jpg';
-import { SITE_TITLE, SITE_URL } from '../consts';
-import { Font } from 'astro:assets';
 
 interface Props {
   title: string;
@@ -17,6 +15,9 @@ interface Props {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const { title, description, image = FallbackImage, locale = 'en', ogImage, robots = 'index, follow' } = Astro.props;
 
+const SITE_TITLE = 'HardStack';
+const SITE_URL = 'https://hardstack.org';
+
 // Generate OG Image URL
 const ogImageUrl = ogImage 
   ? new URL(ogImage, Astro.site).href
@@ -26,9 +27,7 @@ const localePrefix = locale === 'en' ? 'en' : 'zh-CN';
 // Build hreflang alternate URLs
 function hreflangUrl(lang: string): string {
   const path = Astro.url.pathname;
-  // Remove locale prefix from current path
   const cleanPath = path.replace(/^\/(en|zh-CN)/, '') || '/';
-  // For English, use root path; for Chinese, add /zh-CN prefix
   if (lang === 'en') {
     return `${SITE_URL}${cleanPath}`;
   }
@@ -51,9 +50,7 @@ function hreflangUrl(lang: string): string {
 <!-- Preconnect Google Fonts for v2 design -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-<Font cssVariable="--font-atkinson" preload />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
 
 <link rel="canonical" href={canonicalURL} />
 

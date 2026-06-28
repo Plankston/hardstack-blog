@@ -37,6 +37,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'search.hint': 'Type to search...',
     'search.noResults': 'No results found.',
     'search.close': 'Close',
+    'search.loading': 'Searching...',
+    'search.error': 'Search error, please try again.',
     'skipToContent': 'Skip to content',
   },
   'zh-CN': {
@@ -62,6 +64,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     'search.hint': '输入关键词搜索...',
     'search.noResults': '未找到结果。',
     'search.close': '关闭',
+    'search.loading': '搜索中...',
+    'search.error': '搜索出错，请重试。',
     'skipToContent': '跳到主要内容',
   },
 };

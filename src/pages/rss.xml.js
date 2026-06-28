@@ -1,6 +1,8 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+
+const SITE_TITLE = 'HardStack';
+const SITE_DESCRIPTION = 'Every open-source project deserves a proper setup — deep dive installation guides, comparisons & real-world troubleshooting';
 
 export async function GET(context) {
   const posts = await getCollection('blog');
