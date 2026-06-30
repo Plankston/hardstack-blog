@@ -45,6 +45,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     'home.connectLabel': 'Connect',
     'home.footerYear': '· Vol. I ·',
     'blog.archiveEmpty': 'No posts yet.',
+    'home.title': 'Deep-dive open-source setup guides & troubleshooting',
+    'blog.description': 'Detailed installation guides, comparisons, and real-world troubleshooting for self-hosted and AI tools.',
+    'notFound.title': 'Page not found',
+    'notFound.description': 'The page you are looking for does not exist or has been moved.',
   },
   'zh-CN': {
     'site.title': 'HardStack',
@@ -82,6 +86,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     'home.connectLabel': '联系',
     'home.footerYear': '· 第一卷 ·',
     'blog.archiveEmpty': '暂无文章。',
+    'home.title': '深度开源项目安装教程与踩坑记录',
+    'blog.description': '详细的开源项目安装教程、对比评测与真实踩坑记录，覆盖自托管与 AI 工具。',
+    'notFound.title': '页面未找到',
+    'notFound.description': '您访问的页面不存在或已被移动。',
   },
 };
 

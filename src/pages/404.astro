@@ -2,12 +2,15 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import { useTranslations } from '../i18n/ui';
+
+const t = useTranslations('en');
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title="404 — HardStack" description="Page not found" />
+    <BaseHead title={t('notFound.title')} description={t('notFound.description')} />
   </head>
   <body>
     <Header locale="en" />
