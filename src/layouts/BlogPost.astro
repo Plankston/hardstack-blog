@@ -83,6 +83,29 @@ const templateLabel: Record<string, string> = {
       ogImage={slug ? `/og/${slug}.png` : undefined}
     />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: locale === 'zh-CN' ? 'https://hardstack.org/zh-CN/' : 'https://hardstack.org/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Blog',
+          item: locale === 'zh-CN' ? 'https://hardstack.org/zh-CN/blog/' : 'https://hardstack.org/blog/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: title,
+        },
+      ],
+    })} />
   </head>
   <body data-template={template}>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
