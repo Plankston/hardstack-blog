@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #FBF7F0;
-  --color-paper-light: #FDF9F3;
-  --color-ink: #1B2A3D;
-  --color-ink-muted: #5A6B7C;
-  --color-ink-faint: #8E9AAB;
-  --color-link: #2D6A8F;
-  --color-accent: #5B8C5A;
-  --color-accent-light: #6BA36A;
-  --color-accent-warm: #C47A5A;
-  --color-accent-warm-light: #D48A6A;
-  --color-border: #E2DDD3;
-  --color-border-strong: #C8C0B2;
-  --color-code-bg: #F0EBE2;
-  --color-code-border: #D8D0C4;
-  --color-surface: #FFFFFF;
-  --color-surface-raised: #F5F0E8;
+  --color-paper: #F0F1F3;
+  --color-paper-light: #F5F6F8;
+  --color-ink: #2A3441;
+  --color-ink-muted: #5A6878;
+  --color-ink-faint: #8A96A6;
+  --color-link: #4A7A9A;
+  --color-accent: #5A7A6A;
+  --color-accent-light: #6A8A7A;
+  --color-accent-warm: #8A6A5A;
+  --color-accent-warm-light: #9A7A6A;
+  --color-border: #D8DAE0;
+  --color-border-strong: #C0C4CC;
+  --color-code-bg: #E8EAED;
+  --color-code-border: #D0D4DA;
+  --color-surface: #F7F8FA;
+  --color-surface-raised: #EAEBED;
   --font-serif: "Instrument Serif", "Noto Serif SC", Georgia, serif;
   --font-sans: "DM Sans", "Atkinson", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
@@ -24,7 +24,7 @@
 
 /* ═══════════════════════════════════════════════
    V3 DESIGN TOKENS
-   Palette: Navy + Cream + Matcha Green + Terracotta
+   Palette: Moonlight — cool gray + muted sage + warm brown
    ═══════════════════════════════════════════════ */
 :root {
   --font-editorial-heading: "Instrument Serif", "Noto Serif SC", Georgia, serif;
@@ -34,31 +34,31 @@
   --font-code-body: "DM Sans", "Helvetica Neue", Arial, sans-serif;
   --font-ui: "DM Sans", "Atkinson", "Helvetica Neue", Arial, sans-serif;
 
-  --accent: #5B8C5A;
-  --accent-dark: #3D6A3C;
-  --accent-warm: #C47A5A;
-  --accent-warm-dark: #A0603F;
-  --ink: 27, 42, 61;
-  --gray: 90, 107, 124;
-  --gray-light: 226, 221, 211;
-  --gray-dark: 27, 42, 61;
-  --box-shadow: 0 1px 3px rgba(27, 42, 61, 0.04), 0 4px 12px rgba(27, 42, 61, 0.03);
+  --accent: #5A7A6A;
+  --accent-dark: #3A5A4A;
+  --accent-warm: #8A6A5A;
+  --accent-warm-dark: #6A4A3A;
+  --ink: 42, 52, 65;
+  --gray: 90, 104, 120;
+  --gray-light: 216, 218, 224;
+  --gray-dark: 42, 52, 65;
+  --box-shadow: 0 1px 3px rgba(42, 52, 65, 0.06), 0 4px 12px rgba(42, 52, 65, 0.04);
 
-  /* Light theme (default) */
-  --bg-body: #FBF7F0;
-  --bg-header: #F5F0E8;
-  --bg-card: #FFFFFF;
+  /* Light theme (default) — Moonlight */
+  --bg-body: #F0F1F3;
+  --bg-header: #EAEBED;
+  --bg-card: #F7F8FA;
   --bg-article: transparent;
-  --bg-code: #F0EBE2;
-  --text-body: #1B2A3D;
-  --text-heading: #1B2A3D;
-  --text-muted: #5A6B7C;
-  --text-faint: #8E9AAB;
-  --border-color: #E2DDD3;
-  --code-border: #D8D0C4;
-  --color-link: #2D6A8F;
-  --color-accent-ui: #5B8C5A;
-  --color-accent-warm-ui: #C47A5A;
+  --bg-code: #E8EAED;
+  --text-body: #2A3441;
+  --text-heading: #2A3441;
+  --text-muted: #5A6878;
+  --text-faint: #8A96A6;
+  --border-color: #D8DAE0;
+  --code-border: #D0D4DA;
+  --color-link: #4A7A9A;
+  --color-accent-ui: #5A7A6A;
+  --color-accent-warm-ui: #8A6A5A;
   --prose-max-w: 880px;
   --body-font: var(--font-editorial-body);
   --heading-font: var(--font-editorial-heading);
@@ -228,7 +228,7 @@ hr {
 
 /* --- Glassmorphism Header --- */
 .glass-header {
-  background: rgba(251, 247, 240, 0.88);
+  background: rgba(240, 241, 243, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
