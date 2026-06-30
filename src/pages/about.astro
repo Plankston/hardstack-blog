@@ -12,6 +12,18 @@ const t = useTranslations(currentLocale);
 <html lang={t('site.lang')} dir="ltr">
   <head>
     <BaseHead title={t('about.title')} description={t('about.description')} locale={currentLocale} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      name: t('about.title'),
+      description: t('about.description'),
+      url: `https://hardstack.org${Astro.url.pathname}`,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'HardStack',
+        url: 'https://hardstack.org',
+      },
+    })} />
   </head>
   <body>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
