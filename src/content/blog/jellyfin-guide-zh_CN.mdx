@@ -1,0 +1,404 @@
+---
+title: "Jellyfin 完全指南：搭建属于你自己的 Netflix"
+description: "从零搭建 Jellyfin 自托管媒体服务器，Docker 一键部署，支持硬件转码、多客户端、自动刮削。告别月费订阅，数据 100% 掌控在自己手中。"
+pubDate: 2026-07-01
+category: "self-hosted"
+tags: ["jellyfin", "media-server", "self-hosted", "docker", "streaming"]
+difficulty: "beginner"
+timeToRead: 25
+postLang: "zh-CN"
+groupKey: "jellyfin-guide"
+template: "paper"
+---
+
+## 你每个月花 50 块钱看的剧，一半下架了你才发现。
+
+去年我续费了三个视频会员——腾讯、爱奇艺、B站。花了差不多 150 块一个月。然后有一天我想重温《星际穿越》，发现爱奇艺没有了，腾讯要单独买。
+
+你猜怎么着？我硬盘里有这部电影。4K 原盘，3 年前下的。但它就静静地躺在硬盘里，我得接 HDMI 线到电视上，或者用 VLC 将就着看那个丑到不行的播放界面。
+
+问题不是没有内容。问题是你明明有内容，却没有一个好用的方式来管理和播放它。
+
+Jellyfin 就是来解决这个问题的。而且它完全免费，开源，不收你一分钱。
+
+---
+
+## 什么是 Jellyfin
+
+Jellyfin 是一个开源的媒体服务器软件——你可以把它理解成一个**自己搭建的 Netflix**。你把电影、电视剧、音乐丢进去，它自动帮你刮削海报、生成片库、管理字幕，然后你在手机、电视、电脑、平板上随时随地播放。
+
+**跟 Plex 和 Emby 的关系：**
+
+Jellyfin 是从 Emby 分叉出来的。2018 年 Emby 转向了部分闭源，社区不满意，就 fork 出了 Jellyfin。所以三者的核心架构几乎一样，但 Jellyfin 是唯一一个**完全开源、完全免费**的。
+
+| | Jellyfin | Plex | Emby |
+|---|---|---|---|
+| 开源 | 完全开源（GPL-2.0） | 客户端开源，服务端闭源 | 部分闭源 |
+| 免费 | 全功能免费 | 基础免费，硬件转码要 Pass | 部分功能要付费 |
+| 刮削 | 内置 TMDb | 内置 | 内置 |
+| 硬件转码 | 免费支持 | 需要 Plex Pass（$5/月） | 需要 Premiere |
+| 社区插件 | 丰富，完全开放 | 有限 | 有限 |
+
+**GitHub 40K+ Stars。** 这不是一个玩具项目，它有活跃的社区和持续的更新。
+
+**一句话说清楚：** 花 30 分钟部署完，以后再也不用给视频平台交月费了。
+
+---
+
+## 准备工作
+
+你需要三样东西：
+
+1. **一台服务器** — 任何 Linux 机器都行，最低 2 核 CPU + 2GB 内存。旧笔记本、树莓派、NAS 都可以。如果你有 Intel N100 或更好的 CPU，恭喜你，硬件转码直接起飞。
+2. **Docker 和 Docker Compose** — 如果还没装，跟着[前面的教程](/zh-CN/blog/coolify-guide)装一下。
+3. **你要播放的媒体文件** — 电影、电视剧、音乐，随便什么格式，Jellyfin 都能处理。
+
+就这些。不需要公网 IP，不需要域名，不需要 SSL 证书——当然你可以后面加，但一开始不需要。
+
+---
+
+## Docker 部署
+
+来，直接抄答案。
+
+### 目录结构
+
+先在服务器上建个目录：
+
+```bash
+mkdir -p /opt/jellyfin/{config,cache}
+```
+
+### docker-compose.yml
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    volumes:
+      - /opt/jellyfin/config:/config
+      - /opt/jellyfin/cache:/cache
+      - /path/to/your/media:/media:ro
+    environment:
+      - TZ=Asia/Shanghai
+    devices:
+      - /dev/dri:/dev/dri  # Intel 硬件转码，NVIDIA 用户看下文
+```
+
+把 `/path/to/your/media` 替换成你实际的媒体目录。比如：
+
+```bash
+# 我的目录结构
+/mnt/nas/movies    # 电影
+/mnt/nas/tv        # 电视剧
+/mnt/nas/music     # 音乐
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+然后打开浏览器，访问 `http://你的服务器IP:8096`。
+
+看到 Jellyfin 的初始化向导了吗？恭喜，部署完成了。就这么简单。
+
+---
+
+## 初始化向导
+
+第一次打开会进入设置向导，跟着走就行：
+
+1. **语言** — 选中文
+2. **用户名和密码** — 设一个管理员账号。别用 admin/admin，真的。
+3. **媒体库** — 先跳过，我们后面单独配置
+4. **元数据语言** — 选中文（简体）
+5. **完成**
+
+进来之后先别急，进 **仪表盘 → 网络** 做一个关键设置：
+
+勾选 **"允许下载远程媒体"**。然后在 **仪表盘 → 媒体 → 转码** 里确认硬件转码设置（下面会详细讲）。
+
+---
+
+## 媒体库配置
+
+这是整个 Jellyfin 最重要的一步。配好了，你的片库就能自动刮削出漂亮的海报和信息。
+
+### 目录结构规范
+
+Jellyfin 依赖标准的目录结构来识别内容：
+
+```
+/media
+├── movies/
+│   ├── Inception (2010)/
+│   │   └── Inception (2010).mkv
+│   ├── Interstellar (2014)/
+│   │   └── Interstellar (2014).mp4
+│   └── The Matrix (1999)/
+│       └── The.Matrix.1999.1080p.BluRay.mkv
+├── tv/
+│   ├── Breaking Bad/
+│   │   ├── Season 1/
+│   │   │   ├── Breaking Bad - S01E01 - Pilot.mkv
+│   │   │   └── Breaking Bad - S01E02 - Cat's in the Bag.mkv
+│   │   └── Season 2/
+│   └── The Last of Us/
+│       └── Season 1/
+└── music/
+    ├── Artist Name/
+    │   └── Album Name/
+    │       └── 01 - Song.mp3
+```
+
+**关键点：** 文件名不需要完美，但包含年份和清晰度信息会帮助刮削更准确。
+
+### 在 Jellyfin 中添加媒体库
+
+1. 进 **仪表盘 → 媒体库**
+2. 点 **"+"** 添加库
+3. 选择内容类型（电影 / 电视剧 / 音乐）
+4. 点 **"+"** 添加文件夹，选择对应的目录
+5. 高级设置里：
+
+| 设置项 | 电影 | 电视剧 |
+|---|---|---|
+| 元数据下载器 | TMDb + Fanart | TMDb + TheTVDB |
+| 刮削器 | TMDb | TMDb |
+| 自动下载字幕 | 勾选 | 勾选 |
+| 字幕语言 | chi, eng | chi, eng |
+
+6. 点确定，Jellyfin 会开始扫描和刮削。
+
+刮削需要时间，取决于你有多少内容。100 部电影大概需要 15-20 分钟。你可以去干别的事，它会在后台默默工作。
+
+**刮削不出来？** 大概率是文件名的问题。重命名成 `Movie Name (Year).mkv` 这种格式基本都能识别。
+
+---
+
+## 硬件转码
+
+这是 Jellyfin 最实用的功能之一，也是最容易踩坑的地方。
+
+### 什么是硬件转码
+
+当你在手机或平板上播放一个 4K 电影时，Jellyfin 需要把 4K 视频实时压缩成你能流畅播放的码率。这个过程就是转码。
+
+用 CPU 转码（软件转码）会把 CPU 吃满，还卡。用 GPU 转码（硬件转码）速度快、CPU 几乎空闲。
+
+### Intel QSV（推荐）
+
+如果你的 CPU 是 Intel 8 代以上（包括 N100、N305、i3/i5/i7/i9），恭喜你有免费的硬件转码。
+
+docker-compose.yml 里的 `/dev/dri` 那行就是为这个准备的。确认一下：
+
+```bash
+ls /dev/dri/
+# 应该看到 card0 renderD128
+```
+
+在 Jellyfin 仪表盘 → 播放 → 转码 里：
+
+- 硬件加速：选 **Intel QuickSync (QSV)**
+- 启用硬件解码：勾选 H.264、HEVC、AV1（如果支持）
+- 启用硬件编码：勾选 H.264、HEVC
+
+点保存，然后播放一个 4K 电影测试。在仪表盘 → 活动 里能看到转码日志，确认是不是 QSV 在工作。
+
+### NVIDIA GPU
+
+如果你有 NVIDIA 显卡（GTX 1050 以上），需要额外配置：
+
+```yaml
+services:
+  jellyfin:
+    # ... 其他配置同上 ...
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video, compute]
+```
+
+仪表盘 → 播放 → 转码 里选 **NVIDIA NVENC**。
+
+**注意：** NVIDIA 驱动要在宿主机上装好，容器里不需要装 CUDA，但需要 `--gpus all` 或上面的 deploy 配置。
+
+### 转码测试
+
+随便播放一个视频，然后在 Jellyfin 的仪表盘 → 活动 里看日志：
+
+```
+[INF] Playback started, using hardware acceleration: QSV
+```
+
+看到 `hardware acceleration: QSV` 或 `NVENC` 就说明硬件转码生效了。
+
+---
+
+## 客户端 App
+
+Jellyfin 的一大优势是客户端覆盖全面，而且全部免费：
+
+| 平台 | 应用 | 备注 |
+|---|---|---|
+| Android | Jellyfin for Android | Google Play 或 F-Droid |
+| iOS/iPadOS | Jellyfin for iOS | App Store |
+| Web | 内置 | 任何浏览器直接访问 |
+| Android TV | Jellyfin for Android TV | Google Play |
+| Apple TV | Jellyfin for tvOS | App Store |
+| Roku | Jellyfin for Roku | Roku Channel |
+| Windows/macOS | Jellyfin Media Player | 官方桌面客户端 |
+| Linux | Jellyfin Media Player | Flatpak 或 AppImage |
+
+**Web 端就够了。** 如果你只是在电脑上看，浏览器直接访问 `http://服务器IP:8096`，不需要装任何东西。支持 Chromecast 投屏。
+
+**手机推荐装 App。** 体验比浏览器好很多，支持离线下载和后台播放。
+
+**电视盒子推荐。** 如果你有 Android TV 盒子（小米盒子、Nvidia Shield 等），装 Jellyfin 的 Android TV 版，直接把客厅变成家庭影院。
+
+---
+
+## 常见坑和解决方案
+
+### 坑 1：权限问题
+
+**症状：** 刮削不出来，或者播放报错 "No streams available"。
+
+**原因：** Docker 容器内的用户没有权限读取媒体文件。
+
+**解决：**
+
+```bash
+# 看看媒体文件的所有者
+ls -la /path/to/media
+
+# 如果是 root，改一下权限
+chmod -R 755 /path/to/media
+
+# 或者在 docker-compose 里加用户
+user: "1000:1000"  # 你的宿主机用户 ID
+```
+
+### 坑 2：刮削不出来
+
+**症状：** 片库里只有文件名，没有海报和介绍。
+
+**解决：**
+
+1. 检查文件名格式，确保包含年份：`Movie Name (2024).mkv`
+2. 仪表盘 → 媒体库 → 编辑 → 刮削器 → 确认选了 TMDb
+3. 仪表盘 → 媒体库 → 扫描媒体库 → 重新扫描
+4. 如果还是不行，手动搜索：在详情页点搜索图标，输入片名手动匹配
+
+### 坑 3：外网访问
+
+**症状：** 在家里的 WiFi 能看，出门就看不了。
+
+**解决方案（按推荐度排序）：**
+
+1. **Tailscale** — 最简单。在服务器和手机上都装 Tailscale，组网后用 Tailscale IP 访问。零配置，不需要公网 IP。[我们之前写过 Tailscale 教程](/zh-CN/blog/tailscale-headscale-guide)。
+2. **反向代理 + 域名** — 用 Nginx Proxy Manager 或 Traefik，配好域名和 HTTPS。适合有公网 IP 的用户。
+3. **Cloudflare Tunnel** — 不需要公网 IP，通过 Cloudflare 的隧道暴露服务。
+
+### 坑 4：字幕不显示
+
+**症状：** 播放视频没有字幕，或者字幕是乱码。
+
+**解决：**
+
+1. 字幕文件和视频文件放在同一目录，文件名相同
+2. 格式推荐 SRT 或 ASS
+3. 在播放器里手动选择字幕轨道
+4. 仪表盘 → 播放 → 字幕 → 默认字幕语言设为中文
+
+### 坑 5：4K 视频卡顿
+
+**症状：** 播放 4K 视频时频繁缓冲。
+
+**原因：** 大概率是转码问题，不是网速问题。
+
+**解决：**
+
+1. 确认硬件转码已开启（仪表盘 → 活动 里确认）
+2. 如果没有 GPU，试试在客户端设置里把画质限制到 1080p，让 Jellyfin 在服务端转码
+3. 检查网络：服务器和播放设备之间的带宽至少要 20Mbps
+
+---
+
+## 进阶玩法
+
+### 插件系统
+
+Jellyfin 有丰富的社区插件，安装方法：仪表盘 → 插件 → 搜索安装。
+
+推荐几个：
+
+| 插件 | 功能 |
+|---|---|
+| **Intro Skipper** | 自动跳过片头曲（Netflix 体验） |
+| **Trakt** | 同步观看记录到 Trakt.tv |
+| **Open Subtitles** | 自动下载字幕 |
+| **TMDb Box Sets** | 自动创建系列电影合集 |
+| **Discord Notifications** | 有人看片时发 Discord 通知 |
+
+### 反向代理 + HTTPS
+
+如果你要从外网访问，强烈建议加 HTTPS。用 Nginx Proxy Manager 最简单：
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name jellyfin.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/jellyfin.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jellyfin.yourdomain.com/privkey.pem;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://localhost:8096;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+
+    location /socket {
+        proxy_pass http://localhost:8096;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+### 自动化刮削
+
+如果你喜欢用 Radarr（电影）和 Sonarr（电视剧）来管理下载，它们和 Jellyfin 是天然搭档。Radarr/Sonarr 下载完成后自动整理到 Jellyfin 的媒体目录，Jellyfin 自动扫描刮削。
+
+这个组合就是所谓的 *arr 全家桶，改天单独写一篇。
+
+---
+
+## 总结：你现在该做什么
+
+1. 复制上面的 `docker-compose.yml`，改一下媒体路径
+2. `docker compose up -d`
+3. 打开 `http://你的IP:8096`，跟着向导走
+4. 添加媒体库，等刮削完成
+5. 在手机上装 Jellyfin App，开始享受你的私人 Netflix
+
+整个过程 30 分钟以内。如果你有 Intel N100 或更好的 CPU，硬件转码直接可用，连调都不用调。
+
+**现在就去装。装完回来告诉我体验。**
+

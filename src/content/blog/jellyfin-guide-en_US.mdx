@@ -1,0 +1,469 @@
+---
+title: "Jellyfin Complete Guide: Build Your Own Netflix"
+description: "Deploy Jellyfin with Docker in 30 minutes — free, open-source media server with hardware transcoding, auto-metadata, and multi-client streaming. No subscriptions, full data ownership."
+pubDate: 2026-07-01
+category: "self-hosted"
+tags: ["jellyfin", "media-server", "self-hosted", "docker", "streaming"]
+difficulty: "beginner"
+timeToRead: 25
+postLang: "en"
+groupKey: "jellyfin-guide"
+template: "paper"
+---
+
+## You pay $50/month for streaming, and half your library disappears without warning.
+
+Last year, I renewed three streaming subscriptions — Netflix, Disney+, and HBO Max. That's roughly $45/month. Then one weekend I wanted to rewatch Interstellar, and it had been pulled from all three platforms.
+
+The funny thing? I had the file on my hard drive. A 4K Remux I'd downloaded three years ago. It just sat there, and the only way to play it was an HDMI cable to the TV or VLC's ugly playback interface.
+
+The problem isn't a lack of content. The problem is that you own content but have no good way to manage and play it.
+
+Jellyfin solves this. And it's completely free, open-source, and costs you nothing.
+
+---
+
+## Table of Contents
+
+- [What Is Jellyfin?](#what-is-jellyfin)
+- [Jellyfin vs Plex vs Emby](#jellyfin-vs-plex-vs-emby)
+- [Prerequisites](#prerequisites)
+- [Docker Deployment](#docker-deployment)
+- [Initial Setup Wizard](#initial-setup-wizard)
+- [Media Library Configuration](#media-library-configuration)
+- [Hardware Transcoding](#hardware-transcoding)
+- [Client Apps](#client-apps)
+- [Common Pitfalls and Fixes](#common-pitfalls-and-fixes)
+- [Advanced Tips](#advanced-tips)
+- [Quick Start Checklist](#quick-start-checklist)
+
+---
+
+## What Is Jellyfin?
+
+Jellyfin is an open-source media server — think of it as a **self-hosted Netflix**. You point it at your movies, TV shows, and music. It automatically fetches posters, builds a browsable library, manages subtitles, and lets you stream to any device.
+
+**GitHub 40K+ stars.** This is not a toy. It has an active community and consistent releases.
+
+**In one sentence:** 30 minutes to deploy, then you never pay a streaming subscription again.
+
+---
+
+## Jellyfin vs Plex vs Emby
+
+Jellyfin is a fork of Emby. In 2018, Emby went partially closed-source, the community disagreed, and Jellyfin was born. The three share similar architecture, but Jellyfin is the only one that is **fully open-source and fully free**.
+
+| | Jellyfin | Plex | Emby |
+|---|---|---|---|
+| **Open Source** | Fully (GPL-2.0) | Clients open, server closed | Partially closed |
+| **Free** | All features free | Basic free, hardware transcoding requires Pass ($5/mo) | Some features paid |
+| **Metadata Scraping** | Built-in TMDb | Built-in | Built-in |
+| **Hardware Transcoding** | Free | Requires Plex Pass | Requires Premiere |
+| **Plugin Ecosystem** | Rich, fully open | Limited | Limited |
+| **Mobile Apps** | Free | Free (some features locked) | Paid |
+| **Client Platforms** | Web, Android, iOS, TV, Desktop | Web, Android, iOS, TV, Desktop, Console | Web, Android, iOS, TV, Desktop |
+
+**When to choose Plex:** You want the most polished apps and don't mind paying $5/month. Plex has the best Smart TV and console apps.
+
+**When to choose Emby:** You want a middle ground with a more mature UI than Jellyfin but don't need full open-source.
+
+**When to choose Jellyfin:** You want free-as-in-freedom, full control, and a community that doesn't lock features behind a paywall.
+
+---
+
+## Prerequisites
+
+You need three things:
+
+1. **A server** — Any Linux machine works. Minimum 2 cores CPU + 2GB RAM. Old laptops, Raspberry Pis, and NAS devices all qualify. If you have an Intel N100 or better, hardware transcoding works out of the box.
+
+2. **Docker and Docker Compose** — If you haven't installed them yet:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+3. **Media files** — Movies, TV shows, music. Any format. Jellyfin handles them all.
+
+No public IP, no domain name, no SSL certificate required for the initial setup. You can add those later.
+
+---
+
+## Docker Deployment
+
+### Directory Structure
+
+Create the required directories:
+
+```bash
+mkdir -p /opt/jellyfin/{config,cache}
+```
+
+### docker-compose.yml
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    volumes:
+      - /opt/jellyfin/config:/config       # Jellyfin configuration and database
+      - /opt/jellyfin/cache:/cache         # Transcoded files, thumbnails
+      - /path/to/your/media:/media:ro      # Your media files (read-only)
+    environment:
+      - TZ=Asia/Shanghai                   # Adjust to your timezone
+    devices:
+      - /dev/dri:/dev/dri                  # Intel hardware transcoding (see below)
+```
+
+Replace `/path/to/your/media` with your actual media directory. For example:
+
+```bash
+# Common layout
+/mnt/nas/movies    # Movies
+/mnt/nas/tv        # TV shows
+/mnt/nas/music     # Music
+```
+
+### Start Jellyfin
+
+```bash
+docker compose up -d
+```
+
+Then open your browser and navigate to `http://your-server-ip:8096`.
+
+If you see the Jellyfin setup wizard, the deployment is complete.
+
+---
+
+## Initial Setup Wizard
+
+The first visit launches a setup wizard. Follow these steps:
+
+1. **Language** — Select your preferred language
+2. **Username and password** — Create an admin account. Do not use `admin`/`admin`.
+3. **Media libraries** — Skip for now. You will configure these in the next section.
+4. **Metadata language** — Choose the language for posters and descriptions.
+5. **Finish**
+
+After completing the wizard, go to **Dashboard → Networking** and enable **"Allow remote connections to this server"**. This is required if you plan to access Jellyfin from other devices on your network.
+
+---
+
+## Media Library Configuration
+
+This is the most important step. A properly configured library gives you automatic metadata scraping, beautiful posters, and organized collections.
+
+### Directory Structure Convention
+
+Jellyfin relies on standard directory structures to identify content:
+
+```
+/media
+├── movies/
+│   ├── Inception (2010)/
+│   │   └── Inception (2010).mkv
+│   ├── Interstellar (2014)/
+│   │   └── Interstellar (2014).mp4
+│   └── The Matrix (1999)/
+│       └── The.Matrix.1999.1080p.BluRay.mkv
+├── tv/
+│   ├── Breaking Bad/
+│   │   ├── Season 1/
+│   │   │   ├── Breaking Bad - S01E01 - Pilot.mkv
+│   │   │   └── Breaking Bad - S01E02 - Cat's in the Bag.mkv
+│   │   └── Season 2/
+│   └── The Last of Us/
+│       └── Season 1/
+└── music/
+    ├── Artist Name/
+    │   └── Album Name/
+    │       └── 01 - Song.mp3
+```
+
+**Key point:** Filenames do not need to be perfect, but including the year and resolution helps scraping accuracy.
+
+### Adding Libraries in Jellyfin
+
+1. Go to **Dashboard → Media Libraries**
+2. Click the **"+"** button to add a library
+3. Select content type (Movies / TV Shows / Music)
+4. Click **"+"** to add the corresponding folder path
+5. Configure advanced settings:
+
+| Setting | Movies | TV Shows |
+|---|---|---|
+| Metadata downloaders | TMDb + Fanart | TMDb + TheTVDB |
+| Scraper | TMDb | TMDb |
+| Auto-download subtitles | Enabled | Enabled |
+| Subtitle languages | eng, chi | eng, chi |
+
+6. Click OK. Jellyfin will begin scanning and scraping.
+
+Scraping takes time depending on library size. 100 movies typically takes 15–20 minutes. You can leave it running in the background.
+
+**Scraping not working?** The most common cause is filename formatting. Rename files to `Movie Name (Year).mkv` and re-scan.
+
+---
+
+## Hardware Transcoding
+
+This is one of Jellyfin's most useful features — and the easiest to misconfigure.
+
+### What Is Hardware Transcoding
+
+When you stream a 4K movie to your phone, Jellyfin must compress the video in real-time to a bitrate your device can handle. This process is called transcoding.
+
+Software transcoding (CPU) maxes out your processor and stutters. Hardware transcoding (GPU) is fast and leaves the CPU idle.
+
+### Intel QuickSync (QSV) — Recommended
+
+If your CPU is Intel 8th gen or newer (including N100, N305, i3/i5/i7/i9), you have free hardware transcoding.
+
+The `/dev/dri` line in docker-compose.yml enables this. Verify:
+
+```bash
+ls /dev/dri/
+# Expected output: card0 renderD128
+```
+
+In Jellyfin's **Dashboard → Playback → Transcoding**:
+
+- Hardware acceleration: **Intel QuickSync (QSV)**
+- Enable hardware decoding for: H.264, HEVC, AV1 (if supported)
+- Enable hardware encoding for: H.264, HEVC
+
+Save and test by playing a 4K movie. Check **Dashboard → Logs** for confirmation:
+
+```
+[INF] Playback started, using hardware acceleration: QSV
+```
+
+### NVIDIA GPU
+
+If you have an NVIDIA GPU (GTX 1050 or newer), add this to your docker-compose.yml:
+
+```yaml
+services:
+  jellyfin:
+    # ... other config above ...
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video, compute]
+```
+
+In **Dashboard → Playback → Transcoding**, select **NVIDIA NVENC**.
+
+**Note:** The NVIDIA driver must be installed on the host. The container does not need CUDA, but the deploy configuration above is required.
+
+### Verifying Hardware Transcoding
+
+Play any video, then check the logs in **Dashboard → Logs**:
+
+```
+[INF] Playback started, using hardware acceleration: QSV
+```
+
+Or for NVIDIA:
+
+```
+[INF] Playback started, using hardware acceleration: NVENC
+```
+
+If you see `software` instead, check the transcoding settings and ensure the GPU device is passed through correctly.
+
+---
+
+## Client Apps
+
+One of Jellyfin's strengths is full client coverage, and every client is free:
+
+| Platform | App | Notes |
+|---|---|---|
+| **Android** | Jellyfin for Android | Google Play or F-Droid |
+| **iOS / iPadOS** | Jellyfin for iOS | App Store |
+| **Web** | Built-in | Any browser, no install required |
+| **Android TV** | Jellyfin for Android TV | Google Play |
+| **Apple TV** | Jellyfin for tvOS | App Store |
+| **Roku** | Jellyfin for Roku | Roku Channel Store |
+| **Windows / macOS** | Jellyfin Media Player | Official desktop client |
+| **Linux** | Jellyfin Media Player | Flatpak or AppImage |
+
+**Web is enough for most users.** If you only watch on a computer, open `http://your-server:8096` in your browser. Chromecast is supported.
+
+**Mobile apps are recommended.** The experience is significantly better than the browser, with offline downloads and background playback.
+
+**TV boxes are ideal.** If you have an Android TV box (Nvidia Shield, Xiaomi Mi Box, etc.), the Jellyfin Android TV app turns your living room into a home theater.
+
+---
+
+## Common Pitfalls and Fixes
+
+### 1. Permission Denied
+
+**Symptom:** Scraping fails, or playback returns "No streams available."
+
+**Cause:** The Docker container cannot read your media files.
+
+**Fix:**
+
+```bash
+# Check file ownership
+ls -la /path/to/media
+
+# If owned by root, adjust permissions
+chmod -R 755 /path/to/media
+
+# Or add user mapping in docker-compose.yml
+user: "1000:1000"  # Your host user ID
+```
+
+### 2. Metadata Not Scraping
+
+**Symptom:** Library shows only filenames, no posters or descriptions.
+
+**Fix:**
+
+1. Check filenames include the year: `Movie Name (2024).mkv`
+2. Go to **Dashboard → Media Libraries → Edit → Scrapers** and confirm TMDb is selected
+3. Go to **Dashboard → Media Libraries → Scan Media Library** to rescan
+4. If still failing, use the search icon on the detail page to manually match
+
+### 3. No Remote Access
+
+**Symptom:** Works on home WiFi, fails outside the house.
+
+**Solutions (in order of recommendation):**
+
+1. **Tailscale** — Simplest. Install Tailscale on both the server and your phone. Access via Tailscale IP. Zero configuration, no public IP needed. We have a [complete Tailscale guide](/blog/tailscale-headscale-guide-en_US).
+
+2. **Reverse proxy + domain** — Use Nginx Proxy Manager or Traefik with a domain and HTTPS. Best for users with a public IP.
+
+3. **Cloudflare Tunnel** — No public IP required. Exposes your service through Cloudflare's tunnel infrastructure.
+
+### 4. Subtitles Not Displaying
+
+**Symptom:** No subtitles during playback, or subtitles appear garbled.
+
+**Fix:**
+
+1. Place subtitle files in the same directory as the video with matching filenames
+2. Use SRT or ASS format for best compatibility
+3. Manually select the subtitle track in the player
+4. Go to **Dashboard → Playback → Subtitles** and set the default subtitle language
+
+### 5. 4K Video Stuttering
+
+**Symptom:** Frequent buffering when playing 4K content.
+
+**Cause:** Usually a transcoding issue, not network bandwidth.
+
+**Fix:**
+
+1. Verify hardware transcoding is enabled (check **Dashboard → Logs**)
+2. If no GPU is available, set the client quality limit to 1080p — Jellyfin will transcode server-side
+3. Ensure network bandwidth between server and playback device is at least 20 Mbps for 4K streams
+
+---
+
+## Advanced Tips
+
+### Plugin System
+
+Jellyfin has a rich community plugin ecosystem. Install via **Dashboard → Plugins → Repository**.
+
+| Plugin | Function |
+|---|---|
+| **Intro Skipper** | Auto-skip intro sequences (Netflix-like experience) |
+| **Trakt** | Sync watch history to Trakt.tv |
+| **Open Subtitles** | Auto-download subtitles |
+| **TMDb Box Sets** | Auto-create movie collections |
+| **Discord Notifications** | Send Discord alerts when content is played |
+| **Jellystat** | Usage analytics and statistics |
+
+### Reverse Proxy with HTTPS
+
+If you plan to access Jellyfin remotely, HTTPS is strongly recommended. Here is an Nginx configuration:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name jellyfin.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/jellyfin.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jellyfin.yourdomain.com/privkey.pem;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://localhost:8096;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+    }
+
+    location /socket {
+        proxy_pass http://localhost:8096;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+The `/socket` block is required for real-time features like session synchronization and live TV.
+
+### The *arr Stack
+
+If you use Radarr (movies) and Sonarr (TV shows) for automated downloads, they integrate seamlessly with Jellyfin. Radarr and Sonarr handle acquisition and organization; Jellyfin handles playback and library management.
+
+This combination — *arr + Jellyfin — is the standard self-hosted media stack. It deserves its own guide.
+
+### Backup Strategy
+
+Your Jellyfin configuration lives in `/opt/jellyfin/config`. Back it up regularly:
+
+```bash
+# Simple backup to external drive
+tar -czf /mnt/backup/jellyfin-config-$(date +%Y%m%d).tar.gz /opt/jellyfin/config
+
+# Automated daily backup via cron
+0 3 * * * tar -czf /mnt/backup/jellyfin-config-$(date +\%Y\%m\%d).tar.gz /opt/jellyfin/config
+```
+
+Your media files are your responsibility — Jellyfin does not modify them, so standard file backup applies.
+
+---
+
+## Quick Start Checklist
+
+1. Create the docker-compose.yml above, update the media path
+2. Run `docker compose up -d`
+3. Open `http://your-server:8096` and follow the setup wizard
+4. Add your media libraries and wait for scraping to complete
+5. Install the Jellyfin app on your phone and start streaming
+
+The entire process takes under 30 minutes. If you have an Intel N100 or better, hardware transcoding works with zero additional configuration.
+
+---
+
+## Related Guides
+
+- [Coolify: Self-Hosted PaaS](/blog/coolify-guide-en_US) — Deploy Jellyfin and other services with one click
+- [Tailscale + Headscale: Zero-Config VPN](/blog/tailscale-headscale-guide-en_US) — Access your Jellyfin server securely from anywhere
+- [Uptime Kuma: Service Monitoring](/blog/uptime-kuma-guide-en_US) — Monitor your Jellyfin instance availability
+- [Vaultwarden: Password Manager](/blog/vaultwarden-guide-en_US) — Protect your Jellyfin admin credentials
+
+---
+
+*Running Jellyfin since 2024. Two servers, 4K library, hardware transcoding, zero monthly cost. That's the pitch.*
