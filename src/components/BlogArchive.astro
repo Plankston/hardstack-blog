@@ -23,6 +23,18 @@ const posts = (await getCollection('blog'))
 <html lang={t('site.lang')} dir="ltr">
   <head>
     <BaseHead title={t('blog.allPosts')} description={t('blog.description')} locale={locale} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: t('blog.allPosts'),
+      description: t('blog.description'),
+      url: `https://hardstack.org${Astro.url.pathname}`,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'HardStack',
+        url: 'https://hardstack.org',
+      },
+    })} />
   </head>
   <body>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
