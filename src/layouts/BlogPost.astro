@@ -33,30 +33,36 @@ const {
 } = Astro.props;
 const t = useTranslations(locale);
 
-// Generate JSON-LD structured data for Article schema
+// Generate JSON-LD structured data for BlogPosting schema
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
+  '@type': 'BlogPosting',
   headline: title,
   description: description,
   datePublished: pubDate.toISOString(),
   dateModified: updatedDate ? updatedDate.toISOString() : pubDate.toISOString(),
   author: {
-    '@type': 'Organization',
-    name: 'HardStack',
-    url: 'https://hardstack.org',
+    '@type': 'Person',
+    name: 'Plankston',
+    url: 'https://github.com/Plankston',
   },
   publisher: {
     '@type': 'Organization',
     name: 'HardStack',
     url: 'https://hardstack.org',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://hardstack.org/favicon.svg',
+    },
   },
   mainEntityOfPage: {
     '@type': 'WebPage',
     '@id': `https://hardstack.org${Astro.url.pathname}`,
   },
   inLanguage: locale === 'zh-CN' ? 'zh-CN' : 'en',
-  keywords: [],
+  keywords: category ? [category] : [],
+  timeRequired: timeToRead ? `PT${timeToRead}M` : undefined,
+  image: slug ? `https://hardstack.org/og/${slug}.png` : undefined,
 };
 
 // Template display names
