@@ -22,8 +22,6 @@ const SITE_URL = 'https://hardstack.org';
 const ogImageUrl = ogImage 
   ? new URL(ogImage, Astro.site).href
   : new URL(image.src, Astro.url).href;
-const localePrefix = locale === 'en' ? 'en' : 'zh-CN';
-
 // Build hreflang alternate URLs
 function hreflangUrl(lang: string): string {
   const path = Astro.url.pathname;

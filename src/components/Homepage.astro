@@ -91,7 +91,7 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
           <div class="article-list" id="article-list-items">
             {posts.map((post, i) => (
               <a
-                href={new URL(getLocalePath(locale, `/blog/${getSlug(post)}/`), Astro.site).pathname}
+                href={new URL(getLocalePath(locale, `/blog/${getSlug(post) || ''}/`), Astro.site).pathname}
                 class="article-card reveal"
                 style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
               >
@@ -168,7 +168,7 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
 
       cards.forEach(el => {
         const slug = el.getAttribute('data-slug');
-        const count = views[slug] || 0;
+        const count = views[slug || ''] || 0;
         const countEl = el.querySelector('span');
         if (countEl) countEl.textContent = count.toString();
       });

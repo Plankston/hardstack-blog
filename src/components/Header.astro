@@ -61,7 +61,7 @@ const t = useTranslations(currentLocale);
             role="menu"
             class="absolute right-0 top-full z-50 mt-1 hidden min-w-[110px] rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] py-1 shadow-lg"
           >
-            {Object.entries(LOCALES).map(([code, label]) => {
+            {Object.entries(LOCALES).map(([code, _label]) => {
               const isEn = code === 'en';
               const currentPath = Astro.url.pathname;
               // Remove locale prefix from current path to get the base path
@@ -141,7 +141,7 @@ const t = useTranslations(currentLocale);
     });
 
     document.addEventListener('click', (e) => {
-      if (switcher && !switcher.contains(e.target)) {
+      if (switcher && !switcher.contains(e.target as Node)) {
         menu.classList.add('hidden');
         toggle.setAttribute('aria-expanded', 'false');
       }

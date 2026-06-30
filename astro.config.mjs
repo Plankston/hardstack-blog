@@ -8,9 +8,10 @@ import { visit } from 'unist-util-visit';
 import tailwindcss from '@tailwindcss/vite';
 
 // Rehype plugin: auto-add loading="lazy" to all <img> tags
+// Rehype plugin: auto-add loading="lazy" to all <img> tags
 function rehypeLazyLoadImages() {
   return (tree) => {
-    visit(tree, 'element', (node) => {
+    visit(tree, 'element', (/** @type {import('hast').Element} */ node) => {
       if (node.tagName === 'img' && !node.properties.loading) {
         node.properties.loading = 'lazy';
       }

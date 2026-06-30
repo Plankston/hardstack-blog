@@ -34,7 +34,7 @@ const slug = getSlug(post);
   <Content />
 </BlogPost>
 
-<script define:vars={{ slug }}>
+<script is:inline define:vars={{ slug }}>
   document.addEventListener('DOMContentLoaded', async () => {
     try {
       await fetch('/api/views', {
