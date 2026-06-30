@@ -1,7 +1,8 @@
 ---
 import HeaderLink from './HeaderLink.astro';
 import Search from './Search.astro';
-import { useTranslations, LOCALES, LOCALE_NAMES, type Locale } from '../i18n/ui';
+import { useTranslations, LOCALES, type Locale } from '../i18n/ui';
+import { getLocalePath } from '../i18n/utils';
 
 interface Props {
   locale: string;
@@ -10,23 +11,17 @@ interface Props {
 const { locale } = Astro.props;
 const currentLocale = locale as Locale;
 const t = useTranslations(currentLocale);
-
-// Generate correct paths based on locale
-function getLocalePath(path: string): string {
-  if (currentLocale === 'en') return path;
-  return `/${currentLocale}${path}`;
-}
 ---
 
 <header class="glass-header sticky top-0 z-50">
   <nav class="mx-auto flex max-w-[1400px] items-center px-8 py-3">
-    <a href={getLocalePath('/')} class="font-['JetBrains_Mono'] text-[0.95rem] font-medium tracking-tight no-underline text-[var(--text-heading)] hover:text-[var(--color-accent-ui)] whitespace-nowrap">
+    <a href={getLocalePath(currentLocale, '/')} class="font-['JetBrains_Mono'] text-[0.95rem] font-medium tracking-tight no-underline text-[var(--text-heading)] hover:text-[var(--color-accent-ui)] whitespace-nowrap">
       {t('site.title')}
     </a>
     <div class="flex flex-1 items-center justify-end gap-6">
       <div class="flex items-center gap-5">
-        <HeaderLink href={getLocalePath('/blog')} locale={currentLocale}>{t('nav.blog')}</HeaderLink>
-        <HeaderLink href={getLocalePath('/about')} locale={currentLocale}>{t('nav.about')}</HeaderLink>
+        <HeaderLink href={getLocalePath(currentLocale, '/blog')} locale={currentLocale}>{t('nav.blog')}</HeaderLink>
+        <HeaderLink href={getLocalePath(currentLocale, '/about')} locale={currentLocale}>{t('nav.about')}</HeaderLink>
       </div>
 
       <Search locale={currentLocale} />
@@ -55,7 +50,7 @@ function getLocalePath(path: string): string {
             aria-expanded="false"
             aria-controls="locale-menu"
           >
-            {LOCALES[currentLocale]}
+            {currentLocale === 'en' ? 'EN' : LOCALES[currentLocale]}
             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9l6 6 6-6"/>
             </svg>
@@ -83,7 +78,7 @@ function getLocalePath(path: string): string {
                       : 'text-[var(--text-muted)] hover:text-[var(--text-body)] hover:bg-[var(--bg-header)]',
                   ]}
                 >
-                  {LOCALE_NAMES[code as Locale]}
+                  {LOCALES[code as Locale]}
                 </a>
               );
             })}

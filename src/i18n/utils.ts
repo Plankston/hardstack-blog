@@ -1,9 +1,6 @@
-import type { Locale } from './ui';
-import { LOCALES } from './ui';
-
-export function getLocaleFromParams(locale?: string): Locale {
-  if (locale && locale in LOCALES) return locale as Locale;
-  return 'en';
+export function getLocalePath(locale: string, path: string): string {
+  if (locale === 'en') return path;
+  return `/${locale}${path}`;
 }
 
 export function getSlug(post: { id: string; data: { groupKey?: string } }): string {

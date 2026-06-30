@@ -1,5 +1,6 @@
 ---
 import { useTranslations, type Locale } from '../i18n/ui';
+import { getLocalePath } from '../i18n/utils';
 
 interface Props {
   locale: string;
@@ -9,12 +10,6 @@ const { locale } = Astro.props;
 const currentLocale = locale as Locale;
 const t = useTranslations(currentLocale);
 const today = new Date();
-
-// Generate correct paths based on locale
-function getLocalePath(path: string): string {
-  if (currentLocale === 'en') return path;
-  return `/${currentLocale}${path}`;
-}
 ---
 
 <footer class="footer-v2">
@@ -27,26 +22,26 @@ function getLocalePath(path: string): string {
 
     <!-- Navigation -->
     <div>
-      <div class="footer-v2-heading">{currentLocale === 'zh-CN' ? '导航' : 'Navigate'}</div>
+      <div class="footer-v2-heading">{t('home.navLabel')}</div>
       <ul class="footer-v2-links">
-        <li><a href={getLocalePath('/')}>{currentLocale === 'zh-CN' ? '首页' : 'Home'}</a></li>
-        <li><a href={getLocalePath('/blog/')}>{t('nav.blog')}</a></li>
-        <li><a href={getLocalePath('/about/')}>{t('nav.about')}</a></li>
+        <li><a href={getLocalePath(currentLocale, '/')}>{t('home.navHome')}</a></li>
+        <li><a href={getLocalePath(currentLocale, '/blog/')}>{t('nav.blog')}</a></li>
+        <li><a href={getLocalePath(currentLocale, '/about/')}>{t('nav.about')}</a></li>
       </ul>
     </div>
 
     <!-- Social / Contact -->
     <div>
-      <div class="footer-v2-heading">{currentLocale === 'zh-CN' ? '联系' : 'Connect'}</div>
+      <div class="footer-v2-heading">{t('home.connectLabel')}</div>
       <ul class="footer-v2-links">
         <li><a href="https://github.com/Plankston" target="_blank">GitHub</a></li>
-        <li><a href={getLocalePath('/rss.xml')}>RSS</a></li>
+        <li><a href={getLocalePath(currentLocale, '/rss.xml')}>RSS</a></li>
         <li><a href="mailto:meng683185@gmail.com">Email</a></li>
       </ul>
     </div>
   </div>
 
   <div class="footer-v2-bottom">
-    &copy; {today.getFullYear()} {currentLocale === 'en' ? '· Vol. I ·' : '· 第一卷 ·'}&nbsp;{t('footer.colophon')}
+    &copy; {today.getFullYear()} {t('home.footerYear')}&nbsp;{t('footer.colophon')}
   </div>
 </footer>

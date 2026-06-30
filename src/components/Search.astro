@@ -59,15 +59,9 @@ const errorText = t('search.error');
 
   async function getPagefind() {
     if (!pagefind) {
-      try {
-        const module = await import('/pagefind/pagefind.js');
-        await module.init();
-        pagefind = module;
-      } catch (error) {
-        console.error('Error loading pagefind:', error);
-        results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
-        throw error;
-      }
+      const module = await import('/pagefind/pagefind.js');
+      await module.init();
+      pagefind = module;
     }
     return pagefind;
   }
@@ -103,52 +97,28 @@ const errorText = t('search.error');
         return;
       }
 
-      // Show loading state
       results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${loadingText}</p>`;
 
       debounceTimer = setTimeout(async () => {
         try {
           const pf = await getPagefind();
-          if (!pf) {
-            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
-            return;
-          }
-
           const searchResults = await pf.search(term);
 
-          // Validate search results
-          if (!searchResults || !Array.isArray(searchResults.results)) {
+          if (!searchResults?.results?.length) {
             results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
             return;
           }
 
-          if (searchResults.results.length === 0) {
-            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${noResultsText}</p>`;
-            return;
-          }
-
-          // Build results HTML with error handling
           let html = '';
-          try {
-            for (const r of searchResults.results.slice(0, 10)) {
-              try {
-                const data = await r.data();
-                html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
-                  <div class="font-medium text-[var(--color-ink)]">${data.meta.title || 'Untitled'}</div>
-                  <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt || ''}</div>
-                </a>`;
-              } catch (dataError) {
-                console.error('Error fetching search result data:', dataError);
-                // Skip this result but continue with others
-                continue;
-              }
-            }
-          } catch (loopError) {
-            console.error('Error processing search results:', loopError);
-            results.innerHTML = `<p class="text-sm text-[var(--color-ink-faint)]">${errorText}</p>`;
-            return;
+          for (const r of searchResults.results.slice(0, 10)) {
+            try {
+              const data = await r.data();
+              html += `<a href="${data.url}" class="block rounded p-2 text-sm no-underline hover:bg-[var(--color-code-bg)] transition-colors">
+                <div class="font-medium text-[var(--color-ink)]">${data.meta.title || 'Untitled'}</div>
+                <div class="text-xs text-[var(--color-ink-faint)]">${data.excerpt || ''}</div>
+              </a>`;
+            } catch {}
           }
-
           results.innerHTML = html;
         } catch (error) {
           console.error('Search error:', error);

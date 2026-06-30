@@ -1,14 +1,9 @@
 export const LOCALES = {
-  en: 'EN',
+  en: 'English',
   'zh-CN': '中文',
 } as const;
 
 export type Locale = keyof typeof LOCALES;
-
-export const LOCALE_NAMES: Record<Locale, string> = {
-  en: 'English',
-  'zh-CN': '中文',
-};
 
 export const translations: Record<Locale, Record<string, string>> = {
   en: {
@@ -40,6 +35,16 @@ export const translations: Record<Locale, Record<string, string>> = {
     'search.loading': 'Searching...',
     'search.error': 'Search error, please try again.',
     'skipToContent': 'Skip to content',
+    'home.readLatest': 'Read the latest',
+    'home.viewAll': 'view all',
+    'home.latestArticles': 'latest articles',
+    'home.emptyTitle': 'Posts coming soon…',
+    'home.emptyDesc': 'The first issue is in the works.',
+    'home.navLabel': 'Navigate',
+    'home.navHome': 'Home',
+    'home.connectLabel': 'Connect',
+    'home.footerYear': '· Vol. I ·',
+    'blog.archiveEmpty': 'No posts yet.',
   },
   'zh-CN': {
     'site.title': 'HardStack',
@@ -67,6 +72,16 @@ export const translations: Record<Locale, Record<string, string>> = {
     'search.loading': '搜索中...',
     'search.error': '搜索出错，请重试。',
     'skipToContent': '跳到主要内容',
+    'home.readLatest': '阅读最新文章',
+    'home.viewAll': '查看全部',
+    'home.latestArticles': '全部文章',
+    'home.emptyTitle': '文章即将推出…',
+    'home.emptyDesc': '第一期正在制作中。',
+    'home.navLabel': '导航',
+    'home.navHome': '首页',
+    'home.connectLabel': '联系',
+    'home.footerYear': '· 第一卷 ·',
+    'blog.archiveEmpty': '暂无文章。',
   },
 };
 

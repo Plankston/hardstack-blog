@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'fs';
 import { join, dirname, basename, extname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -94,29 +94,19 @@ function generateSvgTemplate(title, description, category) {
 </svg>`;
 }
 
-// Parse MDX frontmatter
+// Parse MDX frontmatter (handles simple key: value pairs with quoted strings)
 function parseFrontmatter(content) {
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
-  const match = content.match(frontmatterRegex);
-  
-  if (!match) {
-    return null;
-  }
-  
-  const frontmatter = match[1];
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return null;
+
   const data = {};
-  
-  // Simple parser for frontmatter
-  const lines = frontmatter.split('\n');
-  for (const line of lines) {
-    const [key, ...valueParts] = line.split(':');
-    if (key && valueParts.length > 0) {
-      const value = valueParts.join(':').trim();
-      // Remove quotes if present
-      data[key.trim()] = value.replace(/^["']|["']$/g, '');
-    }
+  for (const line of match[1].split('\n')) {
+    const idx = line.indexOf(':');
+    if (idx === -1) continue;
+    const key = line.slice(0, idx).trim();
+    const value = line.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+    if (key) data[key] = value;
   }
-  
   return data;
 }
 
@@ -131,8 +121,7 @@ async function generateOgImage(article) {
   // Ensure output directory exists
   const outputDir = dirname(outputPath);
   if (!existsSync(outputDir)) {
-    const fs = await import('fs');
-    fs.mkdirSync(outputDir, { recursive: true });
+    mkdirSync(outputDir, { recursive: true });
   }
   
   await sharp(Buffer.from(svg))
