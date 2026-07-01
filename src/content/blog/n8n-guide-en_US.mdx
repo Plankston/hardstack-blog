@@ -1,0 +1,370 @@
+---
+title: "n8n Complete Guide: Automate Anything with Visual Workflows"
+description: "Deploy n8n with Docker in minutes — self-hosted workflow automation replacing Zapier. Build RSS monitors, GitHub integrations, and daily reminders."
+pubDate: 2026-07-02
+category: "automation"
+tags: ["n8n", "automation", "workflow", "self-hosted", "docker"]
+difficulty: "beginner"
+timeToRead: 20
+postLang: "en"
+groupKey: "n8n-guide"
+template: "paper"
+---
+
+## What Is n8n?
+
+[n8n](https://github.com/n8n-io/n8n) is a self-hostable, open-source workflow automation platform with over 60K GitHub Stars. It lets you connect APIs, databases, message queues, and file systems using a visual drag-and-drop editor — the same kind of tool you would use Zapier or Make for, but with full data sovereignty and no monthly execution limits.
+
+If you are a developer, DevOps engineer, or homelab enthusiast who has ever written a cron job to poll an API and push results to Slack, n8n is the generalization of that pattern. Instead of stitching together shell scripts, you build a visual graph of nodes where each node performs one action and the connections between them define the data flow.
+
+The key difference from hosted alternatives: your data never leaves your infrastructure. Self-hosted n8n runs inside a Docker container on a server you control. There is no vendor lock-in, no per-task pricing, and no risk of a third-party outage taking down your automations.
+
+## n8n vs Zapier vs Make: A Quick Comparison
+
+Before diving in, it helps to understand where n8n sits in the automation landscape.
+
+| Feature | Zapier | Make | n8n |
+|---------|--------|------|-----|
+| **Starting price** | $29.99/month | $9.09/month | Free (self-hosted) |
+| **Task limits** | Yes (varies by plan) | Yes (varies by plan) | None |
+| **Self-hosted** | No | No | Yes (Docker) |
+| **Data location** | Vendor servers | Vendor servers | Your server |
+| **Integrations** | 7,000+ (most paid) | 1,500+ | 400+ (extensible) |
+| **Code execution** | Limited | Limited | Full JS/Python |
+| **Learning curve** | Low | Medium | Medium |
+
+The pattern is straightforward. If your automations are simple (send an email when X happens), Zapier works fine. If you need complex logic, data transformation, or you process large payloads — or you simply do not want to pay a monthly fee for something you can host yourself — n8n is the better choice.
+
+## Deployment with Docker
+
+### Prerequisites
+
+- A Linux server (Ubuntu 22.04+ recommended)
+- Docker and Docker Compose installed
+
+If Docker is not installed yet:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose Configuration
+
+Create a directory and a compose file:
+
+```bash
+mkdir -p ~/n8n && cd ~/n8n
+```
+
+Create `docker-compose.yml`:
+
+```yaml
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Basic configuration
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      # Timezone affects scheduled triggers
+      - GENERIC_TIMEZONE=America/New_York
+      - TZ=America/New_York
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
+```
+
+Start the container:
+
+```bash
+docker compose up -d
+```
+
+Open your browser and navigate to `http://your-server-ip:5678`. You will be prompted to create an admin account on first access.
+
+### Adding Reverse Proxy and SSL (Recommended)
+
+Running n8n on a bare IP address over HTTP works for local testing, but production deployments need HTTPS. If you use [Coolify](https://coolify.io) or Traefik as your reverse proxy, you can add SSL termination without modifying the n8n container configuration. For a quick setup, Caddy is also a solid choice:
+
+```bash
+# /etc/caddy/Caddyfile
+n8n.yourdomain.com {
+    reverse_proxy localhost:5678
+}
+```
+
+Caddy automatically provisions and renews Let's Encrypt certificates.
+
+## Core Concepts
+
+n8n's visual editor has a learning curve, but the entire system rests on four concepts.
+
+### Triggers
+
+A trigger defines when a workflow starts. There are four main types:
+
+- **Schedule Trigger** — runs at a defined interval (e.g., daily at 9 AM)
+- **Webhook** — runs when an HTTP request hits a specific URL
+- **Manual Trigger** — you click the "Execute Workflow" button
+- **Application Trigger** — runs in response to an event (e.g., a new GitHub star, an incoming email)
+
+### Nodes
+
+Each node performs a single action. Reading an RSS feed, sending a Telegram message, querying a database — these are all individual nodes. n8n ships with 400+ built-in nodes, and you can install community nodes for services not covered out of the box.
+
+### Connections
+
+Connections define the data flow between nodes. The output of one node becomes the input of the next. This is where n8n differs from traditional scripting: you do not write code to pass data between steps, the framework handles serialization and transformation automatically.
+
+### Credentials
+
+API keys, OAuth tokens, and SSH keys are stored in n8n's encrypted credential store. They are never exposed in workflow definitions or logs. Each credential type (GitHub, Telegram, Notion, etc.) has its own configuration form in the Settings panel.
+
+That is the entire conceptual model. Everything else — sub-workflows, error handling, code nodes — builds on these four primitives.
+
+## Workflow Example 1: RSS Feed Monitor with Telegram Notifications
+
+This workflow fetches RSS feeds daily, filters entries by keyword, and sends matches to a Telegram channel. It is a common starting point for monitoring tech blogs, security advisories, or news sources.
+
+**Workflow structure:**
+
+```
+Schedule Trigger → RSS Feed Read → IF (keyword filter) → Telegram
+```
+
+### Step 1: Add a Schedule Trigger
+
+Add a `Schedule Trigger` node. Set the rule to run daily at 8:00 AM. This node emits a single item that kicks off the workflow.
+
+### Step 2: Add an RSS Feed Read Node
+
+Search for `RSS Feed Read` and add it. Enter your RSS feed URL. To monitor multiple feeds, use a Code node to merge outputs:
+
+```javascript
+// Code node: merge multiple RSS feeds
+const feeds = $input.all();
+const items = [];
+for (const feed of feeds) {
+  for (const item of feed.json.items || []) {
+    items.push({
+      json: {
+        title: item.title,
+        link: item.link,
+        pubDate: item.pubDate,
+        source: feed.json.feed?.title || 'Unknown'
+      }
+    });
+  }
+}
+// Sort by publish date, keep the 20 most recent
+items.sort((a, b) => new Date(b.json.pubDate) - new Date(a.json.pubDate));
+return items.slice(0, 20);
+```
+
+### Step 3: Add an IF Node for Keyword Filtering
+
+Set the condition to check if `{{ $json.title }}` contains your target keyword (e.g., `docker`, `kubernetes`, `security`). Only matching items proceed to the next node.
+
+### Step 4: Add a Telegram Node
+
+Before configuring this node, you need a Telegram Bot token. Create a bot via [@BotFather](https://t.me/BotFather), copy the token, and add it as a Telegram credential in n8n (Settings → Credentials → Telegram).
+
+The message template:
+
+```
+📰 {{ $json.title }}
+
+🔗 {{ $json.link }}
+
+Source: {{ $json.source }}
+```
+
+## Workflow Example 2: GitHub Star Tracker → Notion Database
+
+This workflow logs every new star on a GitHub repository into a Notion database. It is useful for tracking project traction over time.
+
+**Workflow structure:**
+
+```
+GitHub Trigger → Notion (Create Database Item)
+```
+
+### Step 1: Configure GitHub Credentials
+
+Go to Settings → Credentials → GitHub. You need a Personal Access Token with `repo:status` scope. Generate one at [github.com/settings/tokens](https://github.com/settings/tokens).
+
+### Step 2: Add a GitHub Trigger
+
+Select `GitHub Trigger`, set the event to `star`, and enter your repository (e.g., `username/repo-name`).
+
+### Step 3: Set Up the Notion Database
+
+Create a Notion database with these fields:
+
+| Field | Type |
+|-------|------|
+| Name | Title |
+| Star Count | Number |
+| Repository | URL |
+| Timestamp | Date |
+
+Then configure the Notion credential in n8n (Settings → Credentials → Notion API). Use an Internal Integration Token — create one at [notion.so/my-integrations](https://www.notion.so/my-integrations).
+
+### Step 4: Map Fields
+
+Add a `Notion` node, select `Create Database Item`, and map each field:
+
+- Name → `{{ $json.sender.login }}`
+- Star Count → `{{ $json.repository.stargazers_count }}`
+- Repository → `{{ $json.repository.html_url }}`
+- Timestamp → `{{ $json.created_at }}`
+
+## Workflow Example 3: Daily Backup Status Report
+
+This workflow SSHes into your servers daily, checks whether recent backups exist, and sends a summary email. It is a practical pattern for monitoring any scheduled task across multiple machines.
+
+**Workflow structure:**
+
+```
+Schedule Trigger → SSH Command (per server) → Code (aggregate) → Email Send
+```
+
+### Step 1: Configure SSH Credentials
+
+Use SSH key authentication, not passwords. Add your private key as an SSH credential in n8n.
+
+### Step 2: SSH Command Node
+
+Run a command to check for recent backup files:
+
+```bash
+# Check for backup files created in the last 24 hours
+find /backup -name "*.tar.gz" -mtime -1 | wc -l
+```
+
+### Step 3: Code Node to Aggregate Results
+
+```javascript
+const results = $input.all();
+let report = 'Daily Backup Report\n\n';
+for (const r of results) {
+  const count = parseInt(r.json.stdout?.trim() || '0');
+  const status = count > 0 ? 'OK' : 'FAILED';
+  report += `${status} Server ${r.json.host}: ${count} backup files\n`;
+}
+return [{ json: { report } }];
+```
+
+### Step 4: Send Email
+
+Configure an SMTP credential (SendGrid, Resend, or your own mail server). Set the recipient, and use `{{ $json.report }}` as the email body.
+
+## Error Handling and Debugging
+
+n8n's debugging experience is less polished than commercial alternatives, but a few techniques cover most scenarios.
+
+### Execution History
+
+Open the left sidebar → Executions. Every workflow run is logged here, and you can inspect the input and output of each node individually. This is your primary debugging tool.
+
+### Sticky Notes
+
+Right-click the canvas → Add Sticky Note. Document non-obvious behavior on key nodes — rate limits, expected payload formats, anything you would forget in two weeks.
+
+### Error Handling on Nodes
+
+For production workflows, set the `On Error` property on critical nodes to `Continue`. A single API timeout should not kill an entire workflow. You can also add an `Error Trigger` node to catch and route failures:
+
+```
+Main Flow → ... → HTTP Request (On Error: Continue)
+                                  ↓ (on error)
+                           Error Handler Node
+```
+
+### Debug Logging
+
+Add the following environment variable to your Docker Compose file to enable verbose logging during troubleshooting:
+
+```yaml
+environment:
+  - N8N_LOG_LEVEL=debug
+```
+
+Switch back to `info` after resolving the issue.
+
+## Common Pitfalls and Fixes
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| Webhook URL unreachable | No reverse proxy or port not exposed | Set up Caddy/Nginx/Traefik; never expose port 5678 directly |
+| 401 errors mid-workflow | OAuth token expired or API key revoked | Re-authorize OAuth credentials; use non-expiring API keys where possible |
+| Empty data between nodes | Previous node returned non-JSON | Wrap output in a Code node: `return [{ json: { raw: $input.first().json } }]` |
+| Container OOM crash | Default memory limit too low | Add `NODE_OPTIONS=--max-old-space-size=4096` to environment |
+| Scheduled triggers at wrong time | Timezone mismatch | Set both `GENERIC_TIMEZONE` and `TZ` to your local timezone |
+
+## Advanced Tips
+
+### Sub-Workflows
+
+Large workflows are easier to maintain when broken into sub-workflows. Use the `Execute Workflow` node to call a child workflow. This also enables reuse — a single "send notification" sub-workflow can be called from ten different parent workflows.
+
+### Environment Variables
+
+Do not hardcode sensitive values in workflow definitions. Use Docker environment variables:
+
+```yaml
+environment:
+  - N8N_ENCRYPTION_KEY=your-encryption-key
+  - WEBHOOK_URL=https://n8n.yourdomain.com/
+```
+
+### Community Nodes
+
+n8n's community node ecosystem is active. Install community nodes from Settings → Community Nodes → Install. Useful packages include:
+
+- **n8n-nodes-ollama** — local LLM integration
+- **n8n-nodes-telegram** — enhanced Telegram node with media support
+- **n8n-nodes-mattermost** — self-hosted Slack alternative
+
+### n8n API
+
+n8n exposes a REST API for programmatic management. Export all workflows for backup:
+
+```bash
+curl -X GET "http://localhost:5678/api/v1/workflows" \
+  -H "X-N8N-API-KEY: your-api-key" \
+  -o workflows-backup.json
+```
+
+## Frequently Asked Questions
+
+**Do I need programming experience to use n8n?**
+
+No. Basic workflows are built entirely with drag-and-drop. However, if you know JavaScript, the Code node gives you full programmatic control — which is one of n8n's advantages over Zapier.
+
+**Is the self-hosted version truly free?**
+
+Yes. There are no execution limits, no feature gates, and no trial period. The cloud version offers a free tier (100 executions/month) and paid plans starting at $20/month, but self-hosting covers most use cases.
+
+**How secure is n8n with self-hosting?**
+
+All data stays on your server. Credentials are encrypted at rest. The main security responsibility is yours: keep the server updated, use SSH keys instead of passwords, do not expose port 5678 directly to the internet, and use a reverse proxy with TLS.
+
+**Can n8n handle large data volumes?**
+
+Yes, within the limits of your server's resources. For large payloads, increase the Node.js memory limit and consider processing data in batches using Split In Batches nodes rather than loading everything into memory at once.
+
+## Quick-Start Checklist
+
+1. **Deploy now** — `docker compose up -d`, five minutes to a running instance
+2. **Build the RSS workflow** — Follow Example 1 above; you will have your first automation in 15 minutes
+3. **Back up your credentials** — Export credentials from Settings → Credentials before you forget
+4. **Add error handling** — Set `On Error → Continue` on every HTTP request node in production workflows
+5. **Review executions weekly** — Check the Executions panel for failures before they pile up

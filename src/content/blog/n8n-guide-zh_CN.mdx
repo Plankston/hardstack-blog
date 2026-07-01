@@ -1,0 +1,407 @@
+---
+title: "n8n 完全指南：别再手动干活了"
+description: "用 n8n 搭建自动化工作流，Docker 一键部署，告别复制粘贴。从 RSS 监控到 GitHub 集成，3 个实战案例手把手教你。"
+pubDate: 2026-07-02
+category: "automation"
+tags: ["n8n", "automation", "workflow", "self-hosted", "docker"]
+difficulty: "beginner"
+timeToRead: 20
+postLang: "zh-CN"
+groupKey: "n8n-guide"
+template: "paper"
+---
+
+## 你还在手动复制粘贴数据？2026 年了，认真的吗？
+
+我见过有人每天早上花 20 分钟从 RSS 订阅源手动复制标题到 Notion。不是一次两次，是 **每天**。我问他为什么不写个脚本，他说"太麻烦了"。
+
+然后我给他看了 n8n。15 分钟后，那个 20 分钟的日常操作变成了一个自动运行的节点。他沉默了很久，说了一句："我浪费了多少个 20 分钟？"
+
+**n8n** 是一个开源的工作流自动化平台，[GitHub 60K+ Stars](https://github.com/n8n-io/n8n)，自托管免费。它用可视化拖拽的方式把 API、数据库、消息队列、文件系统连起来——Zapier 能做的事它都能做，但数据不出你的服务器，而且没有每月任务数限制。[官方文档](https://docs.n8n.io/) 写得不错，遇到问题先翻文档。
+
+**一句话总结：自托管版 Zapier，但更强、更自由、零月费。**
+
+---
+
+## 为什么 Zapier/Make 不够用
+
+先说结论：不是 Zapier 不好，是它不适合你。
+
+| 对比项 | Zapier | Make | n8n |
+|--------|--------|------|-----|
+| **月费** | $29.99 起，任务数受限 | $9.09 起，操作数受限 | 自托管免费，云版 $20/月 |
+| **自托管** | ❌ | ❌ | ✅ Docker 一键部署 |
+| **数据位置** | Zapier 服务器 | Make 服务器 | 你自己的服务器 |
+| **节点数** | 7000+（但大部分要付费） | 1500+ | 400+（社区节点无限扩展） |
+| **代码执行** | 有限 | 有限 | 完全支持 JavaScript/Python |
+| **学习曲线** | 低 | 中 | 中 |
+
+我之前用 Make 跑了 3 个自动化，月费 $29。然后有一次我需要处理一个 50MB 的 JSON 文件——Make 直接超时。换成 n8n，本地跑，3 秒搞定。
+
+**真正的问题不是价格，是控制权。** 你的自动化流程跑在别人的服务器上，别人宕机你也跟着挂，别人涨价你也得认。
+
+---
+
+## 5 分钟部署
+
+### 前置要求
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+）
+- Docker 和 Docker Compose 已安装
+
+没装 Docker？一行搞定：
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose 部署（推荐）
+
+```bash
+mkdir -p ~/n8n && cd ~/n8n
+```
+
+创建 `docker-compose.yml`：
+
+```yaml
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # 基础配置
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      # 数据持久化
+      - GENERIC_TIMEZONE=Asia/Shanghai
+      - TZ=Asia/Shanghai
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+打开浏览器访问 `http://你的服务器IP:5678`，设置管理员账号就能用了。
+
+> 如果你还没搞好域名和 SSL，建议搭配 [Coolify 一键部署指南](/blog/coolify-deploy) 使用反向代理。
+
+---
+
+## 核心概念：5 分钟搞懂 n8n 的世界观
+
+我第一次打开 n8n 的时候被吓到了——节点太多了。但你只需要理解 4 个概念：
+
+### 1. 触发器（Trigger）
+
+工作流的起点。什么时候开始跑？
+
+- **Schedule Trigger**：定时运行，比如每天早上 9 点
+- **Webhook**：收到 HTTP 请求时运行
+- **手动触发**：你自己点"Execute Workflow"按钮
+- **应用触发**：比如"收到新邮件时"、"GitHub 有新 Star 时"
+
+### 2. 节点（Node）
+
+每个节点做一件事。比如"读 RSS"、"发 Telegram 消息"、"写入数据库"。n8n 内置 400+ 节点，覆盖几乎所有常见服务。
+
+### 3. 连接（Connection）
+
+节点之间的数据流。前一个节点的输出自动变成下一个节点的输入。这就是 n8n 的核心——数据从 A 流到 B 流到 C。
+
+### 4. 凭证（Credential）
+
+API 密钥、OAuth Token 这些敏感信息存在 n8n 的加密存储里，不会暴露在工作流中。
+
+**就这四个。** 其他都是这四个概念的组合。
+
+---
+
+## 3 个实战工作流
+
+### 案例 1：RSS 订阅 → Telegram 推送
+
+每天自动抓取你关注的 RSS 源，筛选关键词后推送到 Telegram 群。我用这个监控 15 个技术博客，每天早上自动收到精选摘要。
+
+**工作流结构：**
+
+```
+Schedule Trigger → RSS Read → IF (关键词过滤) → Telegram
+```
+
+**Step 1：添加 Schedule Trigger**
+
+选择 `Schedule Trigger` 节点，设置 `Rule` → `Days` → 每天 8:00。
+
+**Step 2：添加 RSS Read 节点**
+
+搜索 `RSS Feed Read` 节点，填入你的 RSS 源 URL。支持多个源——用逗号分隔或用 Code 节点合并多个 RSS Read 的输出。
+
+```javascript
+// Code 节点：合并多个 RSS 源
+const feeds = $input.all();
+const items = [];
+for (const feed of feeds) {
+  for (const item of feed.json.items || []) {
+    items.push({
+      json: {
+        title: item.title,
+        link: item.link,
+        pubDate: item.pubDate,
+        source: feed.json.feed?.title || 'Unknown'
+      }
+    });
+  }
+}
+// 按发布时间排序，取最新 20 条
+items.sort((a, b) => new Date(b.json.pubDate) - new Date(a.json.pubDate));
+return items.slice(0, 20);
+```
+
+**Step 3：添加 IF 节点过滤关键词**
+
+设置条件：`{{ $json.title }}` contains `docker`（或你要监控的关键词）。
+
+**Step 4：添加 Telegram 节点**
+
+需要先配置 Telegram Bot 的凭证——创建 Bot 拿到 Token，然后填入 n8n 的凭证管理。
+
+消息模板：
+
+```
+📰 {{ $json.title }}
+
+🔗 {{ $json.link }}
+
+来源：{{ $json.source }}
+```
+
+### 案例 2：GitHub 新 Star → Notion 任务
+
+当你的仓库获得新 Star 时，自动在 Notion 数据库里创建一条记录。我用这个追踪项目热度变化。
+
+**工作流结构：**
+
+```
+GitHub Trigger → Notion (Create Database Item)
+```
+
+**Step 1：配置 GitHub 凭证**
+
+Settings → Credentials → GitHub Personal Access Token。权限只需要 `repo:status`。
+
+**Step 2：添加 GitHub Trigger**
+
+选择 `GitHub Trigger`，Event 选 `star`，填入你的仓库。
+
+**Step 3：添加 Notion 节点**
+
+先在 Notion 创建一个 Database，字段包含：
+- Name（标题）
+- Star Count（数字）
+- Repo（URL）
+- Timestamp（日期）
+
+然后在 n8n 配置 Notion 凭证（Internal Integration Token），添加 `Notion` 节点，操作选 `Create Database Item`，映射字段。
+
+### 案例 3：每日备份提醒邮件
+
+每天下午 6 点检查关键服务的备份状态，汇总后发邮件。我用这个监控 3 台服务器的备份任务。
+
+**工作流结构：**
+
+```
+Schedule Trigger → SSH Command (检查备份) → Code (汇总) → Email Send
+```
+
+**Step 1：配置 SSH 凭证**
+
+Settings → Credentials → SSH。用密钥认证，别用密码。
+
+**Step 2：SSH Command 检查备份**
+
+```bash
+# 检查最近 24 小时是否有备份文件
+find /backup -name "*.tar.gz" -mtime -1 | wc -l
+```
+
+**Step 3：Code 节点汇总**
+
+```javascript
+const results = $input.all();
+let report = '📋 每日备份报告\n\n';
+for (const r of results) {
+  const count = parseInt(r.json.stdout?.trim() || '0');
+  const status = count > 0 ? '✅' : '❌';
+  report += `${status} 服务器 ${r.json.host}: ${count} 个备份文件\n`;
+}
+return [{ json: { report } }];
+```
+
+**Step 4：发邮件**
+
+配置 SMTP 凭证（推荐用 Resend 或 SendGrid 的免费额度），填入收件人，正文用 `{{ $json.report }}`。
+
+---
+
+## 调试和排错
+
+n8n 的调试体验比 Zapier 差一截，但有几个技巧能救命：
+
+### 查看执行历史
+
+左侧栏 → Executions → 点击任意一次执行记录。每个节点的输入输出都能展开看。这是你排查问题的第一站。
+
+### Sticky Notes
+
+在画布上右键 → Add Sticky Note。给关键节点写注释，比如"这个 API 的 rate limit 是 100 次/分钟"。别笑，你两周后绝对记不住。
+
+### 错误处理节点
+
+在关键节点后加 `Error Trigger` 或设置节点的 `On Error` → `Continue`。生产环境的工作流不能因为一个 API 超时就全挂。
+
+### 日志级别
+
+环境变量加上：
+
+```yaml
+- N8N_LOG_LEVEL=debug
+```
+
+线上排查时改成 `debug`，平时用 `info` 就够了。
+
+---
+
+## 常见坑和解决方案
+
+### 坑 1：Webhook URL 不通
+
+**症状：** 外部服务配置了 Webhook 但 n8n 收不到。
+
+**原因：** 本地部署没配反向代理，外部访问不到 5678 端口。
+
+**解法：** 用 Nginx/Caddy/Traefik 反向代理，或者用 Cloudflare Tunnel 暴露。别直接开端口到公网。
+
+### 坑 2：Credential 过期
+
+**症状：** 工作流突然报 401。
+
+**原因：** OAuth Token 过期，或 API Key 被撤销。
+
+**解法：** n8n 的 OAuth 凭证会自动刷新，但偶尔会失败。遇到就重新授权一次。对于 API Key 类的凭证，建议用不会过期的密钥。
+
+### 坑 3：节点数据丢失
+
+**症状：** 前一个节点输出的数据在下一个节点里是空的。
+
+**原因：** n8n 的数据在节点间传递时是 JSON 格式，如果前一个节点返回了非 JSON 数据（比如纯文本），需要先用 Code 节点转换。
+
+**解法：**
+
+```javascript
+return [{ json: { raw: $input.first().json } }];
+```
+
+### 坑 4：内存溢出
+
+**症状：** 处理大量数据时 n8n 崩了。
+
+**原因：** 默认内存限制太低。
+
+**解法：** docker-compose.yml 加上：
+
+```yaml
+environment:
+  - NODE_OPTIONS=--max-old-space-size=4096
+```
+
+然后根据服务器内存调整。
+
+---
+
+## 进阶玩法
+
+### 子工作流（Sub-Workflow）
+
+大工作流拆成小的子工作流，用 `Execute Workflow` 节点调用。好处是复用——同一个"发 Telegram 消息"子工作流可以在 10 个地方调用。
+
+### 环境变量
+
+敏感配置别硬编码在工作流里。用环境变量：
+
+```yaml
+environment:
+  - N8N_CUSTOM_EXTENSIONS=n8n-nodes-base.cron
+  - N8N_ENCRYPTION_KEY=your-encryption-key
+```
+
+### 社区节点
+
+n8n 的社区节点生态很活跃。装社区节点：
+
+Settings → Community Nodes → Install → 输入包名，比如 `n8n-nodes-ollama`。
+
+推荐几个：
+- **n8n-nodes-ollama**：本地大模型集成
+- **n8n-nodes-telegram**：增强版 Telegram 节点
+- **n8n-nodes-mattermost**：自托管 Slack 替代
+
+### n8n API
+
+n8n 自己有 REST API，可以用脚本批量创建工作流、导出备份。备份工作流：
+
+```bash
+curl -X GET "http://localhost:5678/api/v1/workflows" \
+  -H "X-N8N-API-KEY: your-api-key" \
+  -o workflows-backup.json
+```
+
+---
+
+## 常见问题
+
+**n8n 和 Zapier 哪个好？**
+
+如果你的数据不在意隐私、每月任务量不超过 1000、不想折腾——用 Zapier。如果你要自托管、跑复杂逻辑、处理大量数据、不想被月费绑架——用 n8n。对 homelab 用户来说没有第二个答案。
+
+**n8n 需要编程基础吗？**
+
+不需要。基础工作流全靠拖拽。但如果你会写 JavaScript，n8n 的 Code 节点能让你做到任何事——这是它比 Zapier 强的核心原因之一。
+
+**n8n 免费版有限制吗？**
+
+自托管版完全免费，没有任务数限制。n8n 云版有免费额度（100 次执行/月），超出后 $20/月。大多数人直接 Docker 自托管就够了。
+
+**n8n 数据安全吗？**
+
+自托管模式下，所有数据存在你自己的服务器上，不出内网。凭证加密存储。但前提是你的服务器本身是安全的——配好防火墙、定期更新、别把 5678 端口直接暴露到公网。
+
+---
+
+## 5 条可执行清单
+
+1. **现在就部署**：`docker compose up -d`，5 分钟内跑起来，别等"有空再说"
+2. **先跑一个 RSS 工作流**：照着案例 1 搭，15 分钟搞定，感受一下自动化的爽
+3. **配好凭证备份**：Settings → Credentials 里的凭证导出一份，别等重装后抓瞎
+4. **加错误处理**：生产工作流的每个 HTTP 请求节点都设 `On Error → Continue`，别让一个 API 超时毁了一整天的自动化
+5. **每周看一次执行历史**：Executions 里有失败记录及时处理，别等问题积累到不可收拾
+
+---
+
+## 写在最后
+
+我第一次用 n8n 是因为 Zapier 的免费额度用完了。后来我发现，真正的价值不是省钱——是控制权。你的数据不出服务器，你的工作流不依赖别人的 SLA，你的自动化想怎么改就怎么改。
+
+n8n 不完美，调试体验比商业产品差，社区节点质量参差不齐，偶尔会遇到奇怪的 bug。但对于 homelab 用户来说，它是目前最好的自动化平台——没有之一。
+
+去装吧。装完回来告诉我你搭了什么工作流。
