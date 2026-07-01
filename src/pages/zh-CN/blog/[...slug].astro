@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BlogPost from '../../../layouts/BlogPost.astro';
-import { getSlug } from '../../../i18n/utils';
+import { getSlug, findRelatedPosts } from '../../../i18n/utils';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -28,9 +28,11 @@ const currentLocale = 'zh-CN';
 const post = Astro.props.post;
 const { Content } = await render(post);
 const slug = getSlug(post);
+const allPosts = await getCollection('blog');
+const related = findRelatedPosts(post, allPosts);
 ---
 
-<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug}>
+<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug} relatedPosts={related}>
   <Content />
 </BlogPost>
 

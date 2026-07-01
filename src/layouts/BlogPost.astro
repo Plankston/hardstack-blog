@@ -17,6 +17,15 @@ interface Props {
   locale: string;
   template?: 'paper' | 'clean' | 'dark';
   slug?: string;
+  relatedPosts?: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    category?: string;
+    difficulty?: string;
+    timeToRead?: number;
+    date?: Date;
+  }>;
 }
 
 const {
@@ -30,6 +39,7 @@ const {
   locale,
   template = 'paper',
   slug,
+  relatedPosts = [],
 } = Astro.props;
 const t = useTranslations(locale);
 
@@ -148,6 +158,26 @@ const templateLabel: Record<string, string> = {
           <div class="prose">
             <slot />
           </div>
+
+          <!-- Related posts -->
+          {relatedPosts.length > 0 && (
+            <div class="related-posts" style="max-width:var(--prose-max-w);margin:3rem auto 0">
+              <h3 class="related-posts-title">
+                {locale === 'zh-CN' ? '相关文章' : 'Related Articles'}
+              </h3>
+              <div class="related-posts-grid">
+                {relatedPosts.map((rp) => (
+                  <a href={locale === 'zh-CN' ? `/zh-CN/blog/${rp.slug}/` : `/blog/${rp.slug}/`} class="related-post-card">
+                    <span class="related-post-category">{rp.category || (locale === 'zh-CN' ? '未分类' : 'Uncategorized')}</span>
+                    <span class="related-post-title">{rp.title}</span>
+                    <span class="related-post-meta">
+                      {rp.timeToRead && `${rp.timeToRead} ${locale === 'zh-CN' ? '分钟' : 'min'}`}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           <!-- Template metadata footer -->
           <div style="max-width:var(--prose-max-w);margin:2rem auto 0;text-align:center;font-size:0.75rem;color:var(--text-faint)">
