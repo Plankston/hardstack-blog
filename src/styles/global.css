@@ -152,6 +152,26 @@ pre {
 pre > code { all: unset; font-family: var(--font-mono); }
 pre code { background: none !important; padding: 0; }
 
+/* ── Code block enhancements ── */
+pre.astro-code {
+  counter-reset: line;
+  border-radius: 0 0 8px 8px;
+}
+pre.astro-code .line {
+  counter-increment: line;
+}
+pre.astro-code .line::before {
+  content: counter(line);
+  display: inline-block;
+  width: 1.5em;
+  margin-right: 1em;
+  text-align: right;
+  color: var(--text-faint);
+  opacity: 0.45;
+  font-size: 0.82em;
+  user-select: none;
+}
+
 blockquote {
   margin: 1.5em 0;
   padding: 1em 1.5em;
@@ -757,6 +777,44 @@ body[data-template="dark"] img {
   .reveal {
     opacity: 1;
   }
+}
+
+/* Code block header (language + copy button) */
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 1rem;
+  background: var(--bg-header);
+  border: 1px solid var(--code-border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  user-select: none;
+}
+.prose .code-block-header {
+  margin-inline: -1.5rem;
+}
+.code-block-copy {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.code-block-copy:hover {
+  color: var(--text-body);
+  border-color: var(--color-accent-ui);
+}
+body[data-template="dark"] .code-block-copy:hover {
+  color: var(--color-accent-ui);
+  border-color: var(--color-accent-ui);
 }
 
 /* ═══════════════════════════════════════════════

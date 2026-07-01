@@ -162,5 +162,30 @@ const templateLabel: Record<string, string> = {
         </div>
     </main>
     <Footer locale={locale} />
+
+    <script is:inline>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('pre.astro-code').forEach((pre) => {
+          const lang = pre.getAttribute('data-language') || 'text';
+          const header = document.createElement('div');
+          header.className = 'code-block-header';
+          header.innerHTML = `<span class="code-block-lang">${lang}</span><button class="code-block-copy" aria-label="Copy code">Copy</button>`;
+          pre.parentNode.insertBefore(header, pre);
+          pre.classList.add('code-block-pre');
+        });
+
+        document.addEventListener('click', (e) => {
+          const btn = e.target.closest('.code-block-copy');
+          if (!btn) return;
+          const pre = btn.closest('.code-block-wrap')?.querySelector('pre');
+          if (!pre) return;
+          const text = pre.textContent.replace(/\n$/, '');
+          navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+          });
+        });
+      });
+    </script>
   </body>
 </html>
