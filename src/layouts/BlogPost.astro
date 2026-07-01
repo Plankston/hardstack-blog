@@ -108,6 +108,7 @@ const templateLabel: Record<string, string> = {
     })} />
   </head>
   <body data-template={template}>
+    <div id="reading-progress" class="reading-progress"></div>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
       {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
     </a>
@@ -186,6 +187,17 @@ const templateLabel: Record<string, string> = {
           });
         });
       });
+
+      // Reading progress bar
+      const bar = document.getElementById('reading-progress');
+      if (bar) {
+        const update = () => {
+          const h = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.width = h > 0 ? `${(window.scrollY / h) * 100}%` : '0%';
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+      }
     </script>
   </body>
 </html>

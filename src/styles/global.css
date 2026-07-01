@@ -745,6 +745,18 @@ body[data-template="dark"] img {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Reading progress bar */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-accent-ui);
+  width: 0%;
+  z-index: 9999;
+  transition: width 0.1s linear;
+}
+
 /* ═══════════════════════════════════════════════
    MOTION
    ═══════════════════════════════════════════════ */
