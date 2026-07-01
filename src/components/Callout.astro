@@ -1,0 +1,87 @@
+---
+interface Props {
+  type?: 'tip' | 'warning' | 'danger' | 'info';
+  title?: string;
+}
+
+const { type = 'tip', title } = Astro.props;
+
+const icons: Record<string, string> = {
+  tip: '💡',
+  warning: '⚠️',
+  danger: '🚫',
+  info: 'ℹ️',
+};
+
+const defaultTitles: Record<string, string> = {
+  tip: 'Tip',
+  warning: 'Warning',
+  danger: 'Danger',
+  info: 'Info',
+};
+---
+
+<div class={`callout callout-${type}`}>
+  <span class="callout-icon">{icons[type]}</span>
+  <div class="callout-content">
+    <strong class="callout-title">{title || defaultTitles[type]}</strong>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .callout {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin: 1.5em 0;
+    font-size: 0.92em;
+    line-height: 1.6;
+  }
+  .callout-icon { font-size: 1.1em; flex-shrink: 0; margin-top: 0.1em; }
+  .callout-content { flex: 1; min-width: 0; }
+  .callout-title { display: block; margin-bottom: 0.25rem; font-weight: 600; }
+
+  .callout-tip {
+    background: rgba(91, 140, 90, 0.06);
+    border-color: rgba(91, 140, 90, 0.25);
+  }
+  .callout-tip .callout-title { color: var(--color-accent-ui); }
+
+  .callout-warning {
+    background: rgba(212, 168, 67, 0.06);
+    border-color: rgba(212, 168, 67, 0.3);
+  }
+  .callout-warning .callout-title { color: #b8860b; }
+
+  .callout-danger {
+    background: rgba(224, 90, 79, 0.06);
+    border-color: rgba(224, 90, 79, 0.25);
+  }
+  .callout-danger .callout-title { color: #c0392b; }
+
+  .callout-info {
+    background: rgba(70, 130, 180, 0.06);
+    border-color: rgba(70, 130, 180, 0.25);
+  }
+  .callout-info .callout-title { color: #2d6a8f; }
+
+  :global(body[data-template="dark"]) .callout-tip {
+    background: rgba(91, 140, 90, 0.1);
+    border-color: rgba(91, 140, 90, 0.3);
+  }
+  :global(body[data-template="dark"]) .callout-warning {
+    background: rgba(212, 168, 67, 0.1);
+    border-color: rgba(212, 168, 67, 0.3);
+  }
+  :global(body[data-template="dark"]) .callout-danger {
+    background: rgba(224, 90, 79, 0.1);
+    border-color: rgba(224, 90, 79, 0.3);
+  }
+  :global(body[data-template="dark"]) .callout-info {
+    background: rgba(70, 130, 180, 0.1);
+    border-color: rgba(70, 130, 180, 0.3);
+  }
+</style>
