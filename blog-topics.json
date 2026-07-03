@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-07-03",
+  "articles": [
+    {
+      "groupKey": "opencode-complete-guide",
+      "title": "OpenCode 完全指南",
+      "pubDate": "2026-06-09",
+      "tags": ["opencode", "ai", "cli"],
+      "category": "AI 编程工具"
+    },
+    {
+      "groupKey": "ollama-openwebui-guide",
+      "title": "Ollama + Open WebUI 本地 AI 全家桶",
+      "pubDate": "2026-06-13",
+      "tags": ["ollama", "open-webui", "llm", "ai"],
+      "category": "本地 AI 部署"
+    },
+    {
+      "groupKey": "vaultwarden-guide",
+      "title": "Vaultwarden 自部署指南",
+      "pubDate": "2026-06-16",
+      "tags": ["vaultwarden", "password", "security"],
+      "category": "密码管理"
+    },
+    {
+      "groupKey": "coolify-deploy",
+      "title": "Coolify 一键部署指南",
+      "pubDate": "2026-06-18",
+      "tags": ["coolify", "deployment", "devops"],
+      "category": "PaaS 部署"
+    },
+    {
+      "groupKey": "hyperframes-guide",
+      "title": "HyperFrames 指南：AI Agent 自动出片",
+      "pubDate": "2026-06-20",
+      "tags": ["hyperframes", "video", "ai-agent"],
+      "category": "视频/内容创作"
+    },
+    {
+      "groupKey": "uptime-kuma-guide",
+      "title": "Uptime Kuma 自部署指南",
+      "pubDate": "2026-06-21",
+      "tags": ["uptime-kuma", "monitoring", "devops"],
+      "category": "监控"
+    },
+    {
+      "groupKey": "dbx-database-client",
+      "title": "DBX 数据库客户端",
+      "pubDate": "2026-06-24",
+      "tags": ["dbx", "database", "developer-tools"],
+      "category": "数据库工具"
+    },
+    {
+      "groupKey": "tailscale-headscale-guide",
+      "title": "Tailscale + Headscale 自部署指南",
+      "pubDate": "2026-06-27",
+      "tags": ["tailscale", "headscale", "vpn", "networking"],
+      "category": "VPN/远程访问"
+    },
+    {
+      "groupKey": "immich-complete-guide",
+      "title": "Immich 自部署照片管理完全指南",
+      "pubDate": "2026-06-29",
+      "tags": ["immich", "photo-management", "backup"],
+      "category": "照片管理"
+    },
+    {
+      "groupKey": "jellyfin-guide",
+      "title": "Jellyfin 完全指南：搭建自己的 Netflix",
+      "pubDate": "2026-07-01",
+      "tags": ["jellyfin", "media-server", "streaming"],
+      "category": "媒体服务器"
+    },
+    {
+      "groupKey": "n8n-guide",
+      "title": "n8n 完全指南：别再手动干活了",
+      "pubDate": "2026-07-02",
+      "tags": ["n8n", "automation", "workflow"],
+      "category": "工作流自动化"
+    }
+  ],
+  "topicHistory": [
+    {
+      "date": "2026-07-03",
+      "suggestions": [
+        "Stirling-PDF：自部署 PDF 全能工具",
+        "TREK：自部署旅行规划器",
+        "Authentik：自部署 SSO",
+        "CasaOS：自部署个人云系统",
+        "Papermark：自部署 DocSend 替代"
+      ],
+      "selected": null
+    }
+  ]
+}
