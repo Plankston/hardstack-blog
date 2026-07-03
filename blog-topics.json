@@ -78,6 +78,13 @@
       "pubDate": "2026-07-02",
       "tags": ["n8n", "automation", "workflow"],
       "category": "工作流自动化"
+    },
+    {
+      "groupKey": "home-assistant-guide",
+      "title": "Home Assistant 自部署指南：从翻车到丝滑的完整踩坑实录",
+      "pubDate": "2026-07-03",
+      "tags": ["Home Assistant", "智能家居", "自部署", "Raspberry Pi", "Docker", "自动化"],
+      "category": "智能家居"
     }
   ],
   "topicHistory": [
@@ -90,7 +97,7 @@
         "CasaOS：自部署个人云系统",
         "Papermark：自部署 DocSend 替代"
       ],
-      "selected": null
+      "selected": "Home Assistant：自部署智能家居中枢"
     }
   ]
 }
