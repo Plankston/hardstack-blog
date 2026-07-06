@@ -1,0 +1,621 @@
+---
+title: "Meetily 自部署指南：你的会议，凭什么交给别人？"
+slug: "meetily-guide"
+description: "Meetily 是开源 AI 会议助手，100% 本地运行，用 Whisper 做语音转录、Ollama 生成会议摘要。告别 Otter.ai 月费和隐私泄露风险。Docker 一键部署，支持 Windows/macOS/Linux，30 分钟搞定。本教程从安装到实战，手把手教你搭建自己的会议助手。"
+pubDate: 2026-07-06
+category: "AI 工具"
+tags: ["meetily", "meeting", "transcription", "self-hosted", "whisper", "ai"]
+difficulty: "intermediate"
+timeToRead: 20
+postLang: "bilingual"
+groupKey: "meetily-guide"
+template: "paper"
+---
+
+Meetily Self-Deployment Guide: Why Hand Your Meetings to Someone Else?
+
+---
+
+## 你每天开会两小时，转录交给 Otter.ai，然后它把你的录音扔进它的服务器。
+
+## You spend two hours in meetings every day, hand transcription to Otter.ai, and it throws your recordings onto its servers.
+
+上个月，公司法务找我谈话，问我为什么把客户会议录音上传到第三方服务。我愣了三秒——我用的是 Otter.ai，行业标杆，HIPAA 合规，看起来很安全。
+
+Last month, company legal pulled me aside and asked why I was uploading client meeting recordings to a third-party service. I froze for three seconds — I was using Otter.ai, the industry standard, HIPAA compliant, seemed secure.
+
+然后我去查了 Otter.ai 的数据处理协议。第 4.2 节写得很清楚：他们有权用你的数据训练模型。你的会议内容，可能正在被用来优化别人的 AI。
+
+Then I read Otter.ai's data processing agreement. Section 4.2 is crystal clear: they have the right to use your data to train models. Your meeting content might be used to optimize someone else's AI.
+
+**你的会议内容，你的知识产权，你的客户隐私——凭什么？**
+
+**Your meeting content, your intellectual property, your client privacy — on what authority?**
+
+Meetily 是一个开源的 AI 会议助手，[GitHub 12K+ Stars](https://github.com/Zackriya-Solutions/meetily)，100% 本地运行。它用 Whisper 做转录，用 Ollama 做摘要，你的音频和文字永远不会离开你的电脑。
+
+Meetily is an open-source AI meeting assistant, [GitHub 12K+ Stars](https://github.com/Zackriya-Solutions/meetily), running 100% locally. It uses Whisper for transcription, Ollama for summaries — your audio and text never leave your machine.
+
+**一句话：30 分钟部署，以后开会录音自己转，摘要自己生成，数据自己存。**
+
+**In one sentence: 30 minutes to deploy, then you transcribe your own meetings, generate your own summaries, store your own data.**
+
+---
+
+## 为什么不用 Otter.ai / Fireflies.ai
+
+## Why Not Otter.ai / Fireflies.ai
+
+| 对比项 | Otter.ai | Fireflies.ai | Meetily |
+|--------|----------|--------------|---------|
+| **数据位置** | Otter 服务器 | Fireflies 服务器 | 你自己的电脑 |
+| **月费** | $16.99 起 | $18 起 | 免费 |
+| **转录模型** | 云端专有 | 云端专有 | Whisper（本地） |
+| **摘要 AI** | 云端 GPT | 云端 GPT | Ollama（本地）或 API |
+| **开源** | ❌ | ❌ | ✅ MIT 协议 |
+| **离线可用** | ❌ | ❌ | ✅ |
+| **HIPAA 合规** | 需要企业版 | 需要企业版 | 本地部署天然合规 |
+
+**真正的问题不是价格。** Otter.ai 的免费版每月 300 分钟转录，对轻度用户够用。问题是**控制权**。你的会议录音包含客户信息、商业策略、产品路线图——这些数据在别人的服务器上，你无法审计、无法删除、无法保证它不被用于其他用途。
+
+**The real issue isn't price.** Otter.ai's free tier gives 300 minutes per month — enough for light users. The issue is **control**. Your meeting recordings contain client information, business strategy, product roadmaps — data on someone else's servers that you can't audit, can't delete, can't guarantee won't be used for other purposes.
+
+我之前用 Otter.ai 两年，累积了 400+ 小时的会议记录。有一天我导出数据，发现它只支持 CSV 格式——没有原始音频，没有时间戳对齐，连说话人都没区分。我花了三天手动整理。
+
+I used Otter.ai for two years, accumulating 400+ hours of meeting records. One day I exported my data and found it only supports CSV — no raw audio, no timestamp alignment, no speaker diarization. It took me three days to manually organize.
+
+**Meetily 的态度很明确：你的数据是你的，永远。**
+
+**Meetily's stance is clear: your data is yours, forever.**
+
+---
+
+## 它能做什么
+
+## What It Can Do
+
+Meetily 不只是转录。它是一个完整的会议工作流：
+
+Meetily isn't just transcription. It's a complete meeting workflow:
+
+1. **实时转录** — 会议进行中，文字同步显示。用 Whisper 或 Parakeet 模型，比 Otter.ai 快 4 倍。
+2. **说话人分离** — 自动区分谁在说话，不用手动标注。
+3. **AI 摘要** — 会后自动生成结构化摘要：要点、待办事项、关键决策。
+4. **本地存储** — 所有数据存 SQLite，你随时可以查询、导出、删除。
+5. **多平台支持** — Zoom、Teams、Google Meet、Webex，通吃。
+6. **离线模式** — 断网也能用，转录和摘要全部本地完成。
+
+1. **Real-time transcription** — Text appears as the meeting happens. Powered by Whisper or Parakeet, 4x faster than Otter.ai.
+2. **Speaker diarization** — Automatically distinguishes who's speaking, no manual tagging needed.
+3. **AI summaries** — Auto-generates structured summaries post-meeting: key points, action items, decisions.
+4. **Local storage** — All data in SQLite. Query, export, or delete anytime.
+5. **Multi-platform** — Zoom, Teams, Google Meet, Webex — works with all of them.
+6. **Offline mode** — Works without internet. Transcription and summaries run entirely locally.
+
+**技术栈：** Tauri（桌面框架）+ Rust（后端）+ Next.js（前端）+ Whisper.cpp（转录）+ Ollama（摘要）+ SQLite（存储）。这不是玩具，是正经的工程。
+
+**Tech stack:** Tauri (desktop framework) + Rust (backend) + Next.js (frontend) + Whisper.cpp (transcription) + Ollama (summaries) + SQLite (storage). This isn't a toy — it's proper engineering.
+
+---
+
+## 部署：30 分钟搞定
+
+## Deployment: 30 Minutes, Done
+
+### 你需要什么
+
+### What You Need
+
+- **一台电脑** — macOS 或 Windows 桌面应用直接下载。Linux 需要从源码编译（下文会讲）。
+- **8GB+ 内存** — Whisper 转录需要，16GB 更好。
+- **10GB+ 磁盘空间** — 模型文件较大。
+- **Docker**（可选）— 如果你想跑后端服务。
+
+- **A computer** — macOS or Windows: download the desktop app directly. Linux: build from source (covered below).
+- **8GB+ RAM** — Whisper needs it. 16GB is better.
+- **10GB+ disk space** — Model files are large.
+- **Docker** (optional) — If you want to run the backend service.
+
+### 方案一：桌面应用（最简单）
+
+### Option 1: Desktop App (Easiest)
+
+**macOS 用户：**
+
+**For macOS users:**
+
+```bash
+# 从 GitHub 下载 .dmg 文件
+# Download the .dmg file from GitHub
+# https://github.com/Zackriya-Solutions/meetily/releases/latest
+
+# 双击安装，拖到 Applications 文件夹
+# Double-click to install, drag to Applications folder
+```
+
+**Windows 用户：**
+
+**For Windows users:**
+
+```bash
+# 下载 .exe 安装包
+# Download the .exe installer
+# https://github.com/Zackriya-Solutions/meetily/releases/latest
+
+# 双击运行，跟着向导走
+# Double-click to run, follow the wizard
+```
+
+打开 Meetily，它会引导你选择转录模型和 AI 提供商。选 Ollama 作为 AI 提供商，它会自动检测你本地的 Ollama 实例。
+
+Open Meetily, and it will guide you through selecting a transcription model and AI provider. Choose Ollama as the AI provider — it will automatically detect your local Ollama instance.
+
+### 方案二：Docker 部署（团队用）
+
+### Option 2: Docker Deployment (For Teams)
+
+如果你想让团队共享一个 Meetily 实例，用 Docker：
+
+If you want your team to share a Meetily instance, use Docker:
+
+```yaml
+# docker-compose.yml
+services:
+  meetily-backend:
+    image: zackriya/meetily-backend:latest
+    container_name: meetily-backend
+    restart: unless-stopped
+    ports:
+      - "8178:8178"
+    volumes:
+      - /opt/meetily/data:/app/data
+    environment:
+      - WHISPER_MODEL=base
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    # 如果有 NVIDIA GPU，取消下面的注释
+    # Uncomment below if you have NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+```
+
+```bash
+# 创建数据目录
+# Create data directory
+mkdir -p /opt/meetily/data
+
+# 启动
+# Start
+docker compose up -d
+```
+
+**GPU 加速：** 如果你有 NVIDIA 显卡，取消注释 GPU 部分。Whisper 在 GPU 上跑比 CPU 快 10 倍。
+
+**GPU acceleration:** If you have an NVIDIA GPU, uncomment the GPU section. Whisper runs 10x faster on GPU than CPU.
+
+### 方案三：Linux 从源码编译
+
+### Option 3: Build from Source on Linux
+
+Linux 目前没有预编译的桌面应用，需要从源码编译：
+
+Linux doesn't have a pre-built desktop app yet. Build from source:
+
+```bash
+# 安装依赖
+# Install dependencies
+sudo apt update
+sudo apt install -y curl wget git build-essential cmake \
+  libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
+  patchelf libssl-dev libgtk-3-dev libayatana-appindicator3-dev
+
+# 克隆仓库
+# Clone the repository
+git clone https://github.com/Zackriya-Solutions/meetily.git
+cd meetily
+
+# 安装 Rust（如果还没装）
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# 安装前端依赖
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# 安装后端依赖
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
+
+# 构建
+# Build
+cargo tauri build
+```
+
+编译完成后，可执行文件在 `src-tauri/target/release/` 目录下。
+
+After compilation, the executable is in `src-tauri/target/release/`.
+
+---
+
+## 首次配置
+
+## First-Time Configuration
+
+### 选择转录模型
+
+### Choose a Transcription Model
+
+Meetily 支持两种转录引擎：
+
+Meetily supports two transcription engines:
+
+| 模型 | 速度 | 准确度 | 内存需求 | 推荐场景 |
+|------|------|--------|----------|----------|
+| Whisper base | 快 | 中等 | 1GB | 日常会议，英语为主 |
+| Whisper large-v3 | 慢 | 高 | 4GB | 重要会议，多语言 |
+| Parakeet | 最快 | 高 | 2GB | 实时转录，性能优先 |
+
+| Model | Speed | Accuracy | Memory | Best For |
+|-------|-------|----------|--------|----------|
+| Whisper base | Fast | Medium | 1GB | Daily meetings, English-focused |
+| Whisper large-v3 | Slow | High | 4GB | Important meetings, multilingual |
+| Parakeet | Fastest | High | 2GB | Real-time transcription, performance-first |
+
+**我的选择：** 日常用 Whisper base，重要会议切换到 large-v3。Parakeet 是新出的，速度快但生态还在完善。
+
+**My pick:** Whisper base for daily use, switch to large-v3 for important meetings. Parakeet is newer and fast, but its ecosystem is still maturing.
+
+### 配置 AI 摘要
+
+### Configure AI Summaries
+
+Meetily 支持多种 AI 提供商：
+
+Meetily supports multiple AI providers:
+
+| 提供商 | 价格 | 隐私 | 推荐指数 |
+|--------|------|------|----------|
+| **Ollama（本地）** | 免费 | 完全本地 | ⭐⭐⭐⭐⭐ |
+| Claude API | 按量付费 | 数据发送到 Anthropic | ⭐⭐⭐ |
+| Groq API | 免费额度 | 数据发送到 Groq | ⭐⭐⭐ |
+| OpenRouter | 按量付费 | 数据发送到 OpenRouter | ⭐⭐ |
+
+| Provider | Price | Privacy | Rating |
+|----------|-------|---------|--------|
+| **Ollama (local)** | Free | Fully local | ⭐⭐⭐⭐⭐ |
+| Claude API | Pay per use | Data sent to Anthropic | ⭐⭐⭐ |
+| Groq API | Free tier | Data sent to Groq | ⭐⭐⭐ |
+| OpenRouter | Pay per use | Data sent to OpenRouter | ⭐⭐ |
+
+**推荐用 Ollama。** 如果你还没装 Ollama，跟着[前面的教程](/zh-CN/blog/ollama-openwebui-guide)装一下。Meetily 会自动检测本地的 Ollama 实例。
+
+**Use Ollama.** If you haven't installed it yet, follow [the previous guide](/zh-CN/blog/ollama-openwebui-guide). Meetily auto-detects your local Ollama instance.
+
+```bash
+# 安装 Ollama（如果还没装）
+# Install Ollama (if not already installed)
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 拉取摘要模型
+# Pull the summary model
+ollama pull llama3.1:8b
+```
+
+**为什么选 llama3.1:8b？** 8B 参数在摘要任务上够用，4GB 显存就能跑。如果你有 16GB+ 内存，可以用 70B 模型，摘要质量明显提升。
+
+**Why llama3.1:8b?** 8B parameters are sufficient for summarization tasks, runs on 4GB VRAM. If you have 16GB+ RAM, use the 70B model — summarization quality improves noticeably.
+
+---
+
+## 实战：一次完整的会议流程
+
+## In Practice: A Complete Meeting Workflow
+
+### 第一步：开始录音
+
+### Step 1: Start Recording
+
+打开 Meetily，点击"开始录音"。它会自动捕获系统音频——你不需要给会议软件装任何插件。
+
+Open Meetily, click "Start Recording". It automatically captures system audio — no plugins needed for your meeting software.
+
+**支持的会议平台：**
+- Zoom
+- Microsoft Teams
+- Google Meet
+- Webex
+- 腾讯会议
+- 飞书
+- 任何通过浏览器或桌面应用运行的会议软件
+
+**Supported meeting platforms:**
+- Zoom
+- Microsoft Teams
+- Google Meet
+- Webex
+- Tencent Meeting
+- Feishu
+- Any meeting software running through a browser or desktop app
+
+### 第二步：实时转录
+
+### Step 2: Real-Time Transcription
+
+会议进行中，Meetily 左侧显示实时转录文字。它会自动区分说话人，标注谁在说什么。
+
+During the meeting, Meetily shows real-time transcription on the left. It automatically identifies speakers and labels who said what.
+
+**小技巧：** 如果转录不准确，检查麦克风输入是否正确。Meetily 默认使用系统默认音频设备。在设置里可以切换。
+
+**Tip:** If transcription is inaccurate, check that the correct microphone input is selected. Meetily uses the system default audio device by default. You can switch in settings.
+
+### 第三步：生成摘要
+
+### Step 3: Generate Summary
+
+会议结束后，点击"生成摘要"。Meetily 会用本地 AI 分析转录内容，输出结构化摘要：
+
+After the meeting, click "Generate Summary". Meetily uses local AI to analyze the transcription and outputs a structured summary:
+
+```
+## 会议摘要
+**日期：** 2026-07-06
+**时长：** 45 分钟
+**参与者：** 张三、李四、王五
+
+### 关键要点
+- 产品 Q3 路线图已确认，优先级：API 重构 > 移动端 > 文档
+- 预算审批延迟，需要下周前提交修订版
+- 新客户（XX 公司）合同谈判进入最终阶段
+
+### 待办事项
+- [ ] 张三：周四前提交修订版预算
+- [ ] 李四：完成 API 重构方案评审
+- [ ] 王五：跟进 XX 公司合同
+
+### 关键决策
+- Q3 不再新增功能需求，专注稳定性
+- 移动端开发推迟到 Q4
+```
+
+### 第四步：导出和分享
+
+### Step 4: Export and Share
+
+摘要可以直接复制到剪贴板，或者导出为 Markdown 文件。转录全文也可以导出，带时间戳和说话人标注。
+
+Copy the summary directly to clipboard, or export as a Markdown file. Full transcripts can also be exported with timestamps and speaker labels.
+
+---
+
+## 常见问题和解决方案
+
+## Common Issues and Fixes
+
+### 问题 1：转录很慢
+
+### Issue 1: Transcription Is Slow
+
+**原因：** 你在用 CPU 跑 Whisper large-v3。
+
+**Cause:** You're running Whisper large-v3 on CPU.
+
+**解决：**
+1. 切换到 Whisper base 模型——速度快 3 倍，准确度损失很小。
+2. 如果有 NVIDIA GPU，确保 CUDA 驱动正确安装。
+3. 用 Parakeet 模型——专为速度优化。
+
+**Fix:**
+1. Switch to Whisper base — 3x faster with minimal accuracy loss.
+2. If you have an NVIDIA GPU, ensure CUDA drivers are installed correctly.
+3. Use Parakeet — optimized for speed.
+
+### 问题 2：中文转录不准确
+
+### Issue 2: Chinese Transcription Is Inaccurate
+
+**原因：** 默认的 Whisper base 模型对中文支持一般。
+
+**Cause:** Default Whisper base model has mediocre Chinese support.
+
+**解决：** 切换到 Whisper large-v3 或 medium 模型。large-v3 的中文准确率明显更高。
+
+**Fix:** Switch to Whisper large-v3 or medium model. large-v3 has significantly better Chinese accuracy.
+
+### 问题 3：Ollama 摘要生成失败
+
+### Issue 3: Ollama Summary Generation Fails
+
+**原因：** Ollama 没运行，或者模型没下载。
+
+**Cause:** Ollama isn't running, or the model isn't downloaded.
+
+**解决：**
+
+**Fix:**
+
+```bash
+# 检查 Ollama 是否运行
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# 如果没运行，启动它
+# If not running, start it
+ollama serve
+
+# 确保模型已下载
+# Ensure model is downloaded
+ollama pull llama3.1:8b
+```
+
+### 问题 4：会议软件没声音
+
+### Issue 4: No Audio from Meeting Software
+
+**原因：** Meetily 没有捕获到正确的音频流。
+
+**Cause:** Meetily isn't capturing the correct audio stream.
+
+**解决：**
+1. 检查系统音频设置——Meetily 需要捕获"系统音频"，不只是麦克风。
+2. macOS 用户：需要在系统偏好设置中给 Meetily 授权"录音"权限。
+3. Windows 用户：确保 Meetily 以管理员身份运行。
+
+**Fix:**
+1. Check system audio settings — Meetily needs to capture "system audio", not just microphone.
+2. macOS users: Grant Meetily "recording" permission in System Preferences.
+3. Windows users: Ensure Meetily runs as administrator.
+
+---
+
+## 进阶玩法
+
+## Advanced Tips
+
+### 自定义摘要模板
+
+### Custom Summary Templates
+
+Meetily 的摘要模板可以在设置中自定义。你可以添加自己的提示词，让它按你的格式输出：
+
+Meetily's summary templates can be customized in settings. You can add your own prompts to format output your way:
+
+```
+请用以下格式生成会议摘要：
+
+## 基本信息
+- 日期：
+- 时长：
+- 参与者：
+
+## 技术决策
+（列出所有技术相关的决策）
+
+## 行动项
+（按人分组列出待办事项）
+
+## 风险和阻塞
+（列出提到的风险和阻塞问题）
+
+## 下一步
+（下一步行动计划）
+```
+
+### 集成到工作流
+
+### Integrate into Your Workflow
+
+Meetily 生成的 Markdown 摘要可以直接导入 Notion、Obsidian、Logseq 等笔记工具。你可以用 n8n 或其他自动化工具，实现会议结束自动生成摘要并推送到指定位置。
+
+Meetily's Markdown summaries can be imported directly into Notion, Obsidian, Logseq, and other note tools. You can use n8n or other automation tools to auto-generate summaries and push them to designated locations after meetings end.
+
+### 多语言支持
+
+### Multilingual Support
+
+Meetily 的 Whisper 模型支持 99 种语言。如果你经常开中英混合会议，用 large-v3 模型——它对代码切换（code-switching）的处理最好。
+
+Meetily's Whisper model supports 99 languages. If you often have Chinese-English mixed meetings, use the large-v3 model — it handles code-switching best.
+
+---
+
+## 诚实的局限性
+
+## Honest Limitations
+
+Meetily 不是完美的。说几个实际遇到的问题：
+
+Meetily isn't perfect. Here are real issues I've encountered:
+
+1. **Linux 没有桌面应用** — 需要从源码编译，对新手不友好。开发团队说在做了，但还没发布。
+2. **实时转录有延迟** — 大约 2-3 秒。不是实时的，但够用。
+3. **说话人分离需要校准** — 第一次使用时，它可能分不清谁是谁。用几次后会越来越准。
+4. **模型文件较大** — Whisper large-v3 约 3GB，下载需要时间。
+5. **社区相对年轻** — 不像 Otter.ai 那样有十年积累，遇到问题可能需要自己翻 GitHub Issues。
+
+1. **No Linux desktop app** — Requires building from source, not beginner-friendly. The dev team says it's in progress, but not released yet.
+2. **Real-time transcription has latency** — About 2-3 seconds. Not truly real-time, but sufficient.
+3. **Speaker diarization needs calibration** — First time use, it may not distinguish speakers well. Improves with use.
+4. **Large model files** — Whisper large-v3 is about 3GB, takes time to download.
+5. **Younger community** — Doesn't have a decade of accumulation like Otter.ai. You may need to check GitHub Issues yourself.
+
+**但这些局限性值不值得接受？** 我的答案是：绝对值得。因为核心价值——**数据控制权**——是任何 SaaS 工具给不了你的。
+
+**But are these limitations worth accepting?** My answer: absolutely. Because the core value — **data control** — is something no SaaS tool can give you.
+
+---
+
+## 总结
+
+## Summary
+
+| 你得到了什么 | 你放弃了什么 |
+|-------------|-------------|
+| 100% 本地数据控制 | 云端协作功能（团队共享转录） |
+| 免费，无月费 | 预训练的说话人识别模型 |
+| 开源，可定制 | 十年积累的用户生态 |
+| 离线可用 | 移动端应用（目前只有桌面端） |
+| 多语言支持 | 自动会议日历集成 |
+
+| What You Get | What You Give Up |
+|-------------|-----------------|
+| 100% local data control | Cloud collaboration features |
+| Free, no monthly fee | Pre-trained speaker identification models |
+| Open source, customizable | A decade of user ecosystem |
+| Offline capable | Mobile app (desktop only for now) |
+| Multilingual support | Automatic calendar integration |
+
+**我的建议：** 如果你处理敏感信息（客户数据、商业机密、法律文件），Meetily 不是可选项——它是必选项。如果你只是偶尔开会记个笔记，Otter.ai 的免费版够用。
+
+**My recommendation:** If you handle sensitive information (client data, trade secrets, legal documents), Meetily isn't optional — it's essential. If you just occasionally need meeting notes, Otter.ai's free tier is fine.
+
+但一旦你体验过数据完全在自己手里的感觉，你就再也回不去了。
+
+But once you experience what it feels like to have complete control over your data, you'll never go back.
+
+---
+
+## 快速开始清单
+
+## Quick Start Checklist
+
+- [ ] 下载 Meetily 桌面应用（[GitHub Releases](https://github.com/Zackriya-Solutions/meetily/releases/latest)）
+- [ ] 安装 Ollama（[教程](/zh-CN/blog/ollama-openwebui-guide)）
+- [ ] 拉取摘要模型：`ollama pull llama3.1:8b`
+- [ ] 打开 Meetily，选择 Whisper base 模型 + Ollama AI 提供商
+- [ ] 开一次会，测试转录和摘要
+- [ ] 导出摘要，导入你的笔记工具
+
+- [ ] Download Meetily desktop app ([GitHub Releases](https://github.com/Zackriya-Solutions/meetily/releases/latest))
+- [ ] Install Ollama ([guide](/en/blog/ollama-openwebui-guide))
+- [ ] Pull summary model: `ollama pull llama3.1:8b`
+- [ ] Open Meetily, select Whisper base model + Ollama AI provider
+- [ ] Hold a test meeting, try transcription and summary
+- [ ] Export summary, import into your note-taking tool
+
+---
+
+## 延伸阅读
+
+## Further Reading
+
+- [Meetily 官方文档](https://meetily.ai/)
+- [Meetily GitHub 仓库](https://github.com/Zackriya-Solutions/meetily)
+- [Whisper 模型对比](https://github.com/openai/whisper#available-models-and-languages)
+- [Ollama 官方网站](https://ollama.com/)
+- [Otter.ai 数据处理协议](https://otter.ai/privacy)
+
+- [Meetily Official Documentation](https://meetily.ai/)
+- [Meetily GitHub Repository](https://github.com/Zackriya-Solutions/meetily)
+- [Whisper Model Comparison](https://github.com/openai/whisper#available-models-and-languages)
+- [Ollama Official Website](https://ollama.com/)
+- [Otter.ai Data Processing Agreement](https://otter.ai/privacy)

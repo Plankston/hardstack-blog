@@ -9,7 +9,7 @@ export async function getStaticPaths() {
 
   for (const post of posts) {
     const locale = post.data.postLang || 'en';
-    if (locale !== 'en') continue;
+    if (locale !== 'en' && locale !== 'bilingual') continue;
     const slug = getSlug(post);
     paths.push({
       params: { slug },
