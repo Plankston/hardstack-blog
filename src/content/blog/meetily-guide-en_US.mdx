@@ -1,0 +1,389 @@
+---
+title: "Meetily Self-Deployment Guide: Why Hand Your Meetings to Someone Else?"
+description: "Meetily is an open-source AI meeting assistant running 100% locally with Whisper for transcription and Ollama for summaries. Say goodbye to Otter.ai fees and privacy risks. Deploy with Docker in 30 minutes on Windows/macOS/Linux. This tutorial covers installation to real-world usage."
+pubDate: 2026-07-06
+category: "AI Tools"
+tags: ["meetily", "meeting", "transcription", "self-hosted", "whisper", "ai"]
+difficulty: "intermediate"
+timeToRead: 20
+postLang: "en"
+groupKey: "meetily-guide"
+template: "paper"
+---
+
+You spend two hours in meetings every day, hand transcription to Otter.ai, and it throws your recordings onto its servers.
+
+Last month, company legal pulled me aside and asked why I was uploading client meeting recordings to a third-party service. I froze for three seconds — I was using Otter.ai, the industry standard, HIPAA compliant, seemed secure.
+
+Then I read Otter.ai's data processing agreement. Section 4.2 is crystal clear: they have the right to use your data to train models. Your meeting content might be used to optimize someone else's AI.
+
+**Your meeting content, your intellectual property, your client privacy — on what authority?**
+
+Meetily is an open-source AI meeting assistant, [GitHub 12K+ Stars](https://github.com/Zackriya-Solutions/meetily), running 100% locally. It uses Whisper for transcription, Ollama for summaries — your audio and text never leave your machine.
+
+**In one sentence: 30 minutes to deploy, then you transcribe your own meetings, generate your own summaries, store your own data.**
+
+---
+
+## Why Not Otter.ai / Fireflies.ai
+
+| Feature | Otter.ai | Fireflies.ai | Meetily |
+|---------|----------|--------------|---------|
+| **Data Location** | Otter servers | Fireflies servers | Your own machine |
+| **Monthly Fee** | From $16.99 | From $18 | Free |
+| **Transcription Model** | Cloud proprietary | Cloud proprietary | Whisper (local) |
+| **Summary AI** | Cloud GPT | Cloud GPT | Ollama (local) or API |
+| **Open Source** | ❌ | ❌ | ✅ MIT License |
+| **Offline Capable** | ❌ | ❌ | ✅ |
+| **HIPAA Compliant** | Enterprise only | Enterprise only | Naturally compliant with local deployment |
+
+**The real issue isn't price.** Otter.ai's free tier gives 300 minutes per month — enough for light users. The issue is **control**. Your meeting recordings contain client information, business strategy, product roadmaps — data on someone else's servers that you can't audit, can't delete, can't guarantee won't be used for other purposes.
+
+I used Otter.ai for two years, accumulating 400+ hours of meeting records. One day I exported my data and found it only supports CSV — no raw audio, no timestamp alignment, no speaker diarization. It took me three days to manually organize.
+
+**Meetily's stance is clear: your data is yours, forever.**
+
+---
+
+## What It Can Do
+
+Meetily isn't just transcription. It's a complete meeting workflow:
+
+1. **Real-time transcription** — Text appears as the meeting happens. Powered by Whisper or Parakeet, 4x faster than Otter.ai.
+2. **Speaker diarization** — Automatically distinguishes who's speaking, no manual tagging needed.
+3. **AI summaries** — Auto-generates structured summaries post-meeting: key points, action items, decisions.
+4. **Local storage** — All data in SQLite. Query, export, or delete anytime.
+5. **Multi-platform** — Zoom, Teams, Google Meet, Webex — works with all of them.
+6. **Offline mode** — Works without internet. Transcription and summaries run entirely locally.
+
+**Tech stack:** Tauri (desktop framework) + Rust (backend) + Next.js (frontend) + Whisper.cpp (transcription) + Ollama (summaries) + SQLite (storage). This isn't a toy — it's proper engineering.
+
+---
+
+## Deployment: 30 Minutes, Done
+
+### What You Need
+
+- **A computer** — macOS or Windows: download the desktop app directly. Linux: build from source (covered below).
+- **8GB+ RAM** — Whisper needs it. 16GB is better.
+- **10GB+ disk space** — Model files are large.
+- **Docker** (optional) — If you want to run the backend service.
+
+### Option 1: Desktop App (Easiest)
+
+**For macOS users:**
+
+```bash
+# Download the .dmg file from GitHub
+# https://github.com/Zackriya-Solutions/meetily/releases/latest
+
+# Double-click to install, drag to Applications folder
+```
+
+**For Windows users:**
+
+```bash
+# Download the .exe installer
+# https://github.com/Zackriya-Solutions/meetily/releases/latest
+
+# Double-click to run, follow the wizard
+```
+
+Open Meetily, and it will guide you through selecting a transcription model and AI provider. Choose Ollama as the AI provider — it will automatically detect your local Ollama instance.
+
+### Option 2: Docker Deployment (For Teams)
+
+If you want your team to share a Meetily instance, use Docker:
+
+```yaml
+# docker-compose.yml
+services:
+  meetily-backend:
+    image: zackriya/meetily-backend:latest
+    container_name: meetily-backend
+    restart: unless-stopped
+    ports:
+      - "8178:8178"
+    volumes:
+      - /opt/meetily/data:/app/data
+    environment:
+      - WHISPER_MODEL=base
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    # Uncomment below if you have NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+```
+
+```bash
+# Create data directory
+mkdir -p /opt/meetily/data
+
+# Start
+docker compose up -d
+```
+
+**GPU acceleration:** If you have an NVIDIA GPU, uncomment the GPU section. Whisper runs 10x faster on GPU than CPU.
+
+### Option 3: Build from Source on Linux
+
+Linux doesn't have a pre-built desktop app yet. Build from source:
+
+```bash
+# Install dependencies
+sudo apt update
+sudo apt install -y curl wget git build-essential cmake \
+  libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
+  patchelf libssl-dev libgtk-3-dev libayatana-appindicator3-dev
+
+# Clone the repository
+git clone https://github.com/Zackriya-Solutions/meetily.git
+cd meetily
+
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
+
+# Build
+cargo tauri build
+```
+
+After compilation, the executable is in `src-tauri/target/release/`.
+
+---
+
+## First-Time Configuration
+
+### Choose a Transcription Model
+
+Meetily supports two transcription engines:
+
+| Model | Speed | Accuracy | Memory | Best For |
+|-------|-------|----------|--------|----------|
+| Whisper base | Fast | Medium | 1GB | Daily meetings, English-focused |
+| Whisper large-v3 | Slow | High | 4GB | Important meetings, multilingual |
+| Parakeet | Fastest | High | 2GB | Real-time transcription, performance-first |
+
+**My pick:** Whisper base for daily use, switch to large-v3 for important meetings. Parakeet is newer and fast, but its ecosystem is still maturing.
+
+### Configure AI Summaries
+
+Meetily supports multiple AI providers:
+
+| Provider | Price | Privacy | Rating |
+|----------|-------|---------|--------|
+| **Ollama (local)** | Free | Fully local | ⭐⭐⭐⭐⭐ |
+| Claude API | Pay per use | Data sent to Anthropic | ⭐⭐⭐ |
+| Groq API | Free tier | Data sent to Groq | ⭐⭐⭐ |
+| OpenRouter | Pay per use | Data sent to OpenRouter | ⭐⭐ |
+
+**Use Ollama.** If you haven't installed it yet, follow [the previous guide](/en/blog/ollama-openwebui-guide). Meetily auto-detects your local Ollama instance.
+
+```bash
+# Install Ollama (if not already installed)
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull the summary model
+ollama pull llama3.1:8b
+```
+
+**Why llama3.1:8b?** 8B parameters are sufficient for summarization tasks, runs on 4GB VRAM. If you have 16GB+ RAM, use the 70B model — summarization quality improves noticeably.
+
+---
+
+## In Practice: A Complete Meeting Workflow
+
+### Step 1: Start Recording
+
+Open Meetily, click "Start Recording". It automatically captures system audio — no plugins needed for your meeting software.
+
+**Supported meeting platforms:**
+- Zoom
+- Microsoft Teams
+- Google Meet
+- Webex
+- Tencent Meeting
+- Feishu
+- Any meeting software running through a browser or desktop app
+
+### Step 2: Real-Time Transcription
+
+During the meeting, Meetily shows real-time transcription on the left. It automatically identifies speakers and labels who said what.
+
+**Tip:** If transcription is inaccurate, check that the correct microphone input is selected. Meetily uses the system default audio device by default. You can switch in settings.
+
+### Step 3: Generate Summary
+
+After the meeting, click "Generate Summary". Meetily uses local AI to analyze the transcription and outputs a structured summary:
+
+```
+## Meeting Summary
+**Date:** 2026-07-06
+**Duration:** 45 minutes
+**Participants:** Zhang San, Li Si, Wang Wu
+
+### Key Points
+- Q3 product roadmap confirmed, priority: API refactor > Mobile > Documentation
+- Budget approval delayed, need to submit revised version before next week
+- New client (XX Company) contract negotiation in final stage
+
+### Action Items
+- [ ] Zhang San: Submit revised budget before Thursday
+- [ ] Li Si: Complete API refactor proposal review
+- [ ] Wang Wu: Follow up on XX Company contract
+
+### Key Decisions
+- No new feature requests in Q3, focus on stability
+- Mobile development postponed to Q4
+```
+
+### Step 4: Export and Share
+
+Copy the summary directly to clipboard, or export as a Markdown file. Full transcripts can also be exported with timestamps and speaker labels.
+
+---
+
+## Common Issues and Fixes
+
+### Issue 1: Transcription Is Slow
+
+**Cause:** You're running Whisper large-v3 on CPU.
+
+**Fix:**
+1. Switch to Whisper base — 3x faster with minimal accuracy loss.
+2. If you have an NVIDIA GPU, ensure CUDA drivers are installed correctly.
+3. Use Parakeet — optimized for speed.
+
+### Issue 2: Chinese Transcription Is Inaccurate
+
+**Cause:** Default Whisper base model has mediocre Chinese support.
+
+**Fix:** Switch to Whisper large-v3 or medium model. large-v3 has significantly better Chinese accuracy.
+
+### Issue 3: Ollama Summary Generation Fails
+
+**Cause:** Ollama isn't running, or the model isn't downloaded.
+
+**Fix:**
+
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# If not running, start it
+ollama serve
+
+# Ensure model is downloaded
+ollama pull llama3.1:8b
+```
+
+### Issue 4: No Audio from Meeting Software
+
+**Cause:** Meetily isn't capturing the correct audio stream.
+
+**Fix:**
+1. Check system audio settings — Meetily needs to capture "system audio", not just microphone.
+2. macOS users: Grant Meetily "recording" permission in System Preferences.
+3. Windows users: Ensure Meetily runs as administrator.
+
+---
+
+## Advanced Tips
+
+### Custom Summary Templates
+
+Meetily's summary templates can be customized in settings. You can add your own prompts to format output your way:
+
+```
+Please generate a meeting summary in the following format:
+
+## Basic Info
+- Date:
+- Duration:
+- Participants:
+
+## Technical Decisions
+(List all technical decisions made)
+
+## Action Items
+(List to-do items grouped by person)
+
+## Risks and Blockers
+(List mentioned risks and blockers)
+
+## Next Steps
+(Next action plan)
+```
+
+### Integrate into Your Workflow
+
+Meetily's Markdown summaries can be imported directly into Notion, Obsidian, Logseq, and other note tools. You can use n8n or other automation tools to auto-generate summaries and push them to designated locations after meetings end.
+
+### Multilingual Support
+
+Meetily's Whisper model supports 99 languages. If you often have Chinese-English mixed meetings, use the large-v3 model — it handles code-switching best.
+
+---
+
+## Honest Limitations
+
+Meetily isn't perfect. Here are real issues I've encountered:
+
+1. **No Linux desktop app** — Requires building from source, not beginner-friendly. The dev team says it's in progress, but not released yet.
+2. **Real-time transcription has latency** — About 2-3 seconds. Not truly real-time, but sufficient.
+3. **Speaker diarization needs calibration** — First time use, it may not distinguish speakers well. Improves with use.
+4. **Large model files** — Whisper large-v3 is about 3GB, takes time to download.
+5. **Younger community** — Doesn't have a decade of accumulation like Otter.ai. You may need to check GitHub Issues yourself.
+
+**But are these limitations worth accepting?** My answer: absolutely. Because the core value — **data control** — is something no SaaS tool can give you.
+
+---
+
+## Summary
+
+| What You Get | What You Give Up |
+|-------------|-----------------|
+| 100% local data control | Cloud collaboration features |
+| Free, no monthly fee | Pre-trained speaker identification models |
+| Open source, customizable | A decade of user ecosystem |
+| Offline capable | Mobile app (desktop only for now) |
+| Multilingual support | Automatic calendar integration |
+
+**My recommendation:** If you handle sensitive information (client data, trade secrets, legal documents), Meetily isn't optional — it's essential. If you just occasionally need meeting notes, Otter.ai's free tier is fine.
+
+But once you experience what it feels like to have complete control over your data, you'll never go back.
+
+---
+
+## Quick Start Checklist
+
+- [ ] Download Meetily desktop app ([GitHub Releases](https://github.com/Zackriya-Solutions/meetily/releases/latest))
+- [ ] Install Ollama ([guide](/en/blog/ollama-openwebui-guide))
+- [ ] Pull summary model: `ollama pull llama3.1:8b`
+- [ ] Open Meetily, select Whisper base model + Ollama AI provider
+- [ ] Hold a test meeting, try transcription and summary
+- [ ] Export summary, import into your note-taking tool
+
+---
+
+## Further Reading
+
+- [Meetily Official Documentation](https://meetily.ai/)
+- [Meetily GitHub Repository](https://github.com/Zackriya-Solutions/meetily)
+- [Whisper Model Comparison](https://github.com/openai/whisper#available-models-and-languages)
+- [Ollama Official Website](https://ollama.com/)
+- [Otter.ai Data Processing Agreement](https://otter.ai/privacy)
