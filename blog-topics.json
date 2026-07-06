@@ -1,7 +1,14 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-03",
+  "lastUpdated": "2026-07-06",
   "articles": [
+    {
+      "groupKey": "meetily-guide",
+      "title": "Meetily AI 会议助手自部署指南",
+      "pubDate": "2026-07-06",
+      "tags": ["meetily", "meeting", "transcription", "self-hosted", "whisper", "ai"],
+      "category": "AI 工具"
+    },
     {
       "groupKey": "opencode-complete-guide",
       "title": "OpenCode 完全指南",
