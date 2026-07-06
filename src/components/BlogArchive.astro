@@ -15,7 +15,10 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 
 const posts = (await getCollection('blog'))
-  .filter((p) => (p.data.postLang || 'en') === locale)
+  .filter((p) => {
+    const lang = p.data.postLang || 'en';
+    return lang === locale || lang === 'bilingual';
+  })
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
