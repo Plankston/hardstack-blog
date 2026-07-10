@@ -1,0 +1,242 @@
+---
+title: "Tolaria：你的笔记该换个活法了"
+description: "别再往 Notion 里塞垃圾了。Tolaria 用纯 Markdown + Git + AI 重新定义笔记管理，本地优先，永久免费，数据全在你硬盘上。"
+pubDate: 2026-07-10
+tags: ["tolaria", "note-taking", "knowledge-management", "markdown", "git", "ai", "second-brain"]
+category: "效率工具"
+difficulty: "beginner"
+timeToRead: 10
+postLang: "zh-CN"
+groupKey: "tolaria-guide"
+template: "paper"
+---
+
+## 你还在往 Notion 里塞东西？
+
+先别急着装 Tolaria。回答我一个问题：你的笔记现在在哪？
+
+Notion？Apple Notes？Obsidian？还是散落在微信收藏、浏览器书签、和某个你再也找不到的 txt 文件里？
+
+如果你的答案是"好几个地方都有"——那恭喜你，你和大多数人一样，知识管理这件事，你还没开始。
+
+**Tolaria 就是来治这个的。**
+
+---
+
+## 到底什么问题
+
+你的笔记工具不缺功能。Notion 有数据库，Obsidian 有双向链接，Apple Notes 能拍照 OCR。但它们有一个共同的致命缺陷：
+
+**你的数据不属于你。**
+
+Notion 的数据在他们的服务器上。Apple Notes 锁在 iCloud 里。Obsidian 虽然是本地文件，但它的同步服务是订阅制的——你每月花钱买的不是功能，是"继续访问你自己的数据"的权利。
+
+更要命的是：AI 时代来了，这些工具的数据格式，AI 根本读不懂。你想让 Claude 帮你整理笔记？它连你的 Notion 数据库都打不开。你想让 Codex 帮你归档？它只能看到一堆 HTML 和私有 API。
+
+**问题的根源不是笔记工具不好用，而是数据格式和存储方式从一开始就选错了。**
+
+---
+
+## Tolaria 怎么解的
+
+解法简单到离谱：**每条笔记就是硬盘上的一个 Markdown 文件。**
+
+没有数据库。没有私有格式。没有服务器。你的笔记就是一个文件夹，里面一堆 `.md` 文件，每个文件带一段 YAML frontmatter 描述元数据。
+
+打开文件管理器，你看到的就是你的笔记。用 VS Code 能编辑，用 `grep` 能搜索，用 Git 能版本控制。Tolaria 只是给这些文件加了一个好看的壳和一堆高效的工作流。
+
+这意味着什么？
+
+- **零迁移成本**：你的笔记就是文件，随便拖到任何文件夹、任何设备
+- **零锁定风险**：哪天 Tolaria 不维护了，你的数据一个字节都不会少
+- **AI 原生友好**：任何能读文件的 AI 工具都能直接操作你的笔记
+- **永远离线**：断网？照样写，照样搜，照样版本控制
+
+---
+
+## 核心功能拆解
+
+### 文件系统即数据库
+
+每条笔记存储为 `filename.md`，格式：
+
+```markdown
+---
+title: "Docker 网络配置笔记"
+type: "reference"
+status: "active"
+tags: ["docker", "networking"]
+created: 2026-05-15
+---
+
+# Docker 网络配置
+
+bridge 模式的子网段默认是 172.17.0.0/16...
+```
+
+frontmatter 里的 `type`、`status` 等字段不是摆设——Tolaria 会根据它们自动渲染 UI 组件（状态标签、关系面板等）。**约定优于配置**，你不用写任何规则。
+
+### 内置 Git 客户端
+
+每个 vault 就是一个 Git 仓库。Tolaria 内置了完整的 Git 操作：
+
+- 提交、推送、拉取
+- 查看每条笔记的版本历史
+- 分支管理和冲突解决
+- 脉搏视图（Pulse）——一眼看到整个知识库的变更节奏
+
+不用切终端，不用装 GitHub Desktop，所有版本控制都在应用内完成。
+
+### AI 集成：不是噱头，是基础设施
+
+Tolaria 内置了 MCP Server，暴露 14 个 vault 工具。这意味着：
+
+- **Claude Code** 可以直接读写你的笔记
+- **Codex CLI** 能基于你的知识库做代码辅助
+- **Gemini CLI** 可以搜索和整理你的笔记
+
+你也可以用任何支持 MCP 的 AI 工具。甚至不需要配置——AGENTS 文件已经写好了，你的 AI 拿到就能用。
+
+这不是"加个 AI 聊天框"那种功能。这是**让 AI 成为你的笔记工作流的一部分**。
+
+### 键盘优先设计
+
+`Cmd+K` 呼出命令面板，方向键导航，回车确认，`Esc` 关闭。所有操作都可以纯键盘完成。对 power user 来说，这比任何花哨的 UI 都重要。
+
+### 关系网络
+
+笔记之间可以用 `[[wikilink]]` 互相引用。Tolaria 会自动构建关系图谱，让你看到知识之间的连接。不是 Obsidian 那种强制的"知识图谱"视图，而是在侧边栏自然呈现的相关笔记。
+
+---
+
+## 安装：三件事
+
+### macOS（Homebrew）
+
+```bash
+brew install --cask tolaria
+```
+
+### Linux（AppImage）
+
+```bash
+# 下载最新 release
+wget https://github.com/refactoringhq/tolaria/releases/latest/download/Tolaria_linux_amd64.AppImage
+chmod +x Tolaria_linux_amd64.AppImage
+./Tolaria_linux_amd64.AppImage
+```
+
+### Windows
+
+从 [GitHub Releases](https://github.com/refactoringhq/tolaria/releases) 下载 `.exe` 安装包，双击运行。
+
+首次启动时，Tolaria 会给你两个选择：
+1. **克隆 Getting Started vault**——推荐，带教程的示例知识库
+2. **创建空 vault**——从零开始
+
+选第一个，跟着走一遍，十分钟上手。
+
+---
+
+## 配置 AI 集成
+
+Tolaria 支持多种 AI 后端。启动后在 **设置 → AI** 中选择你用的工具：
+
+### Claude Code
+
+在 Tolaria 设置中选择 Claude Code，填入你的 Anthropic API Key。Tolaria 会通过内置 MCP Server 自动桥接，Claude Code 即可直接读写 vault 中的笔记。
+
+### Codex CLI
+
+同上，选择 Codex CLI，填入 OpenAI API Key。确保 `codex` 命令在系统 PATH 中可用：
+
+```bash
+which codex
+# 输出路径即表示已安装
+```
+
+### 自定义 MCP 客户端
+
+Tolaria 内置的 MCP Server 也可以通过 WebSocket 直连。在你的 MCP 客户端配置中添加：
+
+```json
+{
+  "mcpServers": {
+    "tolaria": {
+      "url": "ws://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+配置完成后，AI 工具会在侧边栏出现，可以直接搜索、读取、编辑你的笔记。
+
+---
+
+## 和 Obsidian 比，差在哪
+
+| 维度 | Tolaria | Obsidian |
+|------|---------|----------|
+| 数据格式 | 纯 Markdown + YAML | 纯 Markdown + YAML |
+| Git 集成 | 内置，开箱即用 | 需要第三方插件 |
+| AI 集成 | 原生 MCP Server | 插件生态 |
+| 同步 | Git remote（你自己的） | Obsidian Sync（付费）或 Syncthing |
+| 定价 | 免费，AGPL-3.0 | 免费核心 + 付费同步 |
+| 插件生态 | 还在早期 | 非常成熟 |
+| 移动端 | 暂无 | iOS + Android |
+
+Obsidian 的插件生态是它最大的护城河。如果你已经深度依赖某些 Obsidian 插件，迁移成本不低。
+
+但如果你的核心需求是**数据所有权 + AI 原生 + Git 版本控制**，Tolaria 的默认体验比 Obsidian 零配置好得多。
+
+---
+
+## 适合谁
+
+**适合：**
+- 个人知识管理 / 第二大脑
+- 给 AI 工具准备上下文文档
+- 存储 AI 助手的记忆和流程
+- 开发者、写作者、研究者
+- 厌倦了订阅制的用户
+
+**不适合：**
+- 需要多人实时协作（Tolaria 是单用户工具）
+- 需要富文本 / 所见即所得（它只处理 Markdown）
+- 需要移动端（目前只有桌面端）
+- 需要成熟的插件生态（还在成长期）
+
+---
+
+## 十分钟迁移指南
+
+### 从 Notion 迁出
+
+1. 打开 Notion → 设置 → 导出 → 选择 Markdown & CSV
+2. 解压得到的 `.zip` 文件
+3. 将 Markdown 文件拖入 Tolaria 的 vault 文件夹
+4. Tolaria 会自动识别 frontmatter，笔记即刻可用
+
+### 从 Obsidian 迁出
+
+Obsidian vault 本身就是 Markdown 文件夹，直接把整个文件夹拖进 Tolaria 即可。`[[wikilink]]` 格式完全兼容，无需转换。
+
+### 从 Apple Notes / 其他工具迁出
+
+大多数笔记工具都支持导出 Markdown。导出后拖入 vault 文件夹，Tolaria 自动索引。
+
+---
+
+## 最后说一句
+
+Tolaria 的作者 Luca Rossi 是 [Refactoring](https://refactoring.fm/) 的创始人，写了 300+ 篇技术文章，积累了 10,000+ 条笔记。这个工具不是实验室产品——它是一个内容创作者每天都在用的生产力工具，从真实需求中长出来的。
+
+GitHub 18.5K stars，AGPL-3.0 开源，免费，无账号，数据全在你本地。
+
+**现在就去装。** 装完把你的笔记从 Notion 导出成 Markdown，拖进 Tolaria 的 vault 文件夹。十分钟之内你会回来感谢我的。
+
+装完遇到问题？评论区见。
+
+---
+
+> 💡 **延伸阅读**：如果你在用 OpenCode 做 AI 编程，Tolaria 的 MCP 集成可以让 AI 直接读写你的知识库，效率翻倍。详见 [OpenCode 完全指南](/zh-CN/blog/opencode-complete-guide)。想要全栈自部署？[Coolify 一键部署指南](/zh-CN/blog/coolify-deploy) 帮你搞定基础设施。

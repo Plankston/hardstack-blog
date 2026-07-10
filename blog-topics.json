@@ -1,7 +1,14 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-06",
+  "lastUpdated": "2026-07-10",
   "articles": [
+    {
+      "groupKey": "tolaria-guide",
+      "title": "Tolaria：你的笔记该换个活法了",
+      "pubDate": "2026-07-10",
+      "tags": ["tolaria", "note-taking", "knowledge-management", "markdown", "git", "ai", "second-brain"],
+      "category": "效率工具"
+    },
     {
       "groupKey": "meetily-guide",
       "title": "Meetily AI 会议助手自部署指南",
@@ -92,6 +99,13 @@
       "pubDate": "2026-07-03",
       "tags": ["Home Assistant", "智能家居", "自部署", "Raspberry Pi", "Docker", "自动化"],
       "category": "智能家居"
+    },
+    {
+      "groupKey": "ponytail-guide",
+      "title": "Ponytail — 让代码少写的艺术",
+      "pubDate": "2026-07-08",
+      "tags": ["ponytail", "lazy-dev", "code-quality", "philosophy", "efficiency", "minimalism"],
+      "category": "开发哲学"
     }
   ],
   "topicHistory": [

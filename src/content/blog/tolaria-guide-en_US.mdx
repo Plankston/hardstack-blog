@@ -1,0 +1,240 @@
+---
+title: "Tolaria: Your Notes Deserve Better"
+description: "Free, open-source desktop app for managing Markdown knowledge bases with native Git and AI integration. No accounts, no lock-in. Data stays on your disk."
+pubDate: 2026-07-10
+tags: ["tolaria", "note-taking", "knowledge-management", "markdown", "git", "ai", "second-brain"]
+category: "productivity"
+difficulty: "beginner"
+timeToRead: 10
+postLang: "en"
+groupKey: "tolaria-guide"
+template: "paper"
+---
+
+## Where Are Your Notes Right Now?
+
+Notion? Apple Notes? Obsidian? Or scattered across browser bookmarks, WeChat favorites, and a `.txt` file you'll never find again?
+
+If your answer is "a little bit everywhere," you haven't started managing knowledge yet. Most people haven't.
+
+**Tolaria exists to fix that.**
+
+---
+
+## The Problem No One Talks About
+
+Your note-taking tools aren't lacking features. Notion has databases. Obsidian has backlinks. Apple Notes does OCR. But they share one fatal flaw:
+
+**You don't own your data.**
+
+Notion's data lives on their servers. Apple Notes is locked inside iCloud. Obsidian is local, but its sync service is a subscription — you're paying monthly for the right to access your own notes.
+
+Then AI arrived, and the problem got worse. Every major note tool stores data in formats AI can't meaningfully read. You want Claude to help organize your notes? It can't open your Notion database. You want Codex to archive your research? It sees HTML and private APIs.
+
+**The root issue isn't that note tools are bad. It's that the data format and storage model were wrong from the start.**
+
+---
+
+## How Tolaria Solves It
+
+The solution is almost suspiciously simple: **every note is a plain Markdown file on your disk.**
+
+No database. No proprietary format. No server. Your notes are a folder full of `.md` files, each with a YAML frontmatter header for metadata.
+
+Open Finder or Explorer, and you see your notes. Edit them in VS Code. Search them with `grep`. Version them with Git. Tolaria adds a polished UI and efficient workflows on top.
+
+What this means:
+
+- **Zero migration cost** — your notes are files. Drag them anywhere.
+- **Zero lock-in** — if Tolaria disappears, you lose nothing.
+- **AI-native** — any AI tool that can read files can work with your notes.
+- **Always offline** — write, search, and version-control without an internet connection.
+
+---
+
+## Core Features
+
+### Filesystem as Database
+
+Each note is stored as `filename.md`:
+
+```markdown
+---
+title: "Docker Network Config Notes"
+type: "reference"
+status: "active"
+tags: ["docker", "networking"]
+created: 2026-05-15
+---
+
+# Docker Network Config
+
+The default bridge subnet is 172.17.0.0/16...
+```
+
+Fields like `type` and `status` in frontmatter aren't decorative — Tolaria uses them to render UI components (status chips, relationship panels). **Convention over configuration**, zero rules to write.
+
+### Built-In Git Client
+
+Every vault is a Git repository. Tolaria ships with full Git operations:
+
+- Commit, push, pull
+- Per-note version history
+- Branch management and conflict resolution
+- Pulse view — a bird's-eye view of your entire knowledge base's change activity
+
+No terminal switching. No GitHub Desktop. All version control happens inside the app.
+
+### AI Integration: Not a Gimmick, Infrastructure
+
+Tolaria includes a built-in MCP Server exposing 14 vault tools. This means:
+
+- **Claude Code** can read and write your notes directly
+- **Codex CLI** can assist coding based on your knowledge base
+- **Gemini CLI** can search and organize your notes
+
+Any MCP-compatible AI tool works. No configuration needed — the AGENTS file is already written for your AI to pick up and use.
+
+This isn't "add a chat box" AI. This is **making AI part of your note workflow**.
+
+### Keyboard-First Design
+
+`Cmd+K` opens the command palette. Arrow keys navigate. Enter confirms. `Esc` closes. Every operation is keyboard-accessible. For power users, this matters more than any fancy UI.
+
+### Relationship Network
+
+Notes reference each other with `[[wikilinks]]`. Tolaria automatically builds a relationship graph, showing connections between ideas. Not a forced "knowledge graph" view — related notes appear naturally in the sidebar.
+
+---
+
+## Installation
+
+### macOS (Homebrew)
+
+```bash
+brew install --cask tolaria
+```
+
+### Linux (AppImage)
+
+```bash
+wget https://github.com/refactoringhq/tolaria/releases/latest/download/Tolaria_linux_amd64.AppImage
+chmod +x Tolaria_linux_amd64.AppImage
+./Tolaria_linux_amd64.AppImage
+```
+
+### Windows
+
+Download the `.exe` installer from [GitHub Releases](https://github.com/refactoringhq/tolaria/releases) and run it.
+
+On first launch, Tolaria offers two options:
+
+1. **Clone the Getting Started vault** — recommended, includes a guided walkthrough
+2. **Create an empty vault** — start from scratch
+
+Pick the first one. Ten minutes to productive.
+
+---
+
+## AI Setup
+
+Tolaria supports multiple AI backends. After launch, go to **Settings → AI** and select your tool:
+
+### Claude Code
+
+Select Claude Code in Tolaria settings and enter your Anthropic API Key. Tolaria bridges the connection through its built-in MCP Server — Claude Code can then read and write notes in your vault directly.
+
+### Codex CLI
+
+Same process: select Codex CLI, enter your OpenAI API Key. Ensure `codex` is available in your system PATH:
+
+```bash
+which codex
+# Output a path = installed
+```
+
+### Custom MCP Client
+
+Tolaria's built-in MCP Server also connects via WebSocket. Add to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "tolaria": {
+      "url": "ws://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+Once configured, the AI tool appears in the sidebar — search, read, and edit your notes directly.
+
+---
+
+## Tolaria vs Obsidian
+
+| Dimension | Tolaria | Obsidian |
+|-----------|---------|----------|
+| Data format | Plain Markdown + YAML | Plain Markdown + YAML |
+| Git integration | Built-in, zero config | Third-party plugins |
+| AI integration | Native MCP Server | Plugin ecosystem |
+| Sync | Git remote (your own) | Obsidian Sync (paid) or Syncthing |
+| Pricing | Free, AGPL-3.0 | Free core + paid sync |
+| Plugin ecosystem | Early-stage | Very mature |
+| Mobile | Desktop only | iOS + Android |
+
+Obsidian's plugin ecosystem is its biggest moat. If you're deeply invested in specific Obsidian plugins, migration isn't trivial.
+
+But if your core needs are **data ownership + AI-native + Git version control**, Tolaria's default experience beats Obsidian's zero-config setup by a wide margin.
+
+---
+
+## Who It's For
+
+**Good fit:**
+- Personal knowledge management / second brain
+- Preparing context documents for AI tools
+- Storing AI assistant memory and procedures
+- Developers, writers, researchers
+- Anyone tired of subscription models
+
+**Not a fit:**
+- Multi-user real-time collaboration (Tolaria is single-user)
+- Rich text / WYSIWYG (Markdown only)
+- Mobile access (desktop only for now)
+- Mature plugin ecosystem (still growing)
+
+---
+
+## Ten-Minute Migration Guide
+
+### From Notion
+
+1. Open Notion → Settings → Export → Markdown & CSV
+2. Unzip the downloaded archive
+3. Drag the Markdown files into your Tolaria vault folder
+4. Tolaria auto-indexes them with frontmatter recognition
+
+### From Obsidian
+
+Obsidian vaults are already Markdown folders. Drag the entire folder into Tolaria. `[[wikilinks]]` are fully compatible — no conversion needed.
+
+### From Apple Notes / Other Tools
+
+Most note tools export Markdown. Export, drag into the vault, and Tolaria indexes automatically.
+
+---
+
+## The Bottom Line
+
+Tolaria was built by Luca Rossi, founder of [Refactoring](https://refactoring.fm/), who has written 300+ articles and accumulated 10,000+ notes over five years. This isn't a lab project — it's a daily-use productivity tool built from real needs.
+
+18.5K GitHub stars. AGPL-3.0 open source. Free. No accounts. All data local.
+
+**Install it now.** Export your notes from Notion as Markdown, drag them into a Tolaria vault folder. You'll be productive in under ten minutes.
+
+Questions? Drop a comment below.
+
+---
+
+> 💡 **Related reads**: If you're using OpenCode for AI-assisted coding, Tolaria's MCP integration lets AI read and write your knowledge base directly — see the [OpenCode Complete Guide](/en/blog/opencode-complete-guide). For self-hosting infrastructure, check out the [Coolify Deployment Guide](/en/blog/coolify-deploy).
