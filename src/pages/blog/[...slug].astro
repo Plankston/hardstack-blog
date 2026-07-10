@@ -30,9 +30,15 @@ const { Content } = await render(post);
 const slug = getSlug(post);
 const allPosts = await getCollection('blog');
 const related = findRelatedPosts(post, allPosts);
+
+// Count words: CJK characters count as 1 word each, spaces separate English words
+const body = post.body || '';
+const cjkChars = (body.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+const englishWords = body.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '').split(/\s+/).filter(Boolean).length;
+const wordCount = cjkChars + englishWords;
 ---
 
-<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug} relatedPosts={related}>
+<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug} wordCount={wordCount} relatedPosts={related}>
   <Content />
 </BlogPost>
 

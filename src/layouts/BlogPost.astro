@@ -17,6 +17,7 @@ interface Props {
   locale: string;
   template?: 'paper' | 'clean' | 'dark';
   slug?: string;
+  wordCount?: number;
   relatedPosts?: Array<{
     slug: string;
     title: string;
@@ -39,6 +40,7 @@ const {
   locale,
   template = 'paper',
   slug,
+  wordCount,
   relatedPosts = [],
 } = Astro.props;
 const t = useTranslations(locale);
@@ -72,6 +74,7 @@ const jsonLd = {
   inLanguage: locale === 'zh-CN' ? 'zh-CN' : 'en',
   keywords: category ? [category] : [],
   timeRequired: timeToRead ? `PT${timeToRead}M` : undefined,
+  wordCount: wordCount || undefined,
   image: slug ? `https://hardstack.org/og/${slug}.png` : undefined,
 };
 

@@ -22,7 +22,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'blog.difficulty': 'Difficulty',
     'footer.tagline': 'Every open-source project deserves a proper setup',
     'footer.colophon': 'Published with Astro',
-    'about.title': 'About HardStack',
+    'about.title': 'About',
     'about.description':
       'A technical blog focused on open-source, self-hosted, and AI tools — with real installation logs.',
     'home.hero':
@@ -65,7 +65,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'blog.difficulty': '难度',
     'footer.tagline': '每个开源项目都值得被认真装一遍',
     'footer.colophon': '使用 Astro 发布',
-    'about.title': '关于 HardStack',
+    'about.title': '关于',
     'about.description': '一个专注开源、自托管与 AI 工具类项目的深度技术博客',
     'home.hero': '深度开源项目安装教程、横向对比与真实踩坑记录',
     'site.lang': 'zh-CN',
