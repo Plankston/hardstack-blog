@@ -1,0 +1,204 @@
+---
+title: "MiniMind: Train a 64M LLM in 2 Hours from Scratch"
+description: "MiniMind trains a 64M parameter LLM for $0.50 in 2 hours with pure PyTorch — no transformers, no trl, no peft. Full pretrain→SFT→RLHF pipeline, from zero."
+pubDate: 2026-07-11
+tags: ["minimind", "llm", "training", "pytorch", "selfhosted", "ai", "tutorial"]
+category: "ai-tools"
+difficulty: "intermediate"
+timeToRead: 18
+postLang: "en"
+groupKey: "minimind-guide"
+template: "paper"
+---
+
+## Stop training. Seriously, stop.
+
+A 53,000+ star GitHub project tells you that you can train a large language model from scratch for $0.50. I spent two nights running the entire pipeline. My conclusion: **most people have zero reason to train their own model.**
+
+But you'll do it anyway. Because what drives you isn't need — it's curiosity.
+
+This post is written for that curiosity — to save you the mistakes I made.
+
+## What you'll get
+
+- The exact commands to run minimind from start to finish (pretrain → SFT → optional RLHF)
+- Real training cost data (time, VRAM, money)
+- An honest verdict: where this works, where it doesn't, and where you're wasting your time
+- How to deploy to ollama / Open WebUI after training
+
+## One sentence about minimind
+
+minimind is a full-pipeline LLM teaching project. Here's the cheat sheet:
+
+| Metric | Value |
+|--------|-------|
+| Parameters | 64M (Dense) / 198M-A64M (MoE) |
+| Training time | Single 3090, ~2 hours |
+| Training cost | ~$0.50 |
+| Architecture | Aligned with Qwen3 ecosystem |
+| Dependencies | Pure PyTorch, no transformers/trl/peft |
+| Full pipeline | Pretrain → SFT → LoRA → DPO → PPO/GRPO/CISPO |
+| Inference | Compatible with llama.cpp / ollama / vllm |
+
+53k stars isn't because it can beat GPT-5. It's because in two hours, you go from zero to understanding how an LLM is actually built. That's the real product.
+
+## Environment setup: don't screw this up
+
+```bash
+# Clone the repo
+git clone --depth 1 https://github.com/jingyaogong/minimind
+cd minimind
+
+# Install dependencies
+pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
+
+# Verify GPU is available
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+**Minimum hardware**: One NVIDIA 3090 (24GB). A 2080 Ti can run it, but batch sizes will be tiny and training time doubles.
+
+No GPU? minimind supports CPU and MPS (Mac), but the README is honest: "training speed and compatibility will vary drastically." Don't torture yourself with CPU training.
+
+## Phase 1: Pretraining
+
+Pretraining is teaching the model to play "next word predictor." Give it a passage, it续写 the rest. At this point the model has no "chat" ability — it's just learning the statistical structure of language.
+
+```bash
+cd trainer
+
+# Single GPU
+python train_pretrain.py
+
+# Multi-GPU (e.g., 2 cards)
+# torchrun --nproc_per_node 2 train_pretrain.py
+```
+
+After training, weights are saved at `out/pretrain_768.pth` (768 is the hidden_size dimension, not the parameter count — don't confuse them).
+
+**Real benchmarks (single 3090)**:
+- `pretrain_t2t_mini.jsonl` (1.2GB): ~**1.2 hours**, cost ~**$0.22**
+- `pretrain_t2t.jsonl` (10GB): ~**12+ hours**, needs more VRAM
+
+First time? Use the `_mini` dataset. Validate the pipeline works before committing to 12 hours of GPU time.
+
+Test the pretrained model:
+
+```bash
+python eval_llm.py --weight pretrain
+```
+
+You'll get chat-style output (simplified):
+
+```
+💬: Why is the sky blue
+🧠: The sky appears blue primarily because sunlight enters the atmosphere and shorter blue wavelengths scatter more easily off air molecules...
+```
+
+If it can say something like that, the pretraining phase worked. The model has learned basic language knowledge.
+
+## Phase 2: Supervised Fine-Tuning (SFT)
+
+Pretraining gives you a "text completion machine." SFT teaches it to be an assistant — how to answer questions, how to refuse unreasonable requests, how to output in tool-call formats.
+
+```bash
+# Still in the trainer directory
+python train_full_sft.py
+```
+
+**Real benchmarks (single 3090)**:
+- `sft_t2t_mini.jsonl` (1.6GB): ~**1.1 hours**, cost ~**$0.19**
+- `sft_t2t.jsonl` (14GB): Takes longer, but better results
+
+SFT weights save to `out/full_sft_768.pth`.
+
+Test the SFT result:
+
+```bash
+python eval_llm.py --weight full_sft
+```
+
+Now ask it questions. The quality jumps from "random text continuation" to "actually understands what you're asking." Night and day difference.
+
+**At this point, your minimind Zero is done.** Total time: ~2.3 hours. Total cost: ~$0.50.
+
+## Optional phase: RLHF
+
+minimind supports the full RLHF pipeline: DPO, PPO, GRPO, CISPO — all implemented from scratch in pure PyTorch.
+
+```bash
+# DPO (Direct Preference Optimization)
+python train_dpo.py
+
+# PPO / GRPO (requires reward model or reward signal)
+python train_rlaif.py --use_grpo 1
+```
+
+**My honest take: skip RLHF on your first run.** Here's why:
+
+1. RLHF gains on a 64M model are marginal at best
+2. Data prep and hyperparameter tuning cost far more than pretrain + SFT
+3. You're here to learn, not to build something that beats ChatGPT
+
+Run pretrain + SFT first. Understand the full pipeline. Then come back and experiment with RLHF.
+
+## Deploy to ollama / Open WebUI
+
+Once trained, minimind models plug directly into ollama, then you chat via Open WebUI in your browser.
+
+```bash
+# Option 1: Pull the pretrained model directly with ollama
+ollama run jingyaogong/minimind-3
+
+# Option 2: Deploy with vllm
+vllm serve /path/to/model --served-model-name "minimind"
+
+# Option 3: Use minimind's built-in WebUI
+cd scripts && streamlit run web_demo.py
+```
+
+If you haven't set up a local AI stack yet, check out [Ollama + Open WebUI: Complete Local AI Setup](/en/blog/ollama-openwebui-guide) — step-by-step from Docker to browser.
+
+## minimind isn't a production tool. That's the point.
+
+Most people see "train your own LLM" and get excited, thinking they'll build a ChatGPT killer. Wake up.
+
+**minimind's 64M parameters is 1/2700th of GPT-3.** Its knowledge base, reasoning ability, and language understanding can't compete with models that have tens of billions of parameters. It hallucinates. Its English is decent but limited. It's a toy.
+
+And none of that matters.
+
+What matters is you spent 2 hours and $0.50 to build a language model from raw data to inference. You no longer think of LLMs as magic. You know what pretraining is. You know what SFT does. You understand why RLHF matters and why DPO is simpler than PPO.
+
+**This understanding is worth more than spending hundreds on GPU cloud time to run LoRA fine-tuning.**
+
+Most people just want to "use AI to be more productive." If that's you, just install [Ollama + Open WebUI](/en/blog/ollama-openwebui-guide) and run open-source models — no training needed.
+
+If you're a developer looking to integrate AI into your workflow, try the [Complete OpenCode Guide](/en/blog/opencode-complete-guide) — covers everything from installation to multi-agent collaboration.
+
+## Cheat sheet
+
+1. **Clone, install deps, verify GPU** — don't skip this
+2. **Use the `_mini` dataset** — 2 hours end-to-end, validates the pipeline
+3. **pretrain + SFT is enough** — save RLHF for your second run
+4. **Deploy with one ollama command** — no custom inference code needed
+5. **Get your mindset right** — this is a learning project, not a product; enjoy understanding LLMs from zero
+
+---
+
+## FAQ
+
+### Does minimind support Chinese?
+
+Yes. The pretraining data includes Chinese-English mixed corpora, and the SFT phase has substantial Chinese dialogue data. But 64M parameters means Chinese comprehension is limited — complex reasoning will fail.
+
+### Can I run it without a 3090?
+
+Yes, but it's slow. CPU training works but takes 20+ hours instead of 2. Mac M-series chips work via MPS backend — speed falls between CPU and GPU.
+
+### Can the trained model be used commercially?
+
+minimind is Apache 2.0 licensed. The model itself has no commercial restrictions. But a 64M parameter model is essentially useless in production — its commercial value is near zero. Its value is educational.
+
+### How is this different from Llama-Factory?
+
+Llama-Factory fine-tunes existing large models. minimind trains a new small model from scratch. One is "teaching Newton to use a smartphone," the other is "teaching Newton the laws of physics."

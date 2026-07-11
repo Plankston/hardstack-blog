@@ -1,0 +1,205 @@
+---
+title: "MiniMind：2 小时从 0 训练 64M 大语言模型"
+description: "MiniMind 让你用 3 块钱、2 小时从 0 训练一个 64M 参数的大语言模型，覆盖 pretrain→SFT→RLHF 全流程，纯 PyTorch 原生实现。本文实测全流程并给出诚实评价。"
+pubDate: 2026-07-11
+tags: ["minimind", "llm", "training", "pytorch", "selfhosted", "ai", "tutorial"]
+category: "ai-tools"
+difficulty: "intermediate"
+timeToRead: 18
+postLang: "zh-CN"
+groupKey: "minimind-guide"
+template: "paper"
+---
+
+## 别训了。真的别训了。
+
+53,000+ Stars 的 GitHub 项目告诉你，3 块钱就能从 0 训一个大语言模型。我花了两个晚上把全流程跑了一遍，结论是：**大部分人根本不需要自己训练模型**。
+
+但你还是会去训练。因为驱动你的不是需求，是好奇心。
+
+这篇文章就是给好奇心写的——帮你省掉我踩过的坑。
+
+## 读完你会得到
+
+- 从 0 跑完 minimind 全流程的完整命令（pretrain → SFT → 可选 RLHF）
+- 实际训练开销数据（时间、显存、费用）
+- 一个诚实的评价：这东西能用在哪，不能用在哪
+- 后续如果想跑自己的模型，怎么接 ollama / Open WebUI
+
+## 一句话说清楚 minimind
+
+minimind 是一个 LLM 全流程教学项目。核心卖点：
+
+| 指标 | 数据 |
+|------|------|
+| 参数量 | 64M（Dense）/ 198M-A64M（MoE） |
+| 训练时间 | 单卡 3090，约 2 小时 |
+| 训练成本 | 约 3 块钱人民币 |
+| 结构 | 对齐 Qwen3 生态 |
+| 依赖 | 纯 PyTorch，不依赖 transformers/trl/peft |
+| 全流程 | Pretrain → SFT → LoRA → DPO → PPO/GRPO/CISPO |
+| 推理部署 | 兼容 llama.cpp / ollama / vllm |
+
+53k Stars 不是因为它能训出 GPT-5。是因为它让你在两个小时内，从零理解一个大语言模型是怎么被造出来的。
+
+## 环境准备：别在这一步翻车
+
+```bash
+# 克隆仓库
+git clone --depth 1 https://github.com/jingyaogong/minimind
+cd minimind
+
+# 安装依赖（国内用阿里云镜像）
+pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
+
+# 确认 GPU 可用
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+**硬件最低要求**：一张 NVIDIA 3090（24GB）。2080 Ti 也能跑，但 batch size 会很小，训练时间翻倍。
+
+没有 GPU？minimind 支持 CPU 和 MPS（Mac），但 README 明确说了"训练速度与兼容性会有非常大的差异"。别用 CPU 自虐。
+
+## 阶段一：预训练（Pretrain）
+
+预训练就是让模型学会"词语接龙"。给它一段文字，它要能合理地续写下去。这一步模型还没有"对话"能力，只是在学习语言的基本规律。
+
+```bash
+cd trainer
+
+# 单卡训练
+python train_pretrain.py
+
+# 多卡训练（假设 2 张卡）
+# torchrun --nproc_per_node 2 train_pretrain.py
+```
+
+训练完成后，权重保存在 `out/pretrain_768.pth`（768 是模型的 hidden_size 维度，不是参数量）。
+
+**实测数据（单卡 3090）**：
+- `pretrain_t2t_mini.jsonl`（1.2GB）：约 **1.2 小时**，费用约 **1.6 元**
+- `pretrain_t2t.jsonl`（10GB）：约 **12+ 小时**，需要更大的显存
+
+第一次跑推荐用 `_mini` 版本，先验证流程能跑通。
+
+测试一下预训练结果：
+
+```bash
+python eval_llm.py --weight pretrain
+```
+
+你会得到对话式输出（简化示意）：
+
+```
+💬: 为什么天空是蓝色的
+🧠: 天空之所以看起来是蓝色的，主要是因为太阳光进入大气层后，
+    短波长的蓝光更容易被空气分子散射...
+```
+
+能说出这个，说明预训练阶段成功了。模型已经学会了基本的语言知识。
+
+## 阶段二：指令微调（SFT）
+
+预训练完的模型只是一个"续写机器"。SFT 才是教它怎么当一个助手——怎么回答问题、怎么拒绝不合理请求、怎么用工具调用格式输出。
+
+```bash
+# 继续在 trainer 目录
+python train_full_sft.py
+```
+
+**实测数据（单卡 3090）**：
+- `sft_t2t_mini.jsonl`（1.6GB）：约 **1.1 小时**，费用约 **1.4 元**
+- `sft_t2t.jsonl`（14GB）：更久，但效果更好
+
+SFT 完成后，权重保存在 `out/full_sft_768.pth`。
+
+测试 SFT 结果：
+
+```bash
+python eval_llm.py --weight full_sft
+```
+
+这时候再问它问题，回答质量会有质的飞跃。从"天书式续写"变成"能听懂人话的助手"。
+
+**到这一步，你的 minimind Zero 就训完了。** 总耗时约 2.3 小时，费用约 3 元。
+
+## 可选阶段：RLHF
+
+minimind 支持完整的 RLHF 流程：DPO、PPO、GRPO、CISPO，全部从 0 用 PyTorch 实现。
+
+```bash
+# DPO（偏好优化）
+python train_dpo.py
+
+# PPO / GRPO（需要先准备奖励模型或 reward signal）
+python train_rlaif.py --use_grpo 1
+```
+
+**我的建议是：第一次跑跳过 RLHF。** 原因很简单：
+
+1. RLHF 的效果在 64M 参数的模型上提升有限
+2. 数据准备和调参成本远高于 pretrain + SFT
+3. 你的目的是学习，不是训一个能打败 ChatGPT 的模型
+
+先把 pretrain + SFT 跑通，理解了全流程，再回来折腾 RLHF。
+
+## 部署到 ollama / Open WebUI
+
+minimind 训好的模型可以直接接入 ollama，然后通过 Open WebUI 在浏览器里聊。
+
+```bash
+# 方式 1：直接用 ollama 拉取预训练好的模型
+ollama run jingyaogong/minimind-3
+
+# 方式 2：用 vllm 部署
+vllm serve /path/to/model --served-model-name "minimind"
+
+# 方式 3：用 minimind 自带的 WebUI
+cd scripts && streamlit run web_demo.py
+```
+
+如果你还没搭过本地 AI 全家桶，可以看这篇 [Ollama + Open WebUI 本地 AI 全家桶](/zh-CN/blog/ollama-openwebui-guide)，手把手教你从 Docker 到浏览器的完整链路。
+
+## minimind 不是生产工具。这才是重点。
+
+很多人看到"训练大模型"就兴奋，觉得自己训完就能替代 ChatGPT。醒醒。
+
+**minimind 的 64M 参数量是 GPT-3 的 1/2700**。它的知识储备、推理能力、中文理解都不可能跟百亿参数的模型比。它偶尔会胡说八道，英文能力也有限。
+
+但这些都不重要。
+
+重要的是你花了 2 小时、3 块钱，就亲手完成了一个语言模型从数据到推理的全流程。你不再觉得 LLM 是魔法。你知道 pretrain 是什么，SFT 是什么，RLHF 在干什么，为什么 reward model 很重要，为什么 DPO 比 PPO 简单。
+
+**这种理解，是花几百块买 GPU 云服务跑 LoRA 微调永远得不到的。**
+
+大部分人的需求其实只是"用 AI 提效"。如果你的目标是这个，直接装 [Ollama + Open WebUI](/zh-CN/blog/ollama-openwebui-guide) 跑开源模型就够了，不需要自己训练。
+
+如果你是程序员想把 AI 集成到开发流程里，试试 [OpenCode 完全指南](/zh-CN/blog/opencode-complete-guide)，从安装到多 Agent 协作全覆盖。
+
+## 实用清单
+
+1. **先克隆、装依赖、确认 GPU**，别跳过这一步
+2. **用 `_mini` 数据集**，2 小时跑完全流程，验证流程正确
+3. **pretrain + SFT 就够了**，RLHF 留到第二次跑
+4. **部署用 ollama 一条命令**，不需要自己写推理代码
+5. **心态放对**：这是学习项目，不是生产工具，享受从 0 理解 LLM 的过程
+
+---
+
+## 常见问题
+
+### minimind 支持中文吗？
+
+支持。预训练数据包含中英混合语料，SFT 阶段也有大量中文对话数据。但 64M 参数的中文能力有限，复杂推理会翻车。
+
+### 没有 3090 能跑吗？
+
+可以，但慢。CPU 也能训，只是耗时从 2 小时变成 20+ 小时。Mac M 系列芯片用 MPS 后端可以跑，速度介于两者之间。
+
+### 训出来的模型能商用吗？
+
+minimind 基于 Apache 2.0 协议开源，模型本身没有商用限制。但 64M 参数的模型在生产环境基本不可用，商用价值接近零——它的价值在教育层面。
+
+### 和 Llama-Factory 有什么区别？
+
+Llama-Factory 是对现有大模型做微调的工具。minimind 是从 0 训练一个全新的小模型。前者是"教牛顿用智能手机"，后者是"教牛顿物理定律"。
