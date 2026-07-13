@@ -1,0 +1,250 @@
+---
+title: "Penpot：别再给 Figma 交租了"
+description: "Figma 每月收你 $15/人，设计文件锁在他们服务器上。Penpot 开源免费，55K Stars，Docker 一键部署，数据全在你手里。"
+pubDate: 2026-07-13
+category: "设计工具"
+tags: ["penpot", "design", "figma", "self-hosted", "open-source", "svg", "collaboration"]
+difficulty: "intermediate"
+timeToRead: 15
+postLang: "zh-CN"
+groupKey: "penpot-guide"
+template: "paper"
+---
+
+## 别用 Figma 了。真的。
+
+我不是在开玩笑。
+
+Figma 做得确实好。但你有没有想过一个问题：你团队所有的设计稿、组件库、设计系统——全部锁在一家美国公司的服务器上？他们说涨价就涨价，说改协议就改协议，说封号就封号。你连导出一个完整的 SVG 都要付费。
+
+而 [Penpot](https://github.com/penpot/penpot)——一个 [GitHub 55K+ Stars](https://github.com/penpot/penpot) 的开源项目——免费给你用，数据在你自己服务器上，基于开放标准 SVG，零厂商锁定。
+
+**你不是在省钱。你是在拿回控制权。**
+
+---
+
+## Figma vs Penpot 云版 vs Penpot 自托管：三选一
+
+别急着部署。先看清楚三个选项，选错了比不选更浪费时间。
+
+| 对比项 | Figma | Penpot Cloud（官方云） | Penpot 自托管 |
+|--------|-------|----------------------|--------------|
+| **费用** | $15/人/月起，团队直接起飞 | 免费（有限制） | 完全免费，无限制 |
+| **数据位置** | Figma 服务器（美国） | Penpot 服务器 | 你自己的服务器 |
+| **文件格式** | 私有格式，导出受限 | 开放 SVG | 开放 SVG |
+| **协作** | 实时协作，丝滑 | 实时协作 | 实时协作 |
+| **座位限制** | 按人头收费 | 免费版有项目数限制 | 无限制 |
+| **组件库** | 丰富 | 有 | 有，且可自定义导入 |
+| **插件生态** | 庞大但封闭 | 有 API，开放 | 开放 API + 插件系统 |
+| **合规性** | GDPR 有风险 | 一般 | 完全可控 |
+
+**我的建议**：
+- 如果你是个人设计师，不需要团队协作 → **Penpot Cloud**，够用，零成本
+- 如果你是团队（3 人以上） → **Penpot 自托管**，一次部署永久免费，数据主权在你
+- 如果你已经深度绑定 Figma 生态（组件库、插件） → 先别迁移，但 **今天就注册一个 Penpot 自托管玩玩**，等你准备好了再切
+
+---
+
+## 5 分钟部署 Penpot
+
+### 前置要求
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+）
+- Docker 和 Docker Compose 已安装
+- 1-2 CPU，4GB RAM，10GB+ 磁盘
+
+没装 Docker？
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose 部署
+
+```bash
+mkdir -p ~/penpot && cd ~/penpot
+```
+
+创建 `docker-compose.yml`：
+
+```yaml
+services:
+  penpot-frontend:
+    image: penpotapp/frontend:latest
+    container_name: penpot-frontend
+    restart: unless-stopped
+    ports:
+      - "9001:80"
+    depends_on:
+      - penpot-backend
+      - penpot-exporter
+
+  penpot-backend:
+    image: penpotapp/backend:latest
+    container_name: penpot-backend
+    restart: unless-stopped
+    depends_on:
+      - penpot-postgres
+      - penpot-redis
+    environment:
+      # enable-registration: 允许注册
+      # enable-login-with-password: 允许密码登录（关闭则仅支持 OAuth）
+      # disable-email-verification: 跳过邮箱验证（自托管推荐）
+      # enable-smtp: 启用邮件服务
+      # enable-prepl-server: 启用管理 CLI
+      - PENPOT_FLAGS=enable-registration enable-login-with-password disable-email-verification enable-smtp enable-prepl-server
+
+  penpot-exporter:
+    image: penpotapp/exporter:latest
+    container_name: penpot-exporter
+    restart: unless-stopped
+    depends_on:
+      - penpot-frontend
+
+  penpot-postgres:
+    image: postgres:15
+    container_name: penpot-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=penpot
+      - POSTGRES_USER=penpot
+      - POSTGRES_PASSWORD=penpot_password_change_me
+    volumes:
+      - penpot_postgres:/var/lib/postgresql/data
+
+  penpot-redis:
+    image: redis:7
+    container_name: penpot-redis
+    restart: unless-stopped
+    volumes:
+      - penpot_redis:/data
+
+volumes:
+  penpot_postgres:
+  penpot_redis:
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+验证服务是否正常运行：
+
+```bash
+# 检查所有容器状态（应全部为 running）
+docker compose ps
+
+# 确认可访问（应返回 HTML）
+curl -s http://localhost:9001 | head -5
+```
+
+等待 2-3 分钟，然后访问 `http://你的服务器IP:9001`。
+
+**第一次访问需要注册管理员账号。** 这个账号就是你的 root，别用 `admin/admin` 这种密码。
+
+> ⚠️ **生产环境务必**：
+> 1. 修改 `POSTGRES_PASSWORD`
+> 2. 配置 HTTPS（用 Nginx/Caddy 反向代理）
+> 3. 定期备份 `penpot_postgres` 和 `penpot_redis` 数据卷
+
+---
+
+## Penpot 的核心功能：不输 Figma
+
+### 基于 SVG 的开放标准
+
+这是 Penpot 最大的差异点。Figma 的文件格式是私有的，你导出的 SVG 经常缺斤少两。Penpot **原生基于 SVG**，你画的每一个图形都是标准的 SVG 元素。这意味着：
+
+- 设计稿可以直接用于 Web 开发，无需转换
+- 文件不会被任何厂商锁定
+- 可以用任何 SVG 编辑器打开和修改
+
+### 设计系统 & 组件库
+
+和 Figma 一样，Penpot 支持：
+- 组件（Components）和变体（Variants）
+- 样式指南（Design Tokens）
+- 可复用的 UI Kit
+
+你可以直接从 [Penpot 社区](https://community.penpot.app/) 导入现成的组件库，也可以自己建。
+
+### 实时协作
+
+多人同时编辑同一个文件，和 Figma 体验一致。区别是：数据在你的服务器上。
+
+### 无限制
+
+- 无座位数限制：100 人的团队和 1 人的团队，部署成本一样
+- 无文件数限制：想存多少存多少
+- 无存储限制：取决于你的磁盘大小
+
+---
+
+## 从 Figma 迁移到 Penpot
+
+### 第一步：导出 Figma 文件
+
+在 Figma 中选择你需要的文件，导出为 `.fig` 或 `.svg` 格式。
+
+### 第二步：导入 Penpot
+
+Penpot 支持直接导入 `.svg` 文件。操作路径：`文件 → 导入`。
+
+> ⚠️ **注意事项**：
+> - Figma 的 Auto Layout 在 Penpot 中需要手动调整为 Flex 布局
+> - Figma 插件生成的特殊效果可能无法完美迁移
+> - 组件嵌套关系需要检查
+
+### 第三步：逐步迁移
+
+不要一次性迁移所有文件。建议：
+1. 先迁移 1-2 个小项目试水
+2. 确认工作流顺畅后，再迁移核心设计系统
+3. 团队磨合 1-2 周，再决定是否完全切换
+
+---
+
+## FAQ：你可能想问的问题
+
+### Penpot 能替代 Figma 吗？
+
+取决于你的需求。核心功能（画板、组件、协作、原型）完全够用。但 Figma 的插件生态和社区资源目前更丰富。Penpot 的社区正在快速增长，[GitHub 55K+ Stars](https://github.com/penpot/penpot) 说明社区活跃度很高。
+
+### 自托管需要什么配置？
+
+最低配置：1-2 CPU，4GB RAM，10GB 磁盘。推荐配置：2-4 CPU，8GB RAM。对于 5-10 人的设计团队，这个配置绰绰有余。
+
+### 数据安全吗？
+
+数据完全在你自己的服务器上。没有第三方可以访问你的设计文件。适合对数据安全要求高的团队（如金融、医疗、政府项目）。
+
+### 和其他自部署工具怎么配合？
+
+Penpot 可以和你的自部署工具链完美配合：
+- 用 [n8n](/blog/n8n-guide) 做设计稿变更自动通知
+- 用 [Coolify](/blog/coolify-guide) 管理 Penpot 的部署和更新
+- 用 [Tailscale](/blog/tailscale-headscale-guide) 让团队安全访问内网部署的 Penpot
+
+### 有中文界面吗？
+
+有。Penpot 支持多语言，包括中文。在设置中切换即可。
+
+---
+
+## 现在就去装
+
+别再犹豫了。
+
+你的设计文件不应该锁在别人的服务器上。你的团队不应该为每个人每月付 $15。你的数据不应该在大洋彼岸。
+
+**5 分钟部署，永久免费，完全可控。**
+
+```bash
+mkdir -p ~/penpot && cd ~/penpot
+# 复制上面的 docker-compose.yml
+docker compose up -d
+```
+
+装完回来告诉我体验。如果有问题，评论区见。

@@ -1,0 +1,201 @@
+---
+title: "Penpot: The Open-Source Design Platform You Should Self-Host"
+description: "Self-host Penpot with Docker in minutes. Open-source Figma alternative with 55K+ GitHub stars, SVG-based, real-time collaboration, zero vendor lock-in."
+pubDate: 2026-07-13
+category: "design"
+tags: ["penpot", "design", "figma", "self-hosted", "open-source", "svg", "collaboration"]
+difficulty: "intermediate"
+timeToRead: 15
+postLang: "en"
+groupKey: "penpot-guide"
+template: "paper"
+---
+
+## What Is Penpot?
+
+[Penpot](https://github.com/penpot/penpot) is an open-source design and prototyping platform with over [55K GitHub Stars](https://github.com/penpot/penpot). It positions itself as a Figma alternative built on open standards — specifically SVG — with full self-hosting capability and zero vendor lock-in.
+
+If you are a designer, frontend developer, or team lead evaluating design tools, Penpot offers a compelling proposition: the same core capabilities as Figma (real-time collaboration, component libraries, design systems, prototyping) without the per-seat pricing model and with complete data sovereignty.
+
+The project is built with Clojure (backend) and TypeScript/JavaScript (frontend), licensed under Mozilla Public License 2.0, and maintained by a growing open-source community.
+
+## Penpot vs Figma vs Penpot Cloud: A Comparison
+
+Before deploying, it is worth understanding the three options available.
+
+| Feature | Figma | Penpot Cloud (Official) | Penpot Self-Hosted |
+|---------|-------|------------------------|-------------------|
+| **Cost** | $15/user/month minimum | Free (with limits) | Free, no limits |
+| **Data location** | Figma servers (US) | Penpot servers | Your server |
+| **File format** | Proprietary | Open SVG | Open SVG |
+| **Collaboration** | Real-time | Real-time | Real-time |
+| **Seat limits** | Per-seat billing | Free tier has project limits | Unlimited |
+| **Component library** | Extensive | Available | Available, fully customizable |
+| **Plugin ecosystem** | Large but closed | Open API | Open API + plugins |
+| **Compliance** | GDPR risk | Standard | Fully controllable |
+
+**Recommendation**: For teams of three or more, self-hosted Penpot is the most cost-effective option. For individual designers or small teams testing the waters, Penpot Cloud provides a zero-cost entry point.
+
+## Deployment with Docker
+
+### Prerequisites
+
+- A Linux server (Ubuntu 22.04+ recommended)
+- Docker and Docker Compose installed
+- 1–2 CPU cores, 4 GB RAM, 10 GB+ disk
+
+If Docker is not installed yet:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Docker Compose Configuration
+
+```bash
+mkdir -p ~/penpot && cd ~/penpot
+```
+
+Create `docker-compose.yml`:
+
+```yaml
+services:
+  penpot-frontend:
+    image: penpotapp/frontend:latest
+    container_name: penpot-frontend
+    restart: unless-stopped
+    ports:
+      - "9001:80"
+    depends_on:
+      - penpot-backend
+      - penpot-exporter
+
+  penpot-backend:
+    image: penpotapp/backend:latest
+    container_name: penpot-backend
+    restart: unless-stopped
+    depends_on:
+      - penpot-postgres
+      - penpot-redis
+    environment:
+      - PENPOT_FLAGS=enable-registration enable-login-with-password disable-email-verification enable-smtp enable-prepl-server
+
+  penpot-exporter:
+    image: penpotapp/exporter:latest
+    container_name: penpot-exporter
+    restart: unless-stopped
+    depends_on:
+      - penpot-frontend
+
+  penpot-postgres:
+    image: postgres:15
+    container_name: penpot-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=penpot
+      - POSTGRES_USER=penpot
+      - POSTGRES_PASSWORD=penpot_password_change_me
+    volumes:
+      - penpot_postgres:/var/lib/postgresql/data
+
+  penpot-redis:
+    image: redis:7
+    container_name: penpot-redis
+    restart: unless-stopped
+    volumes:
+      - penpot_redis:/data
+
+volumes:
+  penpot_postgres:
+  penpot_redis:
+```
+
+Start the stack:
+
+```bash
+docker compose up -d
+```
+
+After 2–3 minutes, access Penpot at `http://your-server-ip:9001`.
+
+**Production checklist**:
+1. Change `POSTGRES_PASSWORD` to a strong, unique value
+2. Configure HTTPS via Nginx or Caddy reverse proxy
+3. Set up regular backups of the `penpot_postgres` and `penpot_redis` volumes
+
+## Core Features
+
+### SVG-Native Open Standard
+
+Penpot's most significant differentiator: it is built natively on SVG. Every shape, path, and element you create is a standard SVG element. This means:
+
+- Design files can be used directly in web development without conversion
+- Files are not locked to any vendor's proprietary format
+- Any SVG-compatible editor can open and modify your work
+
+### Design Systems and Components
+
+Penpot supports components, variants, design tokens, and reusable UI kits — the same patterns you would use in Figma. You can import community-made component libraries from the [Penpot Community](https://community.penpot.app/) or build your own.
+
+### Real-Time Collaboration
+
+Multiple team members can edit the same file simultaneously. The collaboration experience is comparable to Figma, with the key difference that all data lives on your infrastructure.
+
+### No Artificial Limits
+
+- No seat limits: a 100-person team costs the same to deploy as a single-person team
+- No file count limits: store as many projects as your disk allows
+- No storage limits: constrained only by your server's capacity
+
+## Migrating from Figma
+
+### Step 1: Export from Figma
+
+Select the files you need in Figma and export them as `.fig` or `.svg` files.
+
+### Step 2: Import into Penpot
+
+Penpot supports direct SVG import. Navigate to `File → Import` and select your exported files.
+
+**Known limitations**:
+- Figma Auto Layout requires manual adjustment to Flex layout in Penpot
+- Effects generated by Figma plugins may not transfer perfectly
+- Nested component relationships should be verified after import
+
+### Step 3: Migrate Incrementally
+
+Do not attempt a full migration at once. Recommended approach:
+1. Start with 1–2 small projects to validate the workflow
+2. Once comfortable, migrate your core design system
+3. Allow 1–2 weeks for team adaptation before deciding on a full switch
+
+## Frequently Asked Questions
+
+### Can Penpot replace Figma?
+
+For most use cases, yes. Core capabilities (artboards, components, collaboration, prototyping) are fully covered. Figma currently has a larger plugin ecosystem and more community resources, but Penpot's community is growing rapidly — the 55K+ GitHub Stars indicate strong adoption.
+
+### What server configuration is required?
+
+Minimum: 1–2 CPU cores, 4 GB RAM, 10 GB disk. Recommended for a 5–10 person design team: 2–4 CPU cores, 8 GB RAM.
+
+### Is my data secure?
+
+All data resides on your own server. No third party can access your design files. This makes Penpot suitable for teams with strict data security requirements (finance, healthcare, government projects).
+
+### How does Penpot integrate with other self-hosted tools?
+
+Penpot fits naturally into a self-hosted toolchain:
+- Use [n8n](/blog/n8n-guide) for automated notifications when designs change
+- Use [Coolify](/blog/coolify-guide) to manage Penpot deployments and updates
+- Use [Tailscale](/blog/tailscale-headscale-guide) for secure team access to self-hosted Penpot
+
+### Is there a Chinese language interface?
+
+Yes. Penpot supports multiple languages, including Chinese. Switch in the application settings.
+
+## Getting Started
+
+Deploy Penpot with Docker Compose using the configuration above. The entire process takes approximately five minutes. For production deployments, ensure you configure HTTPS, change default passwords, and set up regular database backups.
+
+The official documentation at [help.penpot.app](https://help.penpot.app/technical-guide/getting-started/) provides additional configuration details and advanced deployment options.
