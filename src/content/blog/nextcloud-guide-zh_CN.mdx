@@ -1,0 +1,572 @@
+---
+title: "Nextcloud 自部署完全指南：20 分钟搭好你自己的云盘，从此告别订阅"
+description: "Nextcloud 是开源自托管云存储方案，支持 Docker 一键部署、WebDAV、Collabora 在线协作、移动端同步。20 分钟部署，数据 100% 掌控在自己手中，告别 Google Drive 和 Dropbox 的月费订阅。"
+pubDate: 2026-07-15
+tags: ["nextcloud", "self-hosted", "file-sync", "docker", "cloud-storage", "webdav", "collabora", "homelab"]
+category: "self-hosted"
+difficulty: "intermediate"
+timeToRead: 25
+postLang: "zh-CN"
+groupKey: "nextcloud-guide"
+template: "paper"
+---
+
+## 每一个云盘服务都是一场订阅绑架。
+
+Google Drive 给你 15GB 免费，然后每月 $10。Dropbox 每月 $12 卖你 2TB。OneDrive 捆绑 Microsoft 365 每年 $70——但你的数据存在他们的服务器上，受制于他们的政策、他们的宕机、他们的 AI 训练流水线。
+
+**[Nextcloud](https://nextcloud.com/)** 就是对这一切竖的中指。开源、自托管，能做那些服务能做的一切——加上 WebDAV、Collabora 在线协作（在线协作）、以及一个真正好用的移动端同步客户端。你的数据留在你的硬件上。没有订阅。没有厂商锁定。没有"我们更新了隐私政策"的邮件轰炸。
+
+**一句话总结：** 20 分钟部署，1 小时配好，然后它就自己跑了。这才是卖点。
+
+---
+
+## 目录
+
+- [为什么要自托管云盘？](#为什么要自托管云盘)
+- [Nextcloud vs Google Drive](#nextcloud-vs-google-drive)
+- [Nextcloud vs Dropbox](#nextcloud-vs-dropbox)
+- [Nextcloud vs Seafile](#nextcloud-vs-seafile)
+- [前置要求](#前置要求)
+- [Docker 部署](#docker-部署)
+- [初始配置](#初始配置)
+- [移动端同步设置](#移动端同步设置)
+- [WebDAV 访问](#webdav-访问)
+- [Collabora 在线协作](#collabora-在线协作)
+- [性能调优](#性能调优)
+- [备份策略](#备份策略)
+- [常见坑与解决方案](#常见坑与解决方案)
+- [FAQ](#faq)
+
+---
+
+## 为什么要自托管云盘？
+
+三个原因，按重要性排序：
+
+1. **数据主权（数据主权）**。你的文件被云端 AI 扫描——用于索引、用于广告、用于你根本没同意的用途。自托管意味着唯一读取你文件的实体就是你自己。
+
+2. **成本**。Google One 2TB = $100/年。Dropbox Plus 2TB = $120/年。五年下来就是 $600-$1,200。一块 $150 的硬盘能跑一辈子。Nextcloud 免费。
+
+3. **没有厂商锁定（无厂商锁定）**。Dropbox 砍了无限计划。Google 砍了 Google Photos 无限存储。等他们砍下一个的时候，你的数据一起没了——除非它已经在你自己的服务器上。
+
+---
+
+## Nextcloud vs Google Drive
+
+| 功能 | Google Drive | Nextcloud |
+|---------|-------------|-----------|
+| **存储** | 15GB 免费，之后 $10/月 | 无限（你自己的硬件） |
+| **文件同步（文件同步）** | 有（桌面 + 移动端） | 有（桌面 + 移动端） |
+| **WebDAV** | 无 | 有（原生支持） |
+| **Office 套件** | Google Docs（仅在线） | Collabora / OnlyOffice（自托管） |
+| **版本历史（版本历史）** | 100 个版本或 30 天 | 无限（可配置） |
+| **分享（分享）** | 有（链接 + 权限） | 有（链接 + 权限 + 联邦） |
+| **API** | 有限制 | 完整 REST + WebDAV |
+| **端到端加密（端到端加密）** | 无（仅服务器端） | 有（E2EE 应用） |
+| **离线访问（离线访问）** | 无 | 有（你的服务器） |
+| **数据所有权（数据所有权）** | 无 | 100% 你的 |
+
+**你会失去什么：** Google Drive 的实时协作体验仍然更流畅。Collabora 不错但还没到 Google Docs 那个水平。如果你深度依赖 Google Workspace，迁移过程会有摩擦。
+
+---
+
+## Nextcloud vs Dropbox
+
+| 功能 | Dropbox | Nextcloud |
+|---------|---------|-----------|
+| **存储** | 2GB 免费，之后 $12/月 | 无限（你自己的硬件） |
+| **文件同步（文件同步）** | 优秀（块级同步） | 良好（分块同步） |
+| **智能同步（智能同步）** | 有（选择性同步） | 有（虚拟文件） |
+| **Dropbox Paper** | 有 | 无（用 Collabora） |
+| **版本历史（版本历史）** | 30 天（免费）/ 180 天（付费） | 无限（可配置） |
+| **分享（分享）** | 有（链接 + 权限） | 有（链接 + 权限 + 联邦） |
+| **API** | 完整 | 完整 REST + WebDAV |
+| **数据所有权（数据所有权）** | 无 | 100% 你的 |
+
+**我的看法：** Dropbox 的同步引擎仍然是黄金标准。但"黄金标准"不值得每月 $12——尤其当你自己有服务器的时候。
+
+---
+
+## Nextcloud vs Seafile
+
+| 功能 | Nextcloud | Seafile |
+|---------|-----------|---------|
+| **存储** | 无限（你自己的硬件） | 无限（你自己的硬件） |
+| **文件同步（文件同步）** | 良好（分块同步） | 优秀（块级同步） |
+| **Office 套件** | 有（Collabora/OnlyOffice） | 无（仅查看） |
+| **WebDAV** | 有（原生支持） | 有限 |
+| **应用生态（应用生态）** | 300+ 应用 | 极少 |
+| **版本历史（版本历史）** | 无限 | 无限 |
+| **分享（分享）** | 有（丰富权限） | 有（基础） |
+| **资源占用** | 较高（PHP + MySQL） | 较低（Python + SQLite/MySQL） |
+| **部署复杂度** | 中等 | 简单 |
+
+**总结：** 选 **Nextcloud** 如果你要一个全能生产力平台——文件同步 + Office 套件 + 日历 + 通讯录 + 海量应用生态。选 **Seafile** 如果你只要快速、可靠的文件同步，且资源占用要低。
+
+---
+
+## 前置要求
+
+- Linux 服务器（推荐 Ubuntu 22.04+，最低 2GB 内存，推荐 4GB+）
+- 已安装 Docker 和 Docker Compose
+- 域名 + DNS 解析（可选但强烈推荐）
+- 反向代理 + SSL（Caddy、Nginx 或 Traefik）
+
+---
+
+## Docker 部署
+
+### 第一步：创建项目目录
+
+```bash
+mkdir -p /opt/nextcloud
+cd /opt/nextcloud
+```
+
+### 第二步：创建 docker-compose.yml
+
+```yaml
+services:
+  db:
+    image: mariadb:10.11
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=your-root-password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=your-nextcloud-password
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud-redis
+    restart: unless-stopped
+
+  app:
+    image: nextcloud:stable
+    container_name: nextcloud-app
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - nextcloud_data:/var/www/html
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=your-nextcloud-password
+      - REDIS_HOST=redis
+      - NEXTCLOUD_TRUSTED_DOMAINS=yourdomain.com
+      - OVERWRITEPROTOCOL=https
+
+  collabora:
+    image: collabora/code
+    container_name: nextcloud-collabora
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:9980:9980
+    environment:
+      - domain=yourdomain\.com
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+
+volumes:
+  db_data:
+  nextcloud_data:
+```
+
+### 第三步：启动服务
+
+```bash
+docker compose up -d
+```
+
+### 第四步：验证部署
+
+```bash
+# 检查所有容器是否正常运行
+docker compose ps
+
+# 查看 Nextcloud 日志
+docker compose logs app --tail 50
+
+# 测试 HTTP 响应
+curl -I http://localhost
+# 应该返回 200 或 301
+```
+
+**就这样。** 20 分钟，一个完整的云存储平台。
+
+**注意：** `OVERWRITEPROTOCOL=https` 这一行在你用了反向代理 + SSL 的情况下至关重要。没有它，Nextcloud 会生成混合内容 URL，你的移动端 App 会默默地挂掉。
+
+---
+
+## 初始配置
+
+### 访问 Web 界面
+
+1. 在浏览器打开 `https://yourdomain.com`
+2. 创建管理员账户（别用 "admin" 作用户名）
+3. 选数据库——要性能选 **PostgreSQL**，要兼容性选 **MariaDB**
+
+### 必调设置
+
+进入 **管理设置 → 概览**，把所有警告都修了。Nextcloud 对安全是偏执狂——这是特性，不是 bug。
+
+**关键设置：**
+
+- **管理 → 概览**：运行安全检查，修掉所有问题
+- **管理 → 分享**：如果你想保护隐私，禁用"允许用户通过链接分享"
+- **管理 → 日志**：日志级别设成 Warning（Info 太吵了）
+- **个人 → 安全**：开启双因素认证（2FA）
+
+### 安装推荐应用
+
+```bash
+# 通过 CLI 安装（比 Web 界面快）
+docker compose exec app php occ app:install files_external
+docker compose exec app php occ app:install calendar
+docker compose exec app php occ app:install contacts
+docker compose exec app php occ app:install deck
+docker compose exec app php occ app:install notes
+```
+
+---
+
+## 移动端同步设置
+
+### iOS
+
+1. 从 App Store 安装 **Nextcloud**
+2. 打开 App，输入服务器 URL：`https://yourdomain.com`
+3. 登录你的账户
+4. 进入 **设置 → 自动上传**
+5. 为照片和视频开启自动上传
+6. 设置上传文件夹（默认：`/Photos`）
+
+### Android
+
+1. 从 F-Droid 或 Google Play 安装 **Nextcloud**
+2. 打开 App，输入服务器 URL：`https://yourdomain.com`
+3. 登录你的账户
+4. 进入 **设置 → 自动上传**
+5. 为照片和视频开启自动上传
+6. 配置上传行为（仅 WiFi、仅充电等）
+
+### 桌面客户端
+
+```bash
+# Ubuntu/Debian
+sudo apt install nextcloud-desktop
+
+# macOS
+brew install --cask nextcloud
+
+# Windows
+# 从 https://nextcloud.com/install/#install-clients 下载
+```
+
+**注意：** 桌面客户端支持选择性同步（选择性同步）。别全量同步——只同步你需要的。你笔记本的 SSD 比你服务器的 HDD 小得多。
+
+---
+
+## WebDAV 访问
+
+WebDAV（Web 分布式创作和版本控制）是 Nextcloud 的杀手锏。它能让你在任何操作系统上把 Nextcloud 挂载为网络驱动器。
+
+### Linux (Nautilus/Files)
+
+1. 打开 Files
+2. 点击 "Other Locations"
+3. 输入：`davs://yourdomain.com/remote.php/dav/files/username/`
+4. 输入凭据
+
+### macOS (Finder)
+
+1. 打开 Finder
+2. 按 `Cmd+K`
+3. 输入：`https://yourdomain.com/remote.php/dav/files/username/`
+4. 输入凭据
+
+### Windows (File Explorer)
+
+1. 右键点击 "此电脑"
+2. 点击 "映射网络驱动器"
+3. 输入：`https://yourdomain.com/remote.php/dav/files/username/`
+4. 勾选 "使用其他凭据连接"
+5. 输入凭据
+
+### 验证 WebDAV
+
+```bash
+# 测试 WebDAV 端点
+curl -u username:password https://yourdomain.com/remote.php/dav/files/username/
+# 应该返回文件列表的 XML
+
+# 上传测试文件
+echo "hello" | curl -T - -u username:password https://yourdomain.com/remote.php/dav/files/username/test.txt
+
+# 再下载回来
+curl -u username:password https://yourdomain.com/remote.php/dav/files/username/test.txt
+# 应该返回 "hello"
+```
+
+---
+
+## Collabora 在线协作
+
+[Collabora Online](https://www.collaboraoffice.com/)（在线协作）把 Nextcloud 变成一个完整的 Office 套件——Word、Excel、PowerPoint 的等价物，全部自托管。
+
+### 配置
+
+Collabora 容器已经在你的 `docker-compose.yml` 里了。现在把它连到 Nextcloud：
+
+1. 进入 **应用 → 已禁用的应用**
+2. 找到 **Collabora Online** 并启用
+3. 进入 **管理 → Collabora Online**
+4. 设置 WOPI URL：`http://collabora:9980`（Docker 内部网络）
+5. 保存
+
+### 测试
+
+1. 上传一个 `.docx`、`.xlsx` 或 `.pptx` 文件到 Nextcloud
+2. 点击文件——它会在 Collabora 中打开
+3. 编辑、分享、协作——全部在浏览器里完成
+
+### 联邦协作（联邦协作）
+
+Nextcloud 支持联邦分享——和其他 Nextcloud 实例的用户分享文件：
+
+1. 进入 **设置 → 分享**
+2. 启用"允许用户通过联邦云分享"
+3. 分享给 `user@other-nextcloud-domain.com`
+
+---
+
+## 性能调优
+
+### 启用 Redis 缓存
+
+已经在 `docker-compose.yml` 里配好了。验证一下是否生效：
+
+```bash
+docker compose exec app php occ config:set memcache.local '\OC\Memcache\APCu'
+docker compose exec app php occ config:set memcache.distributed '\OC\Memcache\Redis'
+docker compose exec app php occ config:set memcache.locking '\OC\Memcache\Redis'
+```
+
+### 提升 PHP 内存限制
+
+```bash
+# 创建自定义 PHP 配置
+cat > custom.ini << 'EOF'
+upload_max_filesize = 16G
+post_max_size = 16G
+memory_limit = 1G
+max_execution_time = 3600
+max_input_time = 3600
+EOF
+
+# 复制到容器
+docker cp custom.ini nextcloud-app:/usr/local/etc/php/conf.d/custom.ini
+docker compose restart app
+```
+
+### 启用 HTTP/2
+
+如果用 Nginx 做反向代理：
+
+```nginx
+server {
+    listen 443 ssl http2;
+    # ... 其余配置
+}
+```
+
+### 监控性能
+
+```bash
+# 检查 Nextcloud 状态
+docker compose exec app php occ status
+
+# 运行完整性检查
+docker compose exec app php occ integrity:check-core
+
+# 检查后台任务
+docker compose exec app php occ background:cron
+```
+
+---
+
+## 备份策略
+
+### 备份什么
+
+1. **数据库**——所有元数据、分享、版本
+2. **Nextcloud 数据目录**——实际文件
+3. **配置**——`config/config.php`
+
+### 自动备份脚本
+
+```bash
+#!/bin/bash
+# /opt/nextcloud/backup.sh
+
+BACKUP_DIR="/opt/backups/nextcloud"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+# 开启维护模式
+docker compose exec -T app php occ maintenance:mode --on
+
+# 备份数据库
+docker compose exec -T db mysqldump -u root -p'your-root-password' nextcloud | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+
+# 备份数据目录
+tar -czf $BACKUP_DIR/data_$DATE.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data .
+
+# 备份配置
+tar -czf $BACKUP_DIR/config_$DATE.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/config config.php
+
+# 关闭维护模式
+docker compose exec -T app php occ maintenance:mode --off
+
+# 只保留最近 7 个备份
+ls -t $BACKUP_DIR/db_*.sql.gz | tail -n +8 | xargs rm -f
+ls -t $BACKUP_DIR/data_*.tar.gz | tail -n +8 | xargs rm -f
+ls -t $BACKUP_DIR/config_*.tar.gz | tail -n +8 | xargs rm -f
+
+echo "Backup completed: $DATE"
+```
+
+### 用 Cron 定时执行
+
+```bash
+# 添加到 crontab
+crontab -e
+
+# 每天凌晨 2 点执行
+0 2 * * * /opt/nextcloud/backup.sh >> /var/log/nextcloud-backup.log 2>&1
+```
+
+### 从备份恢复
+
+```bash
+# 停止 Nextcloud
+docker compose down
+
+# 恢复数据库
+gunzip < /opt/backups/nextcloud/db_YYYYMMDD_HHMMSS.sql.gz | docker compose exec -T db mysql -u root -p'your-root-password' nextcloud
+
+# 恢复数据
+tar -xzf /opt/backups/nextcloud/data_YYYYMMDD_HHMMSS.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/
+
+# 恢复配置
+tar -xzf /opt/backups/nextcloud/config_YYYYMMDD_HHMMSS.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/config
+
+# 启动 Nextcloud
+docker compose up -d
+
+# 修复权限
+docker compose exec app chown -R www-data:www-data /var/www/html
+```
+
+---
+
+## 常见坑与解决方案
+
+### 移动端报 "Can't connect to the server"
+
+**原因：** 缺少 `NEXTCLOUD_TRUSTED_DOMAINS` 或 `OVERWRITEPROTOCOL`。
+
+**修复：** 把你的域名加到受信任域名，并设置协议：
+
+```yaml
+environment:
+  - NEXTCLOUD_TRUSTED_DOMAINS=yourdomain.com
+  - OVERWRITEPROTOCOL=https
+```
+
+### 大文件上传失败
+
+**原因：** PHP 限制或反向代理超时。
+
+**修复：** 提升 PHP 限制（见性能调优部分），并在 Nginx 配置中添加：
+
+```nginx
+client_max_body_size 16G;
+proxy_read_timeout 3600s;
+```
+
+### Collabora 显示 "Failed to connect"
+
+**原因：** Collabora 容器连不上 Nextcloud。
+
+**修复：** 确保 Collabora 的 `domain` 和你的实际域名匹配（转义点号）：
+
+```yaml
+environment:
+  - domain=yourdomain\.com
+```
+
+### 文件同步慢
+
+**原因：** 缺少 Redis 或分块设置不对。
+
+**修复：** 启用 Redis 缓存并增大分块大小：
+
+```bash
+docker compose exec app php occ config:system:set chunked_file_size --value=100 --type=integer
+```
+
+---
+
+## FAQ
+
+### Nextcloud vs Seafile vs ownCloud？
+
+| 使用场景 | 推荐 |
+|----------|---------------|
+| **全能生产力平台** | **Nextcloud**——文件同步 + Office 套件 + 日历 + 通讯录 + 300+ 应用 |
+| **只要快速可靠的文件同步** | **Seafile**——块级同步，资源占用低 |
+| **遗留企业需求** | **ownCloud**——从 Nextcloud fork，企业导向 |
+
+### 我需要多大存储？
+
+取决于你的使用场景：
+- **仅个人文件：** 500GB-1TB 足够
+- **家庭照片/视频：** 2-4TB
+- **完全替代 Google Drive：** 4-8TB
+- **配合媒体服务器：** 8TB+（搭配 [Jellyfin](/zh-CN/blog/jellyfin-guide)）
+
+### 能和 Tailscale 一起用吗？
+
+可以。在服务器上部署 [Tailscale + Headscale](/zh-CN/blog/tailscale-headscale-guide)，就能从任何地方安全访问 Nextcloud，无需暴露端口。这是推荐的远程访问方案。
+
+### Nextcloud 怎么处理文件版本？
+
+Nextcloud 默认保留无限文件版本。在 `config.php` 中配置：
+
+```php
+'versions_retention_obligation' => 'auto, 60',
+'max_versions' => 100,
+```
+
+这意味着保留 60 天内或最多 100 个版本，以先到者为准。
+
+---
+
+## 下一篇
+
+- [Immich：自托管照片备份](/zh-CN/blog/immich-complete-guide)——和 Nextcloud 搭配，组成完整的数据所有权栈
+- [Vaultwarden：密码管理器](/zh-CN/blog/vaultwarden-guide)——保护你的 Nextcloud 管理员凭据
+- [Tailscale + Headscale：零配置 VPN](/zh-CN/blog/tailscale-headscale-guide)——从任何地方安全访问 Nextcloud
+
+---
+
+*从 2026 年 3 月开始跑 Nextcloud。2.3TB 文件，零数据丢失，$0/月。Google Drive 收你 $100/年存同样的东西。这笔账不难算。*

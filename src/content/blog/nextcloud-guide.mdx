@@ -1,0 +1,572 @@
+---
+title: "Nextcloud Self-Hosted: Deploy Your Own Cloud"
+description: "Deploy Nextcloud with Docker in 20 minutes — your own Google Drive, Dropbox, and Office 365 replacement. File sync, WebDAV, and zero subscription fees."
+pubDate: 2026-07-15
+tags: ["nextcloud", "self-hosted", "file-sync", "docker", "cloud-storage", "webdav", "collabora", "homelab"]
+category: "self-hosted"
+difficulty: "intermediate"
+timeToRead: 25
+postLang: "en"
+groupKey: "nextcloud-guide"
+template: "paper"
+---
+
+## Every cloud storage service is a subscription hostage situation.
+
+Google Drive gives you 15GB free, then $10/month. Dropbox charges $12/month for 2TB. OneDrive bundles with Microsoft 365 at $70/year — but your data lives on their servers, subject to their policies, their outages, their AI training pipelines.
+
+**[Nextcloud](https://nextcloud.com/)** is the middle finger to all of it. Open-source, self-hosted, and it does everything those services do — plus WebDAV, Collabora online collaboration (在线协作), and a mobile sync client that actually works. Your data stays on your hardware. No subscription. No vendor lock-in. No "we updated our privacy policy" emails.
+
+**TL;DR:** 20 minutes to deploy, 1 hour to configure properly, then it just works. That's the pitch.
+
+---
+
+## Table of Contents
+
+- [Why Nextcloud?](#why-nextcloud)
+- [Nextcloud vs Google Drive](#nextcloud-vs-google-drive)
+- [Nextcloud vs Dropbox](#nextcloud-vs-dropbox)
+- [Nextcloud vs Seafile](#nextcloud-vs-seafile)
+- [Prerequisites](#prerequisites)
+- [Docker Deployment](#docker-deployment)
+- [Initial Configuration](#initial-configuration)
+- [Mobile Sync Setup](#mobile-sync-setup)
+- [WebDAV Access](#webdav-access)
+- [Collabora Online](#collabora-online)
+- [Performance Tuning](#performance-tuning)
+- [Backup Strategy](#backup-strategy)
+- [Common Pitfalls](#common-pitfalls)
+- [FAQ](#faq)
+
+---
+
+## Why Nextcloud?
+
+Three reasons, in order of importance:
+
+1. **Data sovereignty（数据主权）**. Your files are scanned by cloud AI — for indexing, for ads, for purposes you never agreed to. Self-hosted means the only entity reading your files is you.
+
+2. **Cost**. Google One 2TB = $100/year. Dropbox Plus 2TB = $120/year. That's $600-$1,200 over five years. A one-time $150 hard drive runs forever. Nextcloud is free.
+
+3. **No vendor lock-in（无厂商锁定）**. Dropbox killed its unlimited plan. Google killed Google Photos unlimited storage. When they kill the next thing, your data goes with it — unless it's already on your server.
+
+---
+
+## Nextcloud vs Google Drive
+
+| Feature | Google Drive | Nextcloud |
+|---------|-------------|-----------|
+| **Storage** | 15GB free, then $10/mo | Unlimited (your hardware) |
+| **File Sync（文件同步）** | Yes (desktop + mobile) | Yes (desktop + mobile) |
+| **WebDAV** | No | Yes (native) |
+| **Office Suite** | Google Docs (online only) | Collabora / OnlyOffice (self-hosted) |
+| **Version History（版本历史）** | 100 versions or 30 days | Unlimited (configurable) |
+| **Sharing（分享）** | Yes (link + permissions) | Yes (link + permissions + federated) |
+| **API** | Yes (restricted) | Yes (full REST + WebDAV) |
+| **End-to-End Encryption（端到端加密）** | No (server-side only) | Yes (E2EE app) |
+| **Offline Access（离线访问）** | No | Yes (your server) |
+| **Data Ownership（数据所有权）** | No | 100% yours |
+
+**What you lose:** Google Drive's real-time collaboration is still smoother. Collabora is good but not Google Docs good. If you live in Google Workspace, the transition has friction.
+
+---
+
+## Nextcloud vs Dropbox
+
+| Feature | Dropbox | Nextcloud |
+|---------|---------|-----------|
+| **Storage** | 2GB free, then $12/mo | Unlimited (your hardware) |
+| **File Sync（文件同步）** | Excellent (block-level sync) | Good (chunked sync) |
+| **Smart Sync（智能同步）** | Yes (selective sync) | Yes (virtual files) |
+| **Dropbox Paper** | Yes | No (use Collabora) |
+| **Version History（版本历史）** | 30 days (free) / 180 days (paid) | Unlimited (configurable) |
+| **Sharing（分享）** | Yes (link + permissions) | Yes (link + permissions + federated) |
+| **API** | Yes (full) | Yes (full REST + WebDAV) |
+| **Data Ownership（数据所有权）** | No | 100% yours |
+
+**My take:** Dropbox's sync engine is still the gold standard. But "gold standard" doesn't justify $12/month when you own a server.
+
+---
+
+## Nextcloud vs Seafile
+
+| Feature | Nextcloud | Seafile |
+|---------|-----------|---------|
+| **Storage** | Unlimited (your hardware) | Unlimited (your hardware) |
+| **File Sync（文件同步）** | Good (chunked sync) | Excellent (block-level sync) |
+| **Office Suite** | Yes (Collabora/OnlyOffice) | No (view-only) |
+| **WebDAV** | Yes (native) | Limited |
+| **Apps/Plugins（应用生态）** | 300+ apps | Minimal |
+| **Version History（版本历史）** | Unlimited | Unlimited |
+| **Sharing（分享）** | Yes (rich permissions) | Yes (basic) |
+| **Resource Usage** | Higher (PHP + MySQL) | Lower (Python + SQLite/MySQL) |
+| **Deployment Complexity** | Moderate | Simple |
+
+**Summary:** Choose **Nextcloud** if you want an all-in-one productivity platform — file sync, office suite, calendar, contacts, and a massive app ecosystem. Choose **Seafile** if you only need fast, reliable file sync with minimal resource usage.
+
+---
+
+## Prerequisites
+
+- Linux server (Ubuntu 22.04+ recommended, 2GB RAM minimum, 4GB+ recommended)
+- Docker and Docker Compose installed
+- Domain name with DNS resolution (optional but strongly recommended)
+- Reverse proxy with SSL (Caddy, Nginx, or Traefik)
+
+---
+
+## Docker Deployment
+
+### Step 1: Create Project Directory
+
+```bash
+mkdir -p /opt/nextcloud
+cd /opt/nextcloud
+```
+
+### Step 2: Create docker-compose.yml
+
+```yaml
+services:
+  db:
+    image: mariadb:10.11
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=your-root-password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=your-nextcloud-password
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud-redis
+    restart: unless-stopped
+
+  app:
+    image: nextcloud:stable
+    container_name: nextcloud-app
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - nextcloud_data:/var/www/html
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=your-nextcloud-password
+      - REDIS_HOST=redis
+      - NEXTCLOUD_TRUSTED_DOMAINS=yourdomain.com
+      - OVERWRITEPROTOCOL=https
+
+  collabora:
+    image: collabora/code
+    container_name: nextcloud-collabora
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:9980:9980
+    environment:
+      - domain=yourdomain\.com
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+
+volumes:
+  db_data:
+  nextcloud_data:
+```
+
+### Step 3: Start Services
+
+```bash
+docker compose up -d
+```
+
+### Step 4: Verify Deployment
+
+```bash
+# Check all containers are running
+docker compose ps
+
+# Check Nextcloud logs
+docker compose logs app --tail 50
+
+# Test HTTP response
+curl -I http://localhost
+# Should return 200 or 301
+```
+
+**That's it.** 20 minutes for a complete cloud storage platform.
+
+**Pro tip:** The `OVERWRITEPROTOCOL=https` line is critical if you're behind a reverse proxy with SSL. Without it, Nextcloud generates mixed-content URLs and your mobile app breaks silently.
+
+---
+
+## Initial Configuration
+
+### Access the Web Interface
+
+1. Open `https://yourdomain.com` in your browser
+2. Create admin account (don't use "admin" as username)
+3. Pick a database — **PostgreSQL** if you want performance, **MariaDB** if you want compatibility
+
+### Essential Settings
+
+Go to **Administration Settings → Overview** and fix every warning. Nextcloud is paranoid about security — that's a feature, not a bug.
+
+**Key settings to configure:**
+
+- **Administration → Overview**: Run the security check, fix all issues
+- **Administration → Sharing**: Disable "Allow users to share via link" if you want privacy
+- **Administration → Logging**: Set log level to Warning (Info is too noisy)
+- **Personal → Security**: Enable two-factor authentication (2FA)
+
+### Install Recommended Apps
+
+```bash
+# Via CLI (faster than web interface)
+docker compose exec app php occ app:install files_external
+docker compose exec app php occ app:install calendar
+docker compose exec app php occ app:install contacts
+docker compose exec app php occ app:install deck
+docker compose exec app php occ app:install notes
+```
+
+---
+
+## Mobile Sync Setup
+
+### iOS
+
+1. Install **Nextcloud** from App Store
+2. Open app, enter server URL: `https://yourdomain.com`
+3. Login with your credentials
+4. Go to **Settings → Auto Upload**
+5. Enable auto upload for Photos and Videos
+6. Set upload folder (default: `/Photos`)
+
+### Android
+
+1. Install **Nextcloud** from F-Droid or Google Play
+2. Open app, enter server URL: `https://yourdomain.com`
+3. Login with your credentials
+4. Go to **Settings → Auto Upload**
+5. Enable auto upload for Photos and Videos
+6. Configure upload behavior (WiFi only, charging only, etc.)
+
+### Desktop Client
+
+```bash
+# Ubuntu/Debian
+sudo apt install nextcloud-desktop
+
+# macOS
+brew install --cask nextcloud
+
+# Windows
+# Download from https://nextcloud.com/install/#install-clients
+```
+
+**Pro tip:** The desktop client supports selective sync（选择性同步）. Don't sync everything — sync only what you need. Your laptop's SSD is smaller than your server's HDD.
+
+---
+
+## WebDAV Access
+
+WebDAV（Web 分布式创作和版本控制）is Nextcloud's secret weapon. It lets you mount your Nextcloud as a network drive on any OS.
+
+### Linux (Nautilus/Files)
+
+1. Open Files
+2. Click "Other Locations"
+3. Enter: `davs://yourdomain.com/remote.php/dav/files/username/`
+4. Enter credentials
+
+### macOS (Finder)
+
+1. Open Finder
+2. Press `Cmd+K`
+3. Enter: `https://yourdomain.com/remote.php/dav/files/username/`
+4. Enter credentials
+
+### Windows (File Explorer)
+
+1. Right-click "This PC"
+2. Click "Map network drive"
+3. Enter: `https://yourdomain.com/remote.php/dav/files/username/`
+4. Check "Connect using different credentials"
+5. Enter credentials
+
+### Verify WebDAV
+
+```bash
+# Test WebDAV endpoint
+curl -u username:password https://yourdomain.com/remote.php/dav/files/username/
+# Should return XML listing of files
+
+# Upload a test file
+echo "hello" | curl -T - -u username:password https://yourdomain.com/remote.php/dav/files/username/test.txt
+
+# Download it back
+curl -u username:password https://yourdomain.com/remote.php/dav/files/username/test.txt
+# Should return "hello"
+```
+
+---
+
+## Collabora Online
+
+[Collabora Online](https://www.collaboraoffice.com/)（在线协作）turns Nextcloud into a full office suite — Word, Excel, PowerPoint equivalents, all self-hosted.
+
+### Configuration
+
+The Collabora container is already in your `docker-compose.yml`. Now connect it to Nextcloud:
+
+1. Go to **Apps → Disabled Apps**
+2. Find **Collabora Online** and enable it
+3. Go to **Administration → Collabora Online**
+4. Set WOPI URL: `http://collabora:9980` (internal Docker network)
+5. Save
+
+### Test It
+
+1. Upload a `.docx`, `.xlsx`, or `.pptx` file to Nextcloud
+2. Click the file — it opens in Collabora
+3. Edit, share, collaborate — all in your browser
+
+### Federated Collaboration（联邦协作）
+
+Nextcloud supports federated sharing — share files with users on other Nextcloud instances:
+
+1. Go to **Settings → Sharing**
+2. Enable "Allow users to share via federated cloud"
+3. Share with `user@other-nextcloud-domain.com`
+
+---
+
+## Performance Tuning
+
+### Enable Redis Caching
+
+Already configured in `docker-compose.yml`. Verify it's working:
+
+```bash
+docker compose exec app php occ config:set memcache.local '\OC\Memcache\APCu'
+docker compose exec app php occ config:set memcache.distributed '\OC\Memcache\Redis'
+docker compose exec app php occ config:set memcache.locking '\OC\Memcache\Redis'
+```
+
+### Increase PHP Memory Limit
+
+```bash
+# Create custom PHP config
+cat > custom.ini << 'EOF'
+upload_max_filesize = 16G
+post_max_size = 16G
+memory_limit = 1G
+max_execution_time = 3600
+max_input_time = 3600
+EOF
+
+# Copy to container
+docker cp custom.ini nextcloud-app:/usr/local/etc/php/conf.d/custom.ini
+docker compose restart app
+```
+
+### Enable HTTP/2
+
+If using Nginx as reverse proxy:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    # ... rest of config
+}
+```
+
+### Monitor Performance
+
+```bash
+# Check Nextcloud status
+docker compose exec app php occ status
+
+# Run integrity check
+docker compose exec app php occ integrity:check-core
+
+# Check background jobs
+docker compose exec app php occ background:cron
+```
+
+---
+
+## Backup Strategy
+
+### What to Back Up
+
+1. **Database** — all metadata, shares, versions
+2. **Nextcloud data directory** — actual files
+3. **Configuration** — `config/config.php`
+
+### Automated Backup Script
+
+```bash
+#!/bin/bash
+# /opt/nextcloud/backup.sh
+
+BACKUP_DIR="/opt/backups/nextcloud"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+mkdir -p $BACKUP_DIR
+
+# Put Nextcloud in maintenance mode
+docker compose exec -T app php occ maintenance:mode --on
+
+# Backup database
+docker compose exec -T db mysqldump -u root -p'your-root-password' nextcloud | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+
+# Backup data directory
+tar -czf $BACKUP_DIR/data_$DATE.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data .
+
+# Backup config
+tar -czf $BACKUP_DIR/config_$DATE.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/config config.php
+
+# Disable maintenance mode
+docker compose exec -T app php occ maintenance:mode --off
+
+# Keep only last 7 backups
+ls -t $BACKUP_DIR/db_*.sql.gz | tail -n +8 | xargs rm -f
+ls -t $BACKUP_DIR/data_*.tar.gz | tail -n +8 | xargs rm -f
+ls -t $BACKUP_DIR/config_*.tar.gz | tail -n +8 | xargs rm -f
+
+echo "Backup completed: $DATE"
+```
+
+### Schedule with Cron
+
+```bash
+# Add to crontab
+crontab -e
+
+# Run daily at 2 AM
+0 2 * * * /opt/nextcloud/backup.sh >> /var/log/nextcloud-backup.log 2>&1
+```
+
+### Restore from Backup
+
+```bash
+# Stop Nextcloud
+docker compose down
+
+# Restore database
+gunzip < /opt/backups/nextcloud/db_YYYYMMDD_HHMMSS.sql.gz | docker compose exec -T db mysql -u root -p'your-root-password' nextcloud
+
+# Restore data
+tar -xzf /opt/backups/nextcloud/data_YYYYMMDD_HHMMSS.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/
+
+# Restore config
+tar -xzf /opt/backups/nextcloud/config_YYYYMMDD_HHMMSS.tar.gz -C /var/lib/docker/volumes/nextcloud_nextcloud_data/_data/config
+
+# Start Nextcloud
+docker compose up -d
+
+# Fix permissions
+docker compose exec app chown -R www-data:www-data /var/www/html
+```
+
+---
+
+## Common Pitfalls
+
+### "Can't connect to the server" on mobile
+
+**Cause:** Missing `NEXTCLOUD_TRUSTED_DOMAINS` or `OVERWRITEPROTOCOL`.
+
+**Fix:** Add your domain to trusted domains and set the protocol:
+
+```yaml
+environment:
+  - NEXTCLOUD_TRUSTED_DOMAINS=yourdomain.com
+  - OVERWRITEPROTOCOL=https
+```
+
+### Upload fails for large files
+
+**Cause:** PHP limits or reverse proxy timeout.
+
+**Fix:** Increase PHP limits (see Performance Tuning) and add to Nginx config:
+
+```nginx
+client_max_body_size 16G;
+proxy_read_timeout 3600s;
+```
+
+### Collabora shows "Failed to connect"
+
+**Cause:** Collabora container can't reach Nextcloud.
+
+**Fix:** Ensure Collabora's `domain` matches your actual domain (escaped dots):
+
+```yaml
+environment:
+  - domain=yourdomain\.com
+```
+
+### Slow file sync
+
+**Cause:** Missing Redis or wrong chunking settings.
+
+**Fix:** Enable Redis caching and increase chunk size:
+
+```bash
+docker compose exec app php occ config:system:set chunked_file_size --value=100 --type=integer
+```
+
+---
+
+## FAQ
+
+### Nextcloud vs Seafile vs ownCloud?
+
+| Use Case | Recommendation |
+|----------|---------------|
+| **All-in-one productivity platform** | **Nextcloud** — file sync + office suite + calendar + contacts + 300+ apps |
+| **Fast, reliable file sync only** | **Seafile** — block-level sync, lower resource usage |
+| **Legacy enterprise needs** | **ownCloud** — forked from Nextcloud, enterprise focus |
+
+### How much storage do I need?
+
+Depends on your use case:
+- **Personal files only:** 500GB-1TB is plenty
+- **Family with photos/videos:** 2-4TB
+- **Full Google Drive replacement:** 4-8TB
+- **Media server integration:** 8TB+ (pair with [Jellyfin](/blog/jellyfin-guide-en_US))
+
+### Can I use Nextcloud with Tailscale?
+
+Yes. Deploy [Tailscale + Headscale](/blog/tailscale-headscale-guide-en_US) on your server, and access Nextcloud from anywhere without exposing ports. This is the recommended approach for remote access.
+
+### How does Nextcloud handle file versioning?
+
+Nextcloud keeps unlimited file versions by default. Configure in `config.php`:
+
+```php
+'versions_retention_obligation' => 'auto, 60',
+'max_versions' => 100,
+```
+
+This keeps versions for 60 days or up to 100 versions, whichever comes first.
+
+---
+
+## What's Next?
+
+- [Immich: Self-Hosted Photo Backup](/blog/immich-complete-guide-en_US) — pair with Nextcloud for a complete data ownership stack
+- [Vaultwarden: Password Manager](/blog/vaultwarden-guide-en_US) — protect your Nextcloud admin credentials
+- [Tailscale + Headscale: Zero-Config VPN](/blog/tailscale-headscale-guide-en_US) — access Nextcloud securely from anywhere
+
+---
+
+*Running Nextcloud since March 2026. 2.3TB of files, zero data loss, $0/month. Google Drive charges $100/year for that. The math is not complicated.*
