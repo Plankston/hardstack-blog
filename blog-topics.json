@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-15",
+  "lastUpdated": "2026-07-16",
   "articles": [
     {
       "groupKey": "tolaria-guide",
@@ -127,6 +127,13 @@
       "pubDate": "2026-07-15",
       "tags": ["nextcloud", "self-hosted", "file-sync", "docker", "cloud-storage", "webdav", "collabora", "homelab"],
       "category": "self-hosted"
+    },
+    {
+      "groupKey": "horizon-guide-zh",
+      "title": "Horizon：让 AI 帮你刷信息流",
+      "pubDate": "2026-07-16",
+      "tags": ["horizon", "ai", "news-aggregation", "self-hosted", "rss", "daily-briefing"],
+      "category": "AI 工具"
     }
   ],
   "topicHistory": [
