@@ -1,0 +1,270 @@
+---
+title: "Horizon：让 AI 帮你刷信息流"
+description: "别再手动刷 Hacker News 了。Horizon 用 AI 帮你筛新闻，每天只看 10 条精选。"
+pubDate: 2026-07-16
+tags: ["horizon", "ai", "news-aggregation", "self-hosted", "rss", "daily-briefing"]
+category: "AI 工具"
+difficulty: "beginner"
+timeToRead: 12
+postLang: "zh-CN"
+groupKey: "horizon-guide-zh"
+template: "paper"
+---
+
+## 你每天花多少时间"刷"新闻？
+
+刷 Hacker News 20 分钟，Reddit 15 分钟，Twitter 10 分钟，再翻翻 RSS 10 分钟。加起来一小时。
+
+这一小时里，真正改变你认知的有几条？3 条？5 条？
+
+剩下那 95 条呢？标题党、重复观点、营销软文、你根本不关心的领域。
+
+**你的注意力就这么贱？**
+
+你每天花 60 分钟买一堆信息垃圾，然后抱怨"没时间学新技术"。这跟花两小时逛超市买了一堆零食然后说没时间做饭一个逻辑。
+
+别辩解了。答案很简单：让 AI 帮你干这件事。
+
+**Horizon** — 开源项目，8.2k Stars。7 种信息源同时抓取，AI 给每条内容打 0-10 分，低于 6 分直接扔。最终输出一份精选日报——10 条，每条有摘要、背景补充、社区讨论。
+
+打开日报，5 分钟扫完。省下来的时间，去写代码。
+
+## 为什么你手动刷是傻的
+
+你手动刷信息流，本质上在做一件低效的事：**用人类的认知带宽做机器更擅长的事**。
+
+你的大脑擅长什么？深度思考、创造性解决问题、理解复杂语境。
+
+你的大脑**不擅长**什么？快速浏览 200 条标题、去重、判断"这条值不值得读"。
+
+把精力花在筛选上，就像让高级工程师写增删改查——不是不能干，是暴殄天物。
+
+Horizon 的 AI 帮你干脏活：
+
+| 你以前要干的 | 现在 Horizon 干 |
+|-------------|---------------|
+| 打开 5 个网站来回切换 | 7 个源同时抓取 |
+| 读标题判断值不值得读 | AI 打分 0-10，低于 6 直接扔 |
+| 看到重复内容手动跳过 | 跨平台去重，同一条新闻合并 |
+| 不懂某个概念去 Google | 自动补充背景知识 |
+| 翻评论区看大家怎么看 | 收集并总结社区讨论 |
+
+你省下来的时间，够写一个 side project 了。
+
+## 5 分钟跑起来
+
+别废话，先跑起来再说。
+
+### 方式一：Docker（推荐，零门槛）
+
+```bash
+# 克隆
+git clone https://github.com/Thysrael/Horizon.git
+cd Horizon
+
+# 配置
+cp .env.example .env
+cp data/config.example.json data/config.json
+```
+
+编辑 `.env`，填入你的 AI API Key：
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+编辑 `data/config.json`，最简配置：
+
+```json
+{
+  "ai": {
+    "provider": "openai",           // AI 服务商：openai / ollama / deepseek
+    "model": "gpt-4o-mini",         // 评分用的模型，mini 足够且便宜
+    "api_key_env": "OPENAI_API_KEY" // 从 .env 读取的环境变量名
+  },
+  "sources": {
+    "hackernews": [{ "name": "Hacker News", "url": "https://hacker-news.firebaseio.com/v0" }], // HN 源
+    "rss": [
+      { "name": "Simon Willison", "url": "https://simonwillison.net/atom/everything/" }         // RSS 源，可加多个
+    ]
+  },
+  "filtering": {
+    "ai_score_threshold": 6.0 // 低于此分数的条目直接丢弃
+  }
+}
+```
+
+跑起来：
+
+```bash
+docker compose run --rm horizon
+```
+
+完事。确认日报已生成：
+
+```bash
+ls data/summaries/
+```
+
+看到 `.md` 文件就说明成功了。
+
+### 方式二：本地运行
+
+```bash
+git clone https://github.com/Thysrael/Horizon.git
+cd Horizon
+uv sync
+cp data/config.example.json data/config.json
+# 编辑 config.json
+uv run horizon
+```
+
+### 方式三：配置向导（懒人专属）
+
+不想手动写配置？运行向导，它会问你"你关心什么"，然后自动生成配置：
+
+```bash
+uv run horizon-wizard
+```
+
+输入你感兴趣的话题（比如"LLM"、"WebAssembly"、"homelab"），它帮你配好源和过滤规则。
+
+## 进阶玩法
+
+### 分类过滤：每个领域限 5 条
+
+不想被某个领域刷屏？在 `config.json` 里限制每个分类的条数：
+
+```json
+{
+  "filtering": {
+    "ai_score_threshold": 6.0,
+    "max_items": 20,
+    "category_groups": {
+      "ai": {
+        "limit": 5,
+        "categories": ["ai-news", "ai-tools", "machine-learning"]
+      },
+      "devops": {
+        "limit": 5,
+        "categories": ["docker", "kubernetes", "ci-cd"]
+      }
+    }
+  }
+}
+```
+
+AI 领域最多 5 条，DevOps 最多 5 条，剩下的留给其他领域。均衡。
+
+### 本地模型：零成本运行
+
+没有 API 额度？用 Ollama 跑本地模型：
+
+```json
+{
+  "ai": {
+    "provider": "ollama",
+    "base_url": "http://localhost:11434",
+    "model": "llama3.1"
+  }
+}
+```
+
+评分速度会慢一点，但**完全免费**，数据完全不出你的机器。如果你还没装 Ollama，看这篇：[Ollama + Open WebUI 本地 AI 全家桶](/zh-cn/blog/ollama-openwebui-guide)。
+
+### DeepSeek：便宜又好用
+
+DeepSeek API 价格极低，评分质量不错，适合预算有限但不想用本地模型的场景：
+
+```json
+{
+  "ai": {
+    "provider": "openai",
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "model": "deepseek-chat"
+  }
+}
+```
+
+## 自动化：每天自动跑
+
+配好之后不想手动跑？GitHub Actions 每天自动帮你生成日报。
+
+在你的 Horizon 仓库里创建 `.github/workflows/daily.yml`：
+
+```yaml
+name: Daily News
+
+on:
+  schedule:
+    - cron: "0 8 * * *"  # UTC 8:00 = 北京时间 16:00
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Horizon
+        run: docker compose run --rm horizon
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./data/summaries
+```
+
+每天下午 4 点（北京时间），日报自动生成并部署到 GitHub Pages。打开网页就能看。
+
+或者用你自己的服务器 + crontab：
+
+```bash
+0 16 * * * cd /opt/horizon && docker compose run --rm horizon
+```
+
+## 工具组合：骚操作
+
+### Horizon + Ollama + n8n：全自动信息中枢
+
+1. Horizon 每天抓取、评分、生成日报
+2. n8n 通过 Webhook 接收日报内容
+3. n8n 自动分类、打标签、存入数据库
+4. 飞书/钉钉/Slack 推送摘要
+5. 高分内容自动写入 Notion 知识库
+
+整个流程零人工干预。参考 [n8n 完全指南](/zh-cn/blog/n8n-guide) 搭建工作流编排。
+
+### Horizon + Uptime Kuma：别让日报断更
+
+你自动化的日报系统自己挂了，你都不知道。用 Uptime Kuma 监控它，挂了立刻告警：
+
+```yaml
+# Uptime Kuma 配置
+- type: HTTP(S)
+  url: http://horizon.local:8080/health
+  interval: 300
+```
+
+参考 [Uptime Kuma 自部署指南](/zh-cn/blog/uptime-kuma-guide) 搭建监控。
+
+---
+
+## 5 条行动清单
+
+1. **克隆仓库**：`git clone https://github.com/Thysrael/Horizon.git`
+2. **填 API Key**：在 `.env` 里加一行 `OPENAI_API_KEY=sk-xxx`（或用 Ollama 零成本）
+3. **编辑 config.json**：至少加 Hacker News + 1 个 RSS 源
+4. **跑一次**：`docker compose run --rm horizon`，看看日报质量
+5. **设自动化**：GitHub Actions 或 crontab，以后不用管了
+
+整个过程 10 分钟。之后每天打开邮箱或网页，5 分钟扫完 AI 帮你筛好的新闻。
+
+---
+
+**相关文章**：
+- [Ollama + Open WebUI 本地 AI 全家桶](/zh-cn/blog/ollama-openwebui-guide) — 零成本运行本地 AI
+- [n8n 完全指南](/zh-cn/blog/n8n-guide) — 串联自部署服务的工作流引擎
+- [Uptime Kuma 自部署指南](/zh-cn/blog/uptime-kuma-guide) — 监控你的服务还活着没
