@@ -75,7 +75,7 @@ const jsonLd = {
   keywords: category ? [category] : [],
   timeRequired: timeToRead ? `PT${timeToRead}M` : undefined,
   wordCount: wordCount || undefined,
-  image: slug ? `https://hardstack.org/og/${slug}.png` : undefined,
+  image: slug ? `https://hardstack.org/og/${slug}.webp` : undefined,
 };
 
 // Template display names
@@ -93,7 +93,7 @@ const templateLabel: Record<string, string> = {
       title={title} 
       description={description} 
       locale={locale} 
-      ogImage={slug ? `/og/${slug}.png` : undefined}
+      ogImage={slug ? `/og/${slug}.webp` : undefined}
     />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
