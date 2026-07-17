@@ -1,67 +1,67 @@
 ---
-title: "Horizon：AI 新闻雷达自部署指南"
-description: "Horizon 自部署 AI 新闻雷达：聚合 7 大信息源，AI 打分筛选，生成中英双语日报，Docker 一键部署。"
+title: "Horizon: AI News Radar Self-Hosted Guide"
+description: "Horizon self-hosted AI news radar: aggregate 7 sources, AI scoring, generate bilingual daily briefings, Docker one-click deploy."
 pubDate: 2026-07-16
 tags: ["horizon", "ai", "news-aggregation", "self-hosted", "rss", "daily-briefing"]
-category: "AI 工具"
+category: "AI Tools"
 difficulty: "beginner"
 timeToRead: 20
 postLang: "en"
-groupKey: "horizon-guide-zh"
+groupKey: "horizon-guide"
 template: "paper"
 ---
 
-## 信息过载时代，你需要一个 AI 帮你筛新闻
+## Information Overload? Let AI Filter Your News
 
-每天打开 Hacker News、Reddit、Twitter，上百条内容刷过去，真正有价值的可能不到 5 条。手动筛选的时间成本越来越高，而错过重要信息的焦虑感却越来越强。
+Every day you open Hacker News, Reddit, Twitter — hundreds of posts fly by, and maybe 5 are actually worth reading. The time cost of manual filtering keeps rising, while the anxiety of missing important information grows stronger.
 
-Horizon 是一个开源项目（GitHub 8.2k Stars），用 AI 自动完成信息源聚合、评分、去重、总结的全流程，最终生成一份结构化的中英双语日报。它不是又一个 RSS 阅读器，而是一个**信息过滤系统**——你只看 AI 认为值得你看的内容。
+Horizon (8.2k GitHub Stars) uses AI to automate the entire pipeline: source aggregation, scoring, deduplication, and summarization — generating a structured bilingual daily briefing. It's not another RSS reader; it's an **information filtering system** where you only see what AI thinks is worth your time.
 
-## Horizon 是什么
+## What Is Horizon
 
-一句话定位：**AI 驱动的个人新闻雷达，自部署日报生成系统**。
+One-liner: **AI-powered personal news radar with self-hosted daily briefing generation.**
 
-核心流程：
+Core flow:
 
 ```
-信息源 → AI 评分（0-10）→ 去重合并 → 内容丰富 → 生成日报 → 多渠道分发
+Sources → AI Scoring (0-10) → Dedup & Merge → Content Enrichment → Daily Briefing → Multi-channel Distribution
 ```
 
-与传统 RSS 阅读器的区别在于：你不需要逐条浏览，AI 会帮你筛选并排序，只把高分内容推送到你面前。
+The difference from traditional RSS readers: instead of browsing every item, AI ranks and sorts them, pushing only high-score content to you.
 
-## 功能全景
+## Feature Overview
 
-### 支持 7 种信息源
+### 7 Supported Sources
 
-| 信息源 | 说明 |
-|--------|------|
-| Hacker News | 技术社区头条，自动抓取热门文章和评论 |
-| RSS / Atom | 任意 RSS 源，兼容主流订阅格式 |
-| Reddit | 按 subreddit 聚合，支持多社区 |
-| Telegram | 频道消息监控 |
-| Twitter/X | 推文抓取和分析 |
-| GitHub | Trending 仓库和开发者动态 |
-| OpenBB | 金融新闻和市场动态 |
+| Source | What It Does |
+|--------|-------------|
+| Hacker News | Tech community headlines, auto-fetch top stories and comments |
+| RSS / Atom | Any RSS feed, compatible with all standard formats |
+| Reddit | Subreddit posts + user activity |
+| Telegram | Public channel monitoring |
+| Twitter/X | Tweet fetching and analysis |
+| GitHub | Trending repos and developer activity |
+| OpenBB | Financial news and market dynamics |
 
-### AI 能力
+### AI Capabilities
 
-- **评分系统**：使用 Claude / GPT / Gemini / DeepSeek / Ollama 等模型，为每条内容打 0-10 分
-- **新闻去重**：跨平台识别相同故事，合并为一条
-- **内容丰富**：为陌生概念自动补充背景知识
-- **社区讨论**：收集 HN / Reddit 等平台的评论摘要
+- **Scoring System**: Uses Claude / GPT / Gemini / DeepSeek / Ollama to score each item 0-10
+- **News Deduplication**: Cross-platform detection of duplicate stories, merged into one
+- **Content Enrichment**: Auto-supplements background knowledge for unfamiliar concepts
+- **Community Discussion**: Collects and summarizes comments from HN, Reddit, etc.
 
-### 输出方式
+### Output Channels
 
-- GitHub Pages 静态站点
-- 邮件订阅
-- 飞书 / 钉钉 / Slack / Discord Webhook
-- MCP Server（可接入其他 AI 工具）
+- GitHub Pages static site
+- Email subscription
+- Feishu / DingTalk / Slack / Discord Webhook
+- MCP Server (integrate with other AI tools)
 
-## 快速开始
+## Quick Start
 
-### 方式一：Docker Compose 部署（推荐）
+### Option 1: Docker Compose (Recommended)
 
-创建 `docker-compose.yml`：
+Create `docker-compose.yml`:
 
 ```yaml
 services:
@@ -72,106 +72,101 @@ services:
       - ./data:/app/data
     environment:
       - TZ=Asia/Shanghai
-    restart: unless-stopped
 ```
 
-配置文件 `data/config.json`（最小配置）：
+Create `data/config.json` (minimal config):
 
 ```json
 {
-  "sources": [
-    { "type": "hackernews", "enabled": true },
-    { "type": "rss", "enabled": true, "feeds": ["https://example.com/feed.xml"] }
-  ],
   "ai": {
     "provider": "openai",
-    "api_key": "${AI_API_KEY}",
-    "model": "gpt-4o-mini"
+    "model": "gpt-4o-mini",
+    "api_key_env": "OPENAI_API_KEY"
   },
-  "output": [
-    { "type": "github_pages", "enabled": true }
-  ]
+  "sources": {
+    "rss": [
+      {
+        "name": "Simon Willison",
+        "url": "https://simonwillison.net/atom/everything/"
+      }
+    ]
+  },
+  "filtering": {
+    "ai_score_threshold": 6.0
+  }
 }
 ```
 
-启动：
+Run:
 
 ```bash
-# 创建目录
-mkdir -p data
+# Set API Key
+export OPENAI_API_KEY="sk-your-key-here"
 
-# 设置 API Key
-export AI_API_KEY="sk-your-key-here"
-
-# 启动
+# Start
 docker compose run --rm horizon
 
-# 查看日志
-docker compose logs -f
+# Verify daily briefing generated
+ls data/summaries/
 ```
 
-### 方式二：本地运行
+### Option 2: Local Installation
 
 ```bash
-# 克隆仓库
 git clone https://github.com/Thysrael/Horizon.git
 cd Horizon
 
-# 安装依赖（推荐使用 uv）
+# Install dependencies (uv recommended)
 uv sync
 
-# 配置
-cp config.example.json data/config.json
-# 编辑 config.json
+# Configure
+cp data/config.example.json data/config.json
 
-# 运行
+# Run
 uv run horizon
 ```
 
-## 进阶配置
+## Advanced Configuration
 
-### 配置向导
+### Setup Wizard
 
-Horizon 内置配置向导，根据你的兴趣自动生成配置：
+Horizon has a built-in wizard that generates config based on your interests:
 
 ```bash
 uv run horizon-wizard
 ```
 
-向导会询问你感兴趣的话题领域（如 AI、Web 开发、DevOps），然后自动推荐相关的信息源和关键词。
+The wizard asks about your interest areas (AI, Web Dev, DevOps, etc.) and recommends relevant sources.
 
-### 分类过滤
+### Category Filtering
 
-在 `config.json` 中定义分类规则：
+Define category rules in `config.json`:
 
 ```json
 {
-  "categories": [
-    {
-      "name": "AI/ML",
-      "keywords": ["llm", "gpt", "claude", "machine learning", "neural network"],
-      "min_score": 7
-    },
-    {
-      "name": "Web 开发",
-      "keywords": ["react", "vue", "typescript", "next.js"],
-      "min_score": 6
-    },
-    {
-      "name": "DevOps",
-      "keywords": ["docker", "kubernetes", "terraform", "ci/cd"],
-      "min_score": 5
-    }
-  ]
+  "filtering": {
+    "categories": [
+      {
+        "name": "AI/ML",
+        "keywords": ["llm", "gpt", "claude", "machine learning"],
+        "min_score": 7
+      },
+      {
+        "name": "Web Dev",
+        "keywords": ["react", "vue", "typescript", "next.js"],
+        "min_score": 6
+      }
+    ]
+  }
 }
 ```
 
-### 自定义模型
+### Custom AI Models
 
-支持所有 OpenAI 兼容 API，可以接入各种 LLM：
+Supports all OpenAI-compatible APIs — connect any LLM:
 
 ```json
-// Ollama 本地模型
+// Ollama (local, free)
 {
   "ai": {
     "provider": "ollama",
@@ -179,43 +174,39 @@ uv run horizon-wizard
     "model": "llama3.1"
   }
 }
-```
 
-```json
-// DeepSeek API
+// DeepSeek
 {
   "ai": {
     "provider": "openai",
     "base_url": "https://api.deepseek.com",
-    "api_key": "${DEEPSEEK_API_KEY}",
+    "api_key_env": "DEEPSEEK_API_KEY",
     "model": "deepseek-chat"
   }
 }
-```
 
-```json
 // Anthropic Claude
 {
   "ai": {
     "provider": "anthropic",
-    "api_key": "${ANTHROPIC_API_KEY}",
+    "api_key_env": "ANTHROPIC_API_KEY",
     "model": "claude-sonnet-4-20250514"
   }
 }
 ```
 
-## 自动化部署
+## Automation
 
-### GitHub Actions 定时任务
+### GitHub Actions Cron Job
 
-在仓库根目录创建 `.github/workflows/daily.yml`：
+Create `.github/workflows/daily.yml`:
 
 ```yaml
 name: Daily News
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # 每天 UTC 8:00（北京时间 16:00）
+    - cron: "0 8 * * *"  # UTC 8:00 (Beijing 16:00)
   workflow_dispatch:
 
 jobs:
@@ -225,8 +216,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Horizon
-        run: |
-          docker compose run --rm horizon
+        run: docker compose run --rm horizon
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -235,22 +225,20 @@ jobs:
           publish_dir: ./data/summaries
 ```
 
-### Crontab 方式
-
-如果使用自己的服务器，直接用 crontab：
+### Crontab
 
 ```bash
-# 每天下午 4 点运行
+# Run daily at 4 PM
 0 16 * * * cd /opt/horizon && docker compose run --rm horizon
 ```
 
-## 与其他自部署工具的组合
+## Tool Combinations
 
-Horizon 可以与你已有的自部署生态协同工作：
+Horizon integrates with your existing self-hosted stack:
 
-### 与 Ollama 配合
+### With Ollama
 
-用本地 Ollama 运行 AI 评分，完全离线，无 API 费用：
+Run AI scoring locally with zero API costs:
 
 ```json
 {
@@ -262,45 +250,45 @@ Horizon 可以与你已有的自部署生态协同工作：
 }
 ```
 
-如果你还没搭建 Ollama，参考博客中的 [Ollama + Open WebUI 本地 AI 全家桶](/zh-cn/blog/ollama-openwebui-guide)。
+See [Ollama + Open WebUI Guide](/zh-cn/blog/ollama-openwebui-guide) for setup details.
 
-### 与 n8n 配合
+### With n8n
 
-用 n8n 编排更复杂的信息流：Horizon 生成日报 → n8n 解析 → 自动发送到飞书群 / Notion / 数据库。
+Orchestrate complex info flows: Horizon generates briefing → n8n parses → auto-send to Feishu / Notion / database.
 
-参考 [n8n 完全指南](/zh-cn/blog/n8n-guide) 了解工作流编排细节。
+See [n8n Complete Guide](/zh-cn/blog/n8n-guide) for workflow orchestration.
 
-### 与 Uptime Kuma 配合
+### With Uptime Kuma
 
-监控 Horizon 的运行状态，确保日报每天准时生成：
+Monitor Horizon's health to ensure daily briefings generate on time:
 
 ```yaml
-# Uptime Kuma 监控配置
+# Uptime Kuma monitoring config
 - type: HTTP(S)
-  url: http://horizon.local:8080/health  # 具体端点请参考 Horizon 文档
+  url: http://horizon.local:8080/health  # Check Horizon docs for actual endpoint
   interval: 300
 ```
 
-参考 [Uptime Kuma 自部署指南](/zh-cn/blog/uptime-kuma-guide) 搭建监控。
+See [Uptime Kuma Self-Hosted Guide](/zh-cn/blog/uptime-kuma-guide).
 
-## 总结
+## Summary
 
-Horizon 解决的是信息过载问题：用 AI 替代人工筛选，让每天的信息获取从"刷 100 条"变成"读 10 条精选"。
+Horizon solves information overload: replace manual filtering with AI, turning "scroll through 100 posts" into "read 10 curated highlights."
 
-### 快速行动清单
+### Quick Action Checklist
 
-1. **选择部署方式**：Docker Compose（推荐）或本地运行
-2. **配置信息源**：至少添加 Hacker News + 1 个 RSS 源
-3. **设置 AI 模型**：OpenAI / Claude / 本地 Ollama 任选
-4. **配置输出渠道**：GitHub Pages 或邮件订阅
-5. **设置定时任务**：GitHub Actions 或 crontab，每天自动生成
+1. **Choose deployment**: Docker Compose (recommended) or local
+2. **Configure sources**: At least Hacker News + 1 RSS feed
+3. **Set AI model**: OpenAI / Claude / local Ollama
+4. **Configure output**: GitHub Pages or email subscription
+5. **Set up cron**: GitHub Actions or crontab for daily auto-generation
 
-整个过程 10-15 分钟，之后每天打开邮箱或网页就能看到 AI 帮你筛选的新闻日报。
+Takes 10-15 minutes. After that, open your inbox or browser each day to see AI-curated news.
 
 ---
 
-**相关文章**：
+**Related Articles**:
 
-- [Ollama + Open WebUI 本地 AI 全家桶](/zh-cn/blog/ollama-openwebui-guide) — 用本地 LLM 替代 API，零成本运行 AI
-- [n8n 完全指南](/zh-cn/blog/n8n-guide) — 可视化工作流编排，串联各个自部署服务
-- [Uptime Kuma 自部署指南](/zh-cn/blog/uptime-kuma-guide) — 监控你的自托管服务健康状态
+- [Ollama + Open WebUI Local AI Stack](/zh-cn/blog/ollama-openwebui-guide) — Run AI locally with zero API costs
+- [n8n Complete Guide](/zh-cn/blog/n8n-guide) — Visual workflow orchestration
+- [Uptime Kuma Self-Hosted Guide](/zh-cn/blog/uptime-kuma-guide) — Monitor your self-hosted services
