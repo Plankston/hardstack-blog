@@ -12,7 +12,6 @@
 - 📝 **MDX blog posts** with structured frontmatter (tags, category, difficulty, reading time)
 - 🔍 **Full-text search** powered by [Pagefind](https://pagefind.app/)
 - 📡 **RSS feed** & **Sitemap**
-- 💬 **Comment system** via [Giscus](https://giscus.app/)
 - 🎨 **Tailwind CSS 4** styling with custom typography (Atkinson font)
 - ✨ **Shiki** syntax highlighting (GitHub Light theme)
 - 🚀 **Static site generation** via [Astro](https://astro.build)

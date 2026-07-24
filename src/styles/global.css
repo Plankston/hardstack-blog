@@ -255,27 +255,7 @@ hr {
 }
 
 /* ═══════════════════════════════════════════════
-   COMMENT SECTION
-   ═══════════════════════════════════════════════ */
-.comment-divider {
-  max-width: var(--prose-max-w);
-  margin: 0 auto;
-  border: none;
-  border-top: 1px solid var(--border-color);
-}
-
-.comment-section {
-  max-width: var(--prose-max-w);
-  margin: 0 auto;
-  padding: 2rem 0;
-}
-
-.giscus-wrapper {
-  width: 100%;
-}
-.giscus-wrapper iframe {
-  width: 100% !important;
-}
+   HERO — Technical Light
 
 /* ═══════════════════════════════════════════════
    HERO — Technical Light
