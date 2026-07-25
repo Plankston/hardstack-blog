@@ -4,33 +4,21 @@ import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
 import FormattedDate from './FormattedDate.astro';
 import Header from './Header.astro';
-import { useTranslations, type Locale } from '../i18n/ui';
-import { getSlug, categoryPillClass, categoryLabel, getLocalePath } from '../i18n/utils';
-
-interface Props {
-  locale: Locale;
-}
-
-const { locale } = Astro.props;
-const t = useTranslations(locale);
+import { getSlug, categoryPillClass, categoryLabel } from '../i18n/utils';
 
 const posts = (await getCollection('blog'))
-  .filter((p) => {
-    const lang = p.data.postLang || 'en';
-    return lang === locale || lang === 'bilingual';
-  })
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <!doctype html>
-<html lang={t('site.lang')} dir="ltr">
+<html lang="zh-CN" dir="ltr">
   <head>
-    <BaseHead title={t('blog.allPosts')} description={t('blog.description')} locale={locale} />
+    <BaseHead title="全部文章 — 深度开源项目安装教程与踩坑记录" description="详细的开源项目安装教程、对比评测与真实踩坑记录，覆盖 Jellyfin、n8n、Home Assistant 等自托管与 AI 工具。" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: t('blog.allPosts'),
-      description: t('blog.description'),
+      name: '全部文章 — 深度开源项目安装教程与踩坑记录',
+      description: '详细的开源项目安装教程、对比评测与真实踩坑记录，覆盖 Jellyfin、n8n、Home Assistant 等自托管与 AI 工具。',
       url: `https://hardstack.org${Astro.url.pathname}`,
       isPartOf: {
         '@type': 'WebSite',
@@ -41,15 +29,15 @@ const posts = (await getCollection('blog'))
   </head>
   <body>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
-      {t('skipToContent')}
+      跳到主要内容
     </a>
-    <Header locale={locale} />
+    <Header />
     <main id="main-content">
       <section class="section-inner">
         <div style="max-width:960px;margin:0 auto;">
-          <h1 class="font-['Instrument_Serif'] text-3xl text-[var(--text-heading)]" style="font-weight:400">{t('blog.allPosts')}</h1>
+          <h1 class="font-['Instrument_Serif'] text-3xl text-[var(--text-heading)]" style="font-weight:400">全部文章 — 深度开源项目安装教程与踩坑记录</h1>
           <p class="mt-2 text-sm text-[var(--text-muted)]">
-            {locale === 'zh-CN' ? `共 ${posts.length} 篇文章` : `${posts.length} articles total`}
+            共 {posts.length} 篇文章
           </p>
         </div>
       </section>
@@ -60,7 +48,7 @@ const posts = (await getCollection('blog'))
             <div class="article-list" id="archive-list">
               {posts.map((post, i) => (
                 <a
-                  href={new URL(getLocalePath(locale, `/blog/${getSlug(post)}/`), Astro.site).pathname}
+                  href={new URL(`/blog/${getSlug(post)}/`, Astro.site).pathname}
                   class="article-card reveal"
                   style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
                 >
@@ -68,7 +56,7 @@ const posts = (await getCollection('blog'))
                   <div class="article-card-content">
                     <div class="article-card-meta">
                       <span class="article-card-date">
-                        <FormattedDate date={post.data.pubDate} locale={locale} />
+                        <FormattedDate date={post.data.pubDate} />
                       </span>
                       {post.data.category && (
                         <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
@@ -96,13 +84,13 @@ const posts = (await getCollection('blog'))
             </div>
           ) : (
             <div class="py-16 text-center text-[var(--text-faint)]">
-              <p class="font-serif text-lg italic">{t('blog.archiveEmpty')}</p>
+              <p class="font-serif text-lg italic">暂无文章。</p>
             </div>
           )}
         </div>
       </section>
     </main>
-    <Footer locale={locale} />
+    <Footer />
   </body>
 </html>
 

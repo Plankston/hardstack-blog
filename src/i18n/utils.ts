@@ -1,8 +1,3 @@
-export function getLocalePath(locale: string, path: string): string {
-  if (locale === 'en') return path;
-  return `/${locale}${path}`;
-}
-
 export function getSlug(post: { id: string; data: { groupKey?: string } }): string {
   return post.data.groupKey || post.id.replace(/-(en_US|zh_CN)$/, '');
 }
@@ -16,22 +11,21 @@ export function categoryPillClass(cat: string | undefined): string {
   return 'category-pill-default';
 }
 
-export function categoryLabel(cat: string | undefined, fallback = 'Uncategorized'): string {
+export function categoryLabel(cat: string | undefined, fallback = '未分类'): string {
   if (!cat) return fallback;
   return cat.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export function findRelatedPosts(
-  current: { id: string; data: { groupKey?: string; tags?: string[]; category?: string; postLang?: string } },
-  allPosts: Array<{ id: string; data: { groupKey?: string; tags?: string[]; category?: string; postLang?: string; title?: string; description?: string; pubDate?: Date; difficulty?: string; timeToRead?: number } }>,
+  current: { id: string; data: { groupKey?: string; tags?: string[]; category?: string } },
+  allPosts: Array<{ id: string; data: { groupKey?: string; tags?: string[]; category?: string; title?: string; description?: string; pubDate?: Date; difficulty?: string; timeToRead?: number } }>,
   limit = 3,
 ) {
-  const locale = current.data.postLang || 'en';
   const currentSlug = getSlug(current);
   const currentTags = new Set(current.data.tags || []);
 
   return allPosts
-    .filter(p => (p.data.postLang || 'en') === locale && getSlug(p) !== currentSlug)
+    .filter(p => getSlug(p) !== currentSlug)
     .map(p => {
       let score = 0;
       if (p.data.category && p.data.category === current.data.category) score += 3;

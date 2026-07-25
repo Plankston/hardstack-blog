@@ -13,7 +13,7 @@ const blog = defineCollection({
     category: z.string().optional(),
     difficulty: z.string().optional(),
     timeToRead: z.number().optional(),
-    postLang: z.string().default('en'),
+    articleType: z.string().optional(),
     groupKey: z.string().optional(),
     template: z.enum(['paper', 'clean', 'dark']).default('paper'),
   }),

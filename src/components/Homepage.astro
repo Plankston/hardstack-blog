@@ -4,18 +4,9 @@ import BaseHead from './BaseHead.astro';
 import Footer from './Footer.astro';
 import Header from './Header.astro';
 import FormattedDate from './FormattedDate.astro';
-import { useTranslations, type Locale } from '../i18n/ui';
-import { getSlug, categoryPillClass, categoryLabel, getLocalePath } from '../i18n/utils';
-
-interface Props {
-  locale: Locale;
-}
-
-const { locale } = Astro.props;
-const t = useTranslations(locale);
+import { getSlug, categoryPillClass, categoryLabel } from '../i18n/utils';
 
 const posts = (await getCollection('blog'))
-  .filter((p) => (p.data.postLang || 'en') === locale)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
 const categories = new Set(posts.filter(p => p.data.category).map(p => p.data.category!.toLowerCase().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())));
@@ -24,9 +15,9 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
 ---
 
 <!doctype html>
-<html lang={t('site.lang')} dir="ltr">
+<html lang="zh-CN" dir="ltr">
   <head>
-    <BaseHead title={t('site.title')} description={t('home.title')} locale={locale} siteTitle />
+    <BaseHead title="HardStack" description="深度开源项目安装教程、横向对比与真实踩坑记录" siteTitle />
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Organization',
@@ -44,26 +35,25 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
   </head>
   <body>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
-      {t('skipToContent')}
+      跳到主要内容
     </a>
-    <Header locale={locale} />
+    <Header />
     <main id="main-content">
 
-      <!-- HERO -->
       <section class="section-inner">
         <div class="hero-grid">
           <div>
             <p class="hero-eyebrow">
-              {t('site.title').toLowerCase()} ~/blog
+              hardstack ~/blog
             </p>
             <h1 class="hero-heading mb-5">
-              {t('site.title')}
+              HardStack
             </h1>
             <p class="mb-8 max-w-[480px] text-[1.05rem] leading-relaxed text-[var(--text-muted)]">
-              {t('home.hero')}
+              深度开源项目安装教程、横向对比与真实踩坑记录
             </p>
             <a href="#article-list" class="hero-cta">
-              {t('home.readLatest')} →
+              阅读最新文章 →
             </a>
           </div>
 
@@ -73,14 +63,13 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
                 <span class="terminal-dot terminal-dot-red"></span>
                 <span class="terminal-dot terminal-dot-yellow"></span>
                 <span class="terminal-dot terminal-dot-green"></span>
-                <span class="terminal-title">{t('site.title').toLowerCase()} — stats</span>
+                <span class="terminal-title">hardstack — stats</span>
               </div>
               <div class="terminal-body">
                 <span class="label">$</span> <span class="highlight">cat</span> blog.stats<br />
                 <span class="label">articles:</span> <span class="value">{posts.length}</span><br />
                 <span class="label">categories:</span> <span class="value-warm">{categories.size}</span><br />
                 <span class="label">avg_read:</span> <span class="value">~{avgReadTime} min</span><br />
-                <span class="label">languages:</span> <span class="value-warm">EN, 中文</span><br />
                 <span class="label">status:</span> <span class="value">active</span>
               </div>
             </div>
@@ -88,15 +77,14 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
         </div>
       </section>
 
-      <!-- ALL POSTS -->
       <section class="section-inner pt-0" id="article-list">
         <div class="section-header">
           <h2 class="section-title">
-            // {t('home.latestArticles')}
+            // 全部文章
           </h2>
           {posts.length > 0 && (
-            <a href={getLocalePath(locale, '/blog/')} class="section-link">
-              {t('home.viewAll')} →
+            <a href="/blog/" class="section-link">
+              查看全部 →
             </a>
           )}
         </div>
@@ -105,7 +93,7 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
           <div class="article-list" id="article-list-items">
             {posts.map((post, i) => (
               <a
-                href={new URL(getLocalePath(locale, `/blog/${getSlug(post) || ''}/`), Astro.site).pathname}
+                href={new URL(`/blog/${getSlug(post) || ''}/`, Astro.site).pathname}
                 class="article-card reveal"
                 style={`transition-delay: ${i * 60}ms; animation-delay: ${i * 60}ms`}
               >
@@ -113,7 +101,7 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
                 <div class="article-card-content">
                   <div class="article-card-meta">
                     <span class="article-card-date">
-                      <FormattedDate date={post.data.pubDate} locale={locale} />
+                      <FormattedDate date={post.data.pubDate} />
                     </span>
                     {post.data.category && (
                       <span class={`${categoryPillClass(post.data.category)} article-card-category`}>
@@ -145,17 +133,17 @@ const avgReadTime = posts.length > 0 ? Math.round(totalReadTime / posts.length) 
         ) : (
           <div class="py-16 text-center text-[var(--text-faint)]">
             <p class="font-serif text-lg italic">
-              {t('home.emptyTitle')}
+              文章即将推出…
             </p>
             <p class="mt-2 text-sm">
-              {t('home.emptyDesc')}
+              第一期正在制作中。
             </p>
           </div>
         )}
       </section>
 
     </main>
-    <Footer locale={locale} />
+    <Footer />
   </body>
 </html>
 

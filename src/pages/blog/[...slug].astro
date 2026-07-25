@@ -8,8 +8,6 @@ export async function getStaticPaths() {
   const paths = [];
 
   for (const post of posts) {
-    const locale = post.data.postLang || 'en';
-    if (locale !== 'en' && locale !== 'bilingual') continue;
     const slug = getSlug(post);
     paths.push({
       params: { slug },
@@ -24,21 +22,19 @@ type Props = {
   post: any;
 };
 
-const currentLocale = 'en';
 const post = Astro.props.post;
 const { Content } = await render(post);
 const slug = getSlug(post);
 const allPosts = await getCollection('blog');
 const related = findRelatedPosts(post, allPosts);
 
-// Count words: CJK characters count as 1 word each, spaces separate English words
 const body = post.body || '';
 const cjkChars = (body.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
 const englishWords = body.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '').split(/\s+/).filter(Boolean).length;
 const wordCount = cjkChars + englishWords;
 ---
 
-<BlogPost {...post.data} locale={currentLocale} template={post.data.template} slug={slug} wordCount={wordCount} relatedPosts={related}>
+<BlogPost {...post.data} template={post.data.template} slug={slug} wordCount={wordCount} relatedPosts={related}>
   <Content />
 </BlogPost>
 

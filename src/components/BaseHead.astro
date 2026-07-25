@@ -1,38 +1,26 @@
 ---
-import '../styles/global.css';
-import type { ImageMetadata } from 'astro';
-import FallbackImage from '../assets/blog-placeholder-1.jpg';
-
 interface Props {
   title: string;
   description: string;
   image?: ImageMetadata;
-  locale?: string;
   ogImage?: string;
   robots?: string;
   googleVerification?: string;
   siteTitle?: boolean;
 }
 
+import '../styles/global.css';
+import type { ImageMetadata } from 'astro';
+import FallbackImage from '../assets/blog-placeholder-1.jpg';
+
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const { title, description, image = FallbackImage, locale = 'en', ogImage, robots = 'index, follow', googleVerification = '0VB6qkrzvHIH21RuCHpkLnJdO1-234YfRUA_j6YNOHk', siteTitle } = Astro.props;
+const { title, description, image = FallbackImage, ogImage, robots = 'index, follow', googleVerification = '0VB6qkrzvHIH21RuCHpkLnJdO1-234YfRUA_j6YNOHk', siteTitle } = Astro.props;
 
 const SITE_TITLE = 'HardStack';
-const SITE_URL = 'https://hardstack.org';
 
-// Generate OG Image URL
 const ogImageUrl = ogImage 
   ? new URL(ogImage, Astro.site).href
   : new URL(image.src, Astro.url).href;
-// Build hreflang alternate URLs
-function hreflangUrl(lang: string): string {
-  const path = Astro.url.pathname;
-  const cleanPath = path.replace(/^\/(en|zh-CN)/, '') || '/';
-  if (lang === 'en') {
-    return `${SITE_URL}${cleanPath}`;
-  }
-  return `${SITE_URL}/${lang}${cleanPath}`;
-}
 ---
 
 <meta charset="utf-8" />
@@ -40,25 +28,16 @@ function hreflangUrl(lang: string): string {
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" href="/favicon.ico" />
 <link rel="sitemap" href="/sitemap-index.xml" />
-<link rel="alternate" type="application/rss+xml" title={`${SITE_TITLE} (EN)`} href={new URL('rss.xml', Astro.site)} />
-<link rel="alternate" type="application/rss+xml" title={`${SITE_TITLE} (中文)`} href={new URL('zh-CN/rss.xml', Astro.site)} />
+<link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={new URL('rss.xml', Astro.site)} />
 <meta name="generator" content={Astro.generator} />
 
-<!-- Preconnects for third-party services -->
 <link rel="preconnect" href="https://avatars.githubusercontent.com" />
-
-<!-- Preconnect Google Fonts for v2 design -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" as="style" />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
 
 <link rel="canonical" href={canonicalURL} />
-
-<!-- hreflang for bilingual SEO -->
-<link rel="alternate" hreflang="en" href={hreflangUrl('en')} />
-<link rel="alternate" hreflang="zh-CN" href={hreflangUrl('zh-CN')} />
-<link rel="alternate" hreflang="x-default" href={hreflangUrl('en')} />
 
 <title>{siteTitle ? title : `${title} — ${SITE_TITLE}`}</title>
 <meta name="title" content={title} />
@@ -71,11 +50,10 @@ function hreflangUrl(lang: string): string {
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:image" content={ogImageUrl} />
-<meta property="og:locale" content={locale === 'zh-CN' ? 'zh_CN' : 'en_US'} />
+<meta property="og:locale" content="zh_CN" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content={Astro.url} />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImageUrl} />
-

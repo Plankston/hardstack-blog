@@ -3,7 +3,6 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
-import { useTranslations } from '../i18n/ui';
 
 interface Props {
   title: string;
@@ -13,7 +12,6 @@ interface Props {
   category?: string;
   difficulty?: string;
   timeToRead?: number;
-  locale: string;
   template?: 'paper' | 'clean' | 'dark';
   slug?: string;
   wordCount?: number;
@@ -36,15 +34,12 @@ const {
   category,
   difficulty,
   timeToRead,
-  locale,
   template = 'paper',
   slug,
   wordCount,
   relatedPosts = [],
 } = Astro.props;
-const t = useTranslations(locale);
 
-// Generate JSON-LD structured data for BlogPosting schema
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -70,28 +65,26 @@ const jsonLd = {
     '@type': 'WebPage',
     '@id': `https://hardstack.org${Astro.url.pathname}`,
   },
-  inLanguage: locale === 'zh-CN' ? 'zh-CN' : 'en',
+  inLanguage: 'zh-CN',
   keywords: category ? [category] : [],
   timeRequired: timeToRead ? `PT${timeToRead}M` : undefined,
   wordCount: wordCount || undefined,
   image: slug ? `https://hardstack.org/og/${slug}.webp` : undefined,
 };
 
-// Template display names
 const templateLabel: Record<string, string> = {
-  paper: locale === 'zh-CN' ? '文章' : 'Editorial',
-  clean: locale === 'zh-CN' ? '墨水屏' : 'E-Ink',
-  dark: locale === 'zh-CN' ? '代码' : 'Code',
+  paper: '文章',
+  clean: '墨水屏',
+  dark: '代码',
 };
 ---
 
 <!doctype html>
-<html lang={t('site.lang')} dir="ltr">
+<html lang="zh-CN" dir="ltr">
   <head>
     <BaseHead 
       title={title} 
       description={description} 
-      locale={locale} 
       ogImage={slug ? `/og/${slug}.webp` : undefined}
     />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
@@ -102,14 +95,14 @@ const templateLabel: Record<string, string> = {
         {
           '@type': 'ListItem',
           position: 1,
-          name: 'Home',
-          item: locale === 'zh-CN' ? 'https://hardstack.org/zh-CN/' : 'https://hardstack.org/',
+          name: '首页',
+          item: 'https://hardstack.org/',
         },
         {
           '@type': 'ListItem',
           position: 2,
-          name: 'Blog',
-          item: locale === 'zh-CN' ? 'https://hardstack.org/zh-CN/blog/' : 'https://hardstack.org/blog/',
+          name: '博客',
+          item: 'https://hardstack.org/blog/',
         },
         {
           '@type': 'ListItem',
@@ -122,25 +115,22 @@ const templateLabel: Record<string, string> = {
   <body data-template={template}>
     <div id="reading-progress" class="reading-progress"></div>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-[var(--bg-card)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--text-body)] focus:shadow-lg focus:outline-none">
-      {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
+      跳到主要内容
     </a>
-    <Header locale={locale} />
+    <Header />
     <main id="main-content">
       <article>
-        <!-- Article header -->
         <div style="background:var(--bg-header)">
           <div class="section-inner">
             <header class="mx-auto" style="max-width:var(--prose-max-w)">
-              <!-- Post meta -->
               <div class="post-meta mb-3 flex flex-wrap items-center gap-x-2">
-                <span>{t('blog.postedOn')} <FormattedDate date={pubDate} locale={locale} /></span>
+                <span>发布于 <FormattedDate date={pubDate} /></span>
                 {updatedDate && (
-                  <span>· {t('blog.updatedOn')} <FormattedDate date={updatedDate} locale={locale} /></span>
+                  <span>· 更新于 <FormattedDate date={updatedDate} /></span>
                 )}
                 {category && <span class="inline-flex items-center rounded-full bg-[var(--color-accent-ui)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-accent-ui)]">{category}</span>}
                 {difficulty && <span class="text-[var(--text-faint)]">[{difficulty}]</span>}
-                {timeToRead && <span>· {timeToRead} {t('blog.minRead')}</span>}
-                <!-- Template badge -->
+                {timeToRead && <span>· {timeToRead} 分钟阅读</span>}
                 <span class="ml-auto inline-flex items-center rounded-full border border-[var(--border-color)] px-2.5 py-0.5 text-xs text-[var(--text-faint)]">
                   {templateLabel[template]}
                 </span>
@@ -155,25 +145,23 @@ const templateLabel: Record<string, string> = {
           </div>
         </div>
 
-        <!-- Article body -->
         <div class="section-inner">
           <div class="prose">
             <slot />
           </div>
 
-          <!-- Related posts -->
           {relatedPosts.length > 0 && (
             <div class="related-posts" style="max-width:var(--prose-max-w);margin:3rem auto 0">
               <h3 class="related-posts-title">
-                {locale === 'zh-CN' ? '相关文章' : 'Related Articles'}
+                相关文章
               </h3>
               <div class="related-posts-grid">
                 {relatedPosts.map((rp) => (
-                  <a href={locale === 'zh-CN' ? `/zh-CN/blog/${rp.slug}/` : `/blog/${rp.slug}/`} class="related-post-card">
-                    <span class="related-post-category">{rp.category || (locale === 'zh-CN' ? '未分类' : 'Uncategorized')}</span>
+                  <a href={`/blog/${rp.slug}/`} class="related-post-card">
+                    <span class="related-post-category">{rp.category || '未分类'}</span>
                     <span class="related-post-title">{rp.title}</span>
                     <span class="related-post-meta">
-                      {rp.timeToRead && `${rp.timeToRead} ${locale === 'zh-CN' ? '分钟' : 'min'}`}
+                      {rp.timeToRead && `${rp.timeToRead} 分钟`}
                     </span>
                   </a>
                 ))}
@@ -181,17 +169,14 @@ const templateLabel: Record<string, string> = {
             </div>
           )}
 
-          <!-- Template metadata footer -->
           <div style="max-width:var(--prose-max-w);margin:2rem auto 0;text-align:center;font-size:0.75rem;color:var(--text-faint)">
-            {locale === 'zh-CN'
-              ? `阅读模式: ${templateLabel[template]}`
-              : `Reading mode: ${templateLabel[template]}`}
+            阅读模式: {templateLabel[template]}
           </div>
         </div>
         </article>
 
     </main>
-    <Footer locale={locale} />
+    <Footer />
 
     <script is:inline>
       document.addEventListener('DOMContentLoaded', () => {
@@ -217,7 +202,6 @@ const templateLabel: Record<string, string> = {
         });
       });
 
-      // Reading progress bar
       const bar = document.getElementById('reading-progress');
       if (bar) {
         const update = () => {
