@@ -1,6 +1,6 @@
 ---
 name: HardStack
-description: A bilingual technical blog about open-source, self-hosted, and AI tools
+description: A Chinese-first technical blog about open-source, self-hosted, and AI tools
 colors:
   primary: "#5B8C5A"
   primary-warm: "#C47A5A"
@@ -52,7 +52,7 @@ This system explicitly rejects: generic tech-blog clutter, AI-generated design t
 
 **Key Characteristics:**
 - Text-first, chrome-second. Margins and white space are the primary design material.
-- Bilingual by construction — English and Chinese CJC glyphs coexist in the same layout without friction.
+- 中文优先 — 中文 CJC 字形排版优先，英文内容兼容但不作为主要方向。
 - Two accent colors used sparingly: matcha green for primary actions, terracotta for category differentiation.
 - Terminal-inspired UI elements (stats card, numbered lists, monospace labels) signal technical depth.
 - Warm neutrals that feel like a craft workshop, not a coffee shop.
