@@ -13,12 +13,12 @@ const posts = (await getCollection('blog'))
 <!doctype html>
 <html lang="zh-CN" dir="ltr">
   <head>
-    <BaseHead title="全部文章 — 深度开源项目安装教程与踩坑记录" description="详细的开源项目安装教程、对比评测与真实踩坑记录，覆盖 Jellyfin、n8n、Home Assistant 等自托管与 AI 工具。" />
+    <BaseHead title="全部文章 — HardStack 开源项目教程" description="覆盖 Jellyfin、n8n、Home Assistant、Ollama 等热门开源项目的深度安装教程、横向对比与真实踩坑记录。" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: '全部文章 — 深度开源项目安装教程与踩坑记录',
-      description: '详细的开源项目安装教程、对比评测与真实踩坑记录，覆盖 Jellyfin、n8n、Home Assistant 等自托管与 AI 工具。',
+      name: '全部文章 — HardStack 开源项目教程',
+      description: '覆盖 Jellyfin、n8n、Home Assistant、Ollama 等热门开源项目的深度安装教程、横向对比与真实踩坑记录。',
       url: `https://hardstack.org${Astro.url.pathname}`,
       isPartOf: {
         '@type': 'WebSite',
@@ -35,7 +35,7 @@ const posts = (await getCollection('blog'))
     <main id="main-content">
       <section class="section-inner">
         <div style="max-width:960px;margin:0 auto;">
-          <h1 class="font-['Instrument_Serif'] text-3xl text-[var(--text-heading)]" style="font-weight:400">全部文章 — 深度开源项目安装教程与踩坑记录</h1>
+          <h1 class="font-['Instrument_Serif'] text-3xl text-[var(--text-heading)]" style="font-weight:400">全部文章 — HardStack 开源项目教程</h1>
           <p class="mt-2 text-sm text-[var(--text-muted)]">
             共 {posts.length} 篇文章
           </p>
