@@ -2,7 +2,7 @@ import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 
 const SITE_TITLE = 'HardStack';
-const SITE_DESCRIPTION = '覆盖 Jellyfin、n8n、Home Assistant、Ollama 等热门开源项目的深度安装教程、横向对比与真实踩坑记录';
+const SITE_DESCRIPTION = '自托管与开源工具的深度实践指南——从部署到调优，用真实踩坑记录帮你建起自己的数字基础设施';
 
 export async function GET(context) {
   const posts = await getCollection('blog');
