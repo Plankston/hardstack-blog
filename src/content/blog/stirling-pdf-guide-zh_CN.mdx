@@ -1,0 +1,288 @@
+---
+title: "别再用在线 PDF 工具了：Stirling-PDF 自部署"
+description: "87k Stars 的全能 PDF 工具，Docker 一键部署，50+ 功能，数据不出你的服务器。告别 iLovePDF、Smallpdf，告别隐私焦虑。"
+pubDate: 2026-07-24
+tags: ["stirling-pdf", "pdf", "self-hosted", "docker", "privacy", "tools"]
+category: "效率工具"
+articleType: "installation"
+difficulty: "beginner"
+timeToRead: 18
+postLang: "zh-CN"
+groupKey: "stirling-pdf-guide"
+template: "paper"
+---
+
+## 你还在用在线 PDF 工具？2026 年了，认真的吗？
+
+每次合并 PDF，你都要把文件上传到 iLovePDF 的服务器。每次压缩 PDF，你都要把文件交给 Smallpdf。每次转换格式，你都要把合同、简历、身份证扫描件——上传到别人的服务器。
+
+然后呢？你信任他们的隐私条款？你相信他们不会偷偷备份你的文件？你确定他们的服务器不会被黑？
+
+我之前也是这样。直到有一次，我上传了一份包含身份证号的合同到某个在线工具，然后在另一个网站上看到了类似的文件推荐。巧合？也许是。但那一刻我决定：**PDF 处理这种事，不能再交给别人了。**
+
+**Stirling-PDF** 是一个开源 PDF 处理平台，[GitHub 87.9k Stars](https://github.com/Stirling-Tools/Stirling-PDF)，[官方文档](https://docs.stirlingpdf.com/) 写得不错，遇到问题先翻文档。一句话总结：自托管版 iLovePDF，但更强、更自由、零月费。
+
+## 错误用法倒推正确做法
+
+### 错误 1：用在线工具处理敏感文件
+
+**问题**：iLovePDF、Smallpdf 这些工具确实好用，但你的文件要上传到他们的服务器。隐私条款？那是一堆法律术语，翻译过来就是"我们可能用你的文件"。
+
+**正确做法**：自部署 Stirling-PDF，文件永远不出你的机器。
+
+### 错误 2：装了不用，觉得太复杂
+
+**问题**：很多人一听"自部署"就觉得要配半天，结果还是回去用在线工具。
+
+**正确做法**：Docker 一行命令搞定，5 分钟开始用。本文就是教你怎么做到的。
+
+### 错误 3：只用基础功能，浪费了 80% 的能力
+
+**问题**：Stirling-PDF 有 50+ 功能，大多数人只用合并和压缩。
+
+**正确做法**：看完本文，你会知道它还能 OCR、加水印、批量转换、自动化处理——而且全部免费。
+
+## Stirling-PDF vs 在线工具：一张表说清楚
+
+| 对比项 | iLovePDF | Smallpdf | **Stirling-PDF** |
+|--------|----------|----------|------------------|
+| **价格** | 免费版每天 2 个任务 | $12/月 | **完全免费** |
+| **隐私** | 文件上传到云端 | 文件上传到云端 | **本地处理，不出服务器** |
+| **功能数** | 20+ | 15+ | **50+** |
+| **批量处理** | 付费版 | 付费版 | **免费** |
+| **API** | 付费版 | 付费版 | **免费** |
+| **自托管** | ❌ | ❌ | **✅ Docker 一键部署** |
+| **Stars** | N/A | N/A | **87.9k** |
+
+**结论**：如果你只是偶尔合并两个 PDF，在线工具够用。但如果你经常处理 PDF，或者有敏感文件，Stirling-PDF 是唯一的选择。
+
+## 5 分钟部署
+
+### 前置要求
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+）
+- Docker 已安装
+
+没装 Docker？一行搞定：
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### 最简部署（一行命令）
+
+```bash
+docker run -d \
+  --name stirling-pdf \
+  -p 8080:8080 \
+  -v ./stirling-data:/configs \
+  stirlingtools/stirling-pdf:latest
+```
+
+打开浏览器访问 `http://你的服务器IP:8080`，就能用了。
+
+### Docker Compose 部署（推荐）
+
+```bash
+mkdir -p ~/stirling-pdf && cd ~/stirling-pdf
+```
+
+创建 `docker-compose.yml`：
+
+```yaml
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    ports:
+      - "8080:8080"
+    volumes:
+      # 数据持久化
+      - ./stirling-data/tessdata:/usr/share/tessdata  # OCR 语言文件
+      - ./stirling-data/configs:/configs              # 配置和数据库
+      - ./stirling-data/logs:/logs                    # 日志
+      - ./stirling-data/pipeline:/pipeline            # 自动化流水线
+    environment:
+      # 安全配置
+      - SECURITY_ENABLELOGIN=true
+      - SECURITY_INITIALLOGIN_USERNAME=admin
+      - SECURITY_INITIALLOGIN_PASSWORD=ChangeMe#Strong2026  # ⚠️ 必须修改为强密码
+      # 语言设置
+      - SYSTEM_DEFAULTLOCALE=zh-CN
+    restart: unless-stopped
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+第一次启动需要 1-2 分钟初始化 LibreOffice 和 OCR 引擎。等日志显示 "Started" 就能用了。
+
+### 验证部署成功
+
+```bash
+# 检查容器状态
+docker ps | grep stirling-pdf
+
+# 检查健康接口
+curl -s http://localhost:8080/api/v1/info | head -5
+
+# 查看启动日志
+docker logs stirling-pdf --tail 20
+```
+
+## 踩坑记录
+
+### 坑 1：端口被占用
+
+**现象**：`docker compose up -d` 后容器一直重启。
+
+**原因**：8080 端口被其他服务占用了。
+
+**解决**：
+
+```bash
+# 查看端口占用
+sudo lsof -i :8080
+
+# 改成其他端口
+# 修改 docker-compose.yml 的 ports 部分
+ports:
+  - "9000:8080"
+```
+
+### 坑 2：权限问题
+
+**现象**：容器启动后无法写入配置。
+
+**原因**：挂载目录权限不对。
+
+**解决**：
+
+```bash
+# 创建目录并设置权限
+mkdir -p ~/stirling-pdf/stirling-data
+chmod -R 755 ~/stirling-pdf/stirling-data
+```
+
+### 坑 3：OCR 功能不可用
+
+**现象**：上传扫描件后无法识别文字。
+
+**原因**：没有下载 OCR 语言文件。
+
+**解决**：
+
+```bash
+# 下载中文语言包
+mkdir -p ~/stirling-pdf/stirling-data/tessdata
+cd ~/stirling-pdf/stirling-data/tessdata
+wget https://github.com/tesseract-ocr/tessdata/raw/main/chi_sim.traineddata
+wget https://github.com/tesseract-ocr/tessdata/raw/main/chi_tra.traineddata
+```
+
+重启容器后 OCR 就能识别中文了。
+
+## 进阶用法
+
+### 1. 自动化流水线
+
+Stirling-PDF 支持创建自动化流水线，把多个操作串起来一键执行。
+
+比如：每天自动把某个文件夹里的 PDF 合并、压缩、加水印。
+
+```bash
+# 创建流水线目录
+mkdir -p ~/stirling-pdf/stirling-data/pipeline/watched
+mkdir -p ~/stirling-pdf/stirling-data/pipeline/finished
+```
+
+把文件放到 `watched` 文件夹，Stirling-PDF 会自动处理，结果放到 `finished` 文件夹。
+
+### 2. API 集成
+
+Stirling-PDF 提供 REST API，可以集成到你的脚本里：
+
+```bash
+# 合并多个 PDF
+curl -X POST "http://localhost:8080/api/v1/general/merge-pdfs" \
+  -F "fileInput=@file1.pdf" \
+  -F "fileInput=@file2.pdf" \
+  -o merged.pdf
+
+# 压缩 PDF
+curl -X POST "http://localhost:8080/api/v1/general/compress-pdf" \
+  -F "fileInput=@large.pdf" \
+  -o compressed.pdf
+```
+
+### 3. 中文界面
+
+如果你的团队是中文用户，可以设置默认语言：
+
+```yaml
+environment:
+  - SYSTEM_DEFAULTLOCALE=zh-CN
+```
+
+## 卸载
+
+```bash
+# 停止并删除容器
+cd ~/stirling-pdf
+docker compose down
+
+# 删除数据（可选，谨慎操作）
+rm -rf ~/stirling-pdf
+```
+
+## 实话实说
+
+- **它不是 Adobe Acrobat**：没有专业的 PDF 编辑能力，不能像 Word 一样直接修改文字。
+- **大文件处理慢**：100MB 以上的 PDF 压缩需要等一会儿。
+- **功能太多反而懵**：50+ 功能，第一次用可能不知道从哪开始。
+
+但免费的、私有的、不限次数的 PDF 处理——这个取舍值不值，你自己最清楚。
+
+## FAQ
+
+**Q：Stirling-PDF 和 PDF.js 有什么区别？**
+
+A：PDF.js 是浏览器里查看 PDF 的库，Stirling-PDF 是处理 PDF 的工具。一个只能看，一个能合并、压缩、转换、OCR、加水印。
+
+**Q：Stirling-PDF 需要很多内存吗？**
+
+A：标准版需要 2GB 内存，推荐 4GB。如果内存紧张，用 ultra-lite 版本，只需要 512MB。
+
+**Q：可以处理加密的 PDF 吗？**
+
+A：可以。Stirling-PDF 支持解密有密码的 PDF，但需要你提供密码。
+
+**Q：支持哪些格式转换？**
+
+A：支持 Word、Excel、PowerPoint、图片、HTML、Markdown 等 20+ 格式与 PDF 互转。
+
+**Q：数据会上传到哪里？**
+
+A：所有数据都在你自己的服务器上，Stirling-PDF 不会上传任何文件到外部。
+
+## 内链推荐
+
+部署好 Stirling-PDF 后，你可能还需要：
+
+- [n8n 自动化工作流](/blog/n8n-guide) — 把 Stirling-PDF 的 API 接入自动化流程
+- [Vaultwarden 密码管理](/blog/vaultwarden-guide) — 管理你各种在线服务的密码
+- [Uptime Kuma 监控](/blog/uptime-kuma-guide) — 监控你的 Stirling-PDF 是否在线
+- [Tailscale + Headscale 组网](/blog/tailscale-headscale-guide) — 远程安全访问你的 PDF 工具
+
+---
+
+> **延伸阅读**：如果你是第一次用 Docker，推荐先看 [Docker 官方入门指南](https://docs.docker.com/get-started/)。关于自部署工具的完整教程见 [Coolify 一键部署指南](/blog/coolify-deploy)。
+
+---
+
+现在就去装。装完回来告诉我，你第一个用它处理的 PDF 是什么。
+
+你的做法是什么？欢迎评论区 battle。

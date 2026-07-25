@@ -153,6 +153,14 @@
       "tags": ["horizon", "ai", "news-aggregation", "self-hosted", "rss", "daily-briefing"],
       "category": "AI 工具",
       "articleType": "installation"
+    },
+    {
+      "groupKey": "stirling-pdf-guide",
+      "title": "别再用在线 PDF 工具了：Stirling-PDF 自部署",
+      "pubDate": "2026-07-24",
+      "tags": ["stirling-pdf", "pdf", "self-hosted", "docker", "privacy", "tools"],
+      "category": "效率工具",
+      "articleType": "installation"
     }
   ],
   "topicHistory": [
