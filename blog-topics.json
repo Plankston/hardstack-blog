@@ -19,6 +19,14 @@
       "articleType": "comparison"
     },
     {
+      "groupKey": "n8n-vs-activepieces",
+      "title": "n8n vs Activepieces：开源自动化谁是你的最优解",
+      "pubDate": "2026-07-26",
+      "tags": ["n8n", "activepieces", "workflow-automation", "self-hosted", "open-source", "comparison"],
+      "category": "工作流自动化",
+      "articleType": "comparison"
+    },
+    {
       "groupKey": "tolaria-guide",
       "title": "Tolaria：你的笔记该换个活法了",
       "pubDate": "2026-07-10",
