@@ -1,7 +1,23 @@
 {
   "version": 2,
-  "lastUpdated": "2026-07-24",
+  "lastUpdated": "2026-07-26",
   "articles": [
+    {
+      "groupKey": "ai-coding-tools-comparison",
+      "title": "Claude Code vs Cursor vs OpenCode：2026 年 AI 编程工具怎么选",
+      "pubDate": "2026-07-26",
+      "tags": ["claude-code", "codex", "cursor", "opencode", "ai", "coding-tools", "comparison"],
+      "category": "AI 编程工具",
+      "articleType": "comparison"
+    },
+    {
+      "groupKey": "immich-vs-photoprism",
+      "title": "Immich vs PhotoPrism：自托管照片管理谁是你的最优解",
+      "pubDate": "2026-07-26",
+      "tags": ["immich", "photoprism", "self-hosted", "photo-management", "comparison"],
+      "category": "照片管理",
+      "articleType": "comparison"
+    },
     {
       "groupKey": "tolaria-guide",
       "title": "Tolaria：你的笔记该换个活法了",
@@ -164,6 +180,27 @@
     }
   ],
   "topicHistory": [
+    {
+      "date": "2026-07-26",
+      "suggestions": [
+        "Claude Code vs Cursor vs OpenCode",
+        "Immich vs PhotoPrism",
+        "n8n vs Activepieces",
+        "Ollama vs LocalAI vs vLLM",
+        "Coolify vs CapRover vs Dokku"
+      ],
+      "selected": "Claude Code vs Cursor vs OpenCode"
+    },
+    {
+      "date": "2026-07-26",
+      "suggestions": [
+        "Immich vs PhotoPrism",
+        "n8n vs Activepieces",
+        "Ollama vs LocalAI vs vLLM",
+        "Coolify vs CapRover vs Dokku"
+      ],
+      "selected": "Immich vs PhotoPrism"
+    },
     {
       "date": "2026-07-03",
       "suggestions": [

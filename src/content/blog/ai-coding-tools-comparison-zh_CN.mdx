@@ -1,0 +1,265 @@
+---
+articleType: "comparison"
+title: "Claude Code vs Codex vs Cursor vs OpenCode：2026 年 AI 编程工具怎么选"
+description: "四款主流 AI 编程工具横评：Claude Code（终端 Agent）、Codex（OpenAI 并行代理）、Cursor（AI IDE）、OpenCode（开源终端助手）。从定位、能力、成本、安全四个维度对比，帮你选对工具。"
+pubDate: 2026-07-26
+tags: ["claude-code", "codex", "cursor", "opencode", "ai", "coding-tools", "comparison"]
+category: "ai-tools"
+difficulty: "intermediate"
+timeToRead: 22
+groupKey: "ai-coding-tools-comparison"
+template: "paper"
+---
+
+## 四个工具，四种哲学
+
+你大概率正在纠结这件事。
+
+Claude Code 说："把任务交给我，我自己搞定。" Codex 说："我帮你并行干活，你负责审 PR。" Cursor 说："我让你写得更快。" OpenCode 说："我是开源的，而且我免费。"
+
+2026 年，AI 编程工具已经不是"有没有用"的问题了，而是"用哪个"的问题。四个工具代表四种完全不同的设计哲学，选错了不是效率低的问题，是根本用不起来。
+
+这篇文章不搞功能清单搬运。我们从四个真实维度对比：**它们各自解决什么问题、谁在什么场景下最强、钱怎么花、国内能不能用。**
+
+---
+
+## 选手介绍
+
+### Claude Code
+
+Anthropic 出品，2025 年底发布，2026 年大幅升级。不是 IDE，不是插件，是**终端里的 AI Agent**。
+
+你给它一个任务描述，它自己读代码、改文件、跑测试、修 bug、提 PR。全程你在旁边看着就行。200K token 上下文（Opus 4.8），Dynamic Workflows 支持在单会话里并行跑数百个 subagent。
+
+**一句话：你当项目经理，它当程序员。**
+
+[官方文档](https://docs.anthropic.com/en/docs/claude-code)
+
+### Codex
+
+OpenAI 出品，从聊天助手进化成了**云端自主编程代理**。CLI + Desktop App + Web/Cloud 三入口。
+
+你提交一个任务，它在云端沙箱里独立执行：读代码、装依赖、改文件、跑测试、生成 diff，最后自动创建 GitHub PR。多个任务可以并行跑，你去做别的事，回来收 PR 就行。GPT-5.5 驱动，1M token 上下文。
+
+**一句话：你当产品经理，它当整个开发团队。**
+
+[GitHub](https://github.com/openai/codex) | [文档](https://platform.openai.com/docs)
+
+### Cursor
+
+Anysphere 开发，基于 VS Code fork 的 AI 原生 IDE。全球用户最多、营收最强的 AI 编程工具。
+
+Tab 补全预测你接下来 3-5 行要写什么，Composer 支持跨多文件同时编辑，Agent 模式可以自主规划任务。所有交互都在编辑器里完成，零学习成本。
+
+**一句话：让编辑器变聪明，而不是取代编辑器。**
+
+[官网](https://cursor.com)
+
+### OpenCode
+
+开源终端 AI 编程助手，TUI/CLI 双模式。支持 75+ 模型提供商（Claude、GPT、Gemini、Ollama 本地模型等）。
+
+能读写文件、执行命令、审查 PR、管理会话、多 Agent 协作。最大卖点：**完全开源、完全免费（自带模型）、完全本地化**。你自己的 API Key，你自己的数据。
+
+我用了 OpenCode 三个月，说几个真实的点：
+
+**白嫖是第一驱动力。** 自带免费模型能用，不想花钱就用免费额度，想花钱就绑自己的 API Key——丰俭由人。对于预算敏感的开发者，这是最大的吸引力。
+
+**命令行界面不是问题。** 程序员天天敲终端，多一个 CLI 工具不稀奇。项目部署一行 `curl` 搞定，对话记录和代码改动全部本地保存，不怕泄露。
+
+**功能比你想的强。** 内置 LSP 适配绝大多数 IDE，命令简单丰富。最关键的是——它兼容 Claude Code 的插件和 Skills 体系，你装的那些插件直接能用。上下文对话还有自动压缩功能，长对话不会爆 token，对编程场景很友好。
+
+**一句话：白嫖党的终端利器，开源界的 Claude Code。**
+
+[完整安装教程](/zh-CN/blog/opencode-complete-guide/) | [GitHub](https://github.com/anomalyco/opencode) | [官网](https://opencode.ai)
+
+---
+
+## 横向对比
+
+| 维度 | Claude Code | Codex | Cursor | OpenCode |
+|------|-------------|-------|--------|----------|
+| 形态 | 终端 CLI | CLI + Desktop + Cloud | VS Code Fork IDE | 终端 TUI/CLI |
+| 模型 | 仅 Claude 系列 | 仅 GPT 系列 | 多模型（GPT/Claude/Gemini） | 75+ 提供商，含本地模型 |
+| 上下文窗口 | 200K（Opus 4.8） | 1M（GPT-5.5） | 取决于所选模型 | 取决于所选模型 |
+| 自主执行 | 极强，Dynamic Workflows | 极强，云端沙箱并行 | Agent 模式，偏交互 | 强，支持多 Agent 协作 |
+| Tab 补全 | 无 | 无 | 业界最强 | 无（终端工具不适用） |
+| 多文件编辑 | 原生支持 | 自主创建 PR | Composer 2，支持 | 支持 |
+| Git 集成 | 深度集成 | 最强，自动分支+PR | 基础 Git 支持 | 支持 |
+| 执行环境 | 本地 | 云端沙箱 | 本地 | 本地 |
+| 价格 | $20/月起（Max $100-200） | $20/月起（Pro $200） | $20/月 Pro | 免费（自带 API Key） |
+| 开源 | 否 | CLI 是 | 否 | 是（MIT） |
+| 国内可用性 | 需翻墙或配代理 | 需翻墙或配代理 | 需翻墙或配代理 | 可配任意 API 端点 |
+
+---
+
+## 四个关键维度深挖
+
+### 维度一：自主执行能力
+
+这是四个工具差距最大的维度。
+
+**Codex** 在"并行委派"上最强。你提交多个任务，每个在独立云端沙箱里执行，跑测试确认没问题后自动创建 PR。你可以同时扔 5 个重构任务进去，去开个会，回来收 5 个 PR。Goals 模式让任务自动规划执行路径。但它不适合需要实时交互的场景——你给完任务就离开了，中间不能调整方向。GPT-5.5 驱动，SWE-bench Verified 约 82.6%（OpenAI 2026-04 发布）。
+
+**Claude Code** 在"深度理解"上最强。你描述任务，它自己读整个项目结构、制定重构计划、逐步执行、跑测试验证。200K 上下文 + Dynamic Workflows 让它能处理复杂的大规模重构。它在本地执行，你可以实时看到进度并随时打断。Agent Teams 功能允许多个子 Agent 并行工作。SWE-bench Verified 得分 88.6%（Anthropic 2026-05 公告，Opus 4.8）。
+
+**OpenCode** 的自主能力和 Claude Code 接近，同样支持多 Agent 协作和 MCP 协议集成。TUI 模式下可以实时看到 Agent 的执行过程，交互体验比纯 CLI 更直观。不过受限于底层模型能力，复杂任务的完成质量取决于你选的模型。
+
+**Cursor** 的 Agent 模式也能自主执行任务，但它更像"你在编辑器里指挥，AI 在编辑器里干活"。适合中等复杂度的多文件修改（10-20 个文件以内），超过这个规模上下文容易出现理解偏差。
+
+**结论：** 并行批量任务 → Codex 最强。深度复杂重构 → Claude Code 最强。Cursor 不适合超过 20 个文件的自主任务。
+
+### 维度二：日常编码体验
+
+**Cursor** 在这个维度碾压。Tab 补全被业界公认为 2026 年最强 inline 补全——不只是补全当前行，而是预测你接下来 3-5 行的逻辑走向。你写完函数签名，它预测整个函数体；你写完 if 判断，它补完 else 分支。
+
+写几行代码时用 Cursor，效率提升是肉眼可见的。那种"它知道我想干什么"的感觉，用过就回不去。
+
+**Claude Code、Codex 和 OpenCode** 都是终端/云端工具，没有 Tab 补全。写新代码时效率反而不如传统编辑器。它们的价值在于"处理已有的代码"，而不是"帮你从零写代码"。
+
+**结论：** 日常编码、边写边改、前端迭代 → Cursor 完胜。终端工具在这个场景是降级。
+
+### 维度三：成本
+
+**OpenCode** 最便宜：完全免费，你只需要付 API 费用。用 Ollama 跑本地模型的话，连 API 费用都省了。
+
+**Cursor** 最可预期：$20/月固定，包含无限 Tab 补全和 500 次高级请求。重度使用可能需要 $60-200/月的更高计划。
+
+**Claude Code** 波动较大：$20/月的 Pro 计划额度有限，重度使用推荐 Max 5x（$100/月）或 Max 20x（$200/月）。按 token 计费的话，花多少取决于你让它干多少活。
+
+**Codex** 成本最不透明：ChatGPT Plus $20/月有基础额度，但重度使用需要 Pro $200/月。API Key 模式按 token 计费，GPT-5.5 输出价 $30/M token，长会话烧得快。Cloud/Review 等功能可能额外计费。
+
+| 月使用强度 | OpenCode | Cursor | Claude Code | Codex |
+|-----------|----------|--------|-------------|-------|
+| 轻度（偶尔用） | $5-15（API 费） | $20（固定） | $20（固定） | $20（固定） |
+| 中度（每天用） | $30-80 | $20-60 | $100 | $100-200 |
+| 重度（高强度自动化） | $50-150 | $200 | $200 | $200+ |
+
+**结论：** 预算敏感选 OpenCode，固定成本选 Cursor，重度自动化选 Claude Code 或 Codex（看你是终端派还是云端派）。
+
+### 维度四：国内网络可用性与安全
+
+这是国内开发者最现实的问题，也是最需要注意的问题。
+
+**Cursor** 的高级功能走 Cursor 自己的服务器，国内连接不稳定。需要翻墙或配置代理，体验时好时坏。
+
+**OpenCode** 在这方面最灵活。它不绑定任何 API 供应商，你可以配置任意 OpenAI 兼容端点——包括国内的 API 代理服务。你甚至可以完全离线，用 Ollama 跑本地模型，零网络依赖。
+
+**Codex** 同样需要翻墙访问 OpenAI API。可以通过 `OPENAI_BASE_URL` 指向自定义端点，但云端沙箱功能依赖 OpenAI 服务器，国内使用受限。
+
+#### Claude Code 的安全事件：必须知道
+
+**2026 年 7 月，Claude Code 爆发了针对中国用户的隐蔽追踪事件。**
+
+时间线：
+- **4月2日**：Claude Code v2.1.91 植入追踪代码
+- **6月30日**：安全研究者逆向审查后公开披露，Reddit 帖子百万浏览
+- **7月1日**：Anthropic 承认，称是"政策合规研究"
+- **7月2日**：v2.1.197 版本移除追踪代码
+- **7月8日**：工信部 NVDB 定性为"存在安全后门隐患，危害严重"
+
+**做了什么：** 当用户配置非官方 `ANTHROPIC_BASE_URL`（如国内中转站）时，Claude Code 会：
+1. 读取系统时区（检测 `Asia/Shanghai` / `Asia/Urumqi`）
+2. 检查代理域名是否命中内置的 147+ 个中国域名黑名单
+3. 检查域名是否包含中国 AI 厂商关键词（deepseek、moonshot、zhipu 等）
+4. 用 Unicode 隐写术（视觉不可见的撇号替换 + 日期格式变形）把分类结果嵌入 system prompt
+
+**关键点：**
+- 这套机制不受 `DISABLE_TELEMETRY` 开关控制
+- VPN 改不了时区，改时区才能避免标记
+- 全程无弹窗、无告知、无同意选项
+- v2.1.197 及以上版本已移除，但信任已经受损
+
+**Codex 目前没有类似安全事件。** 但它是闭源工具，用户无法审计代码。OpenCode 是唯一可以完全审计的选项。
+
+**结论：** 国内可用性 OpenCode > Cursor > Codex ≈ Claude Code。OpenCode 的 BYO 架构是最大优势。Claude Code 的安全事件让它的国内信任度降到最低。
+
+---
+
+## 场景推荐
+
+| 你的情况 | 首选 | 理由 |
+|----------|------|------|
+| 想要最强自主执行能力 | Claude Code 或 Codex | Claude Code 深度重构最强，Codex 并行批量最强 |
+| 并行批量任务（重构、迁移） | Codex | 云端沙箱并行，自动创建 PR |
+| 深度复杂重构 | Claude Code | 200K 上下文 + Dynamic Workflows，本地执行可实时调整 |
+| 日常编码想提速 | Cursor | Tab 补全 + IDE 集成，零摩擦 |
+| 预算有限 / 不想订阅 | OpenCode | 免费开源，只付 API 费用 |
+| 国内网络环境 | OpenCode | 可配任意端点，支持本地模型，无安全顾虑 |
+| 在意数据主权和隐私 | OpenCode | 开源可审计，无隐蔽追踪（类似理念见 [Immich 自部署指南](/zh-CN/blog/immich-complete-guide/)） |
+| 终端原教旨主义者 | OpenCode 或 Claude Code | 不绑 IDE，终端里完成一切 |
+| 需要多模型灵活切换 | Cursor 或 OpenCode | Claude Code 和 Codex 只支持自家模型 |
+| 团队采购，需要 PR 工作流 | Codex 或 Claude Code | Codex 自动创建 PR，Claude Code 深度 Git 集成 |
+
+---
+
+## 我的推荐
+
+**如果只选一个：** 大多数开发者选 Cursor。它覆盖了最常见的编码场景——补全、编辑、调试——而且上手成本最低。如果你已经习惯 VS Code，打开 Cursor 就能用。
+
+**如果预算允许两个：** Cursor + Claude Code（或 Codex）。日常编码用 Cursor 保持心流，复杂任务切到 Claude Code 深度处理，或用 Codex 并行批量执行。这是 2026 年最高效的组合。
+
+**如果你在意开源和自由：** OpenCode。它不锁定你到任何供应商，支持 75+ 模型提供商，可以用本地模型完全离线运行。对于重视数据主权的开发者，这是唯一的真正选择。
+
+**最终排名：**
+
+1. **Cursor** — 综合体验最全面，适合大多数人
+2. **Codex** — 并行委派最强，适合批量任务和团队工作流
+3. **Claude Code** — 深度重构最强，但安全事件后国内信任度受损
+4. **OpenCode** — 最灵活最自由，开源可审计，适合国内用户和在意隐私的开发者
+
+---
+
+## FAQ
+
+### Q: Codex 和 Claude Code 到底选哪个？
+
+看你需要什么。Codex 适合"并行委派"——你提交多个任务，它在云端并行跑，回来收 PR。Claude Code 适合"深度协作"——你在终端里和它一起处理复杂任务，可以实时调整方向。Codex 更像外包团队，Claude Code 更像结对编程搭档。
+
+### Q: 国内用 Cursor 需要翻墙吗？
+
+需要。Cursor 的高级功能（Agent、Chat）走 Cursor 自己的服务器。可以尝试配置代理，但体验不稳定。
+
+### Q: 哪个工具的代码质量最好？
+
+根据各自官方公告（2026年5月数据），Claude Code（Opus 4.8）在 SWE-bench Verified 上得分 88.6%，Codex（GPT-5.5）约 82.6%。但 benchmark 不等于你的实际场景，且两者测试条件不同（不同 harness 和变体），不可直接对比。四个工具在合适的场景下都能产出高质量代码。
+
+### Q: 学习成本哪个最低？
+
+Cursor 最低——如果你已经会用 VS Code，打开 Cursor 就能上手。OpenCode 中等——终端 TUI 需要一点适应。Claude Code 和 Codex 中等偏高——纯 CLI，没有可视化界面。
+
+### Q: Claude Code 的安全事件是怎么回事？
+
+2026 年 4 月至 7 月，Claude Code v2.1.91-v2.1.196 版本内置了针对中国用户的隐蔽追踪机制。当用户配置非官方 API 代理时，它会检测系统时区和代理域名，通过 Unicode 隐写术将用户分类信息嵌入 system prompt，全程无告知。工信部 NVDB 定性为"危害严重"的安全后门。Anthropic 在 7 月 2 日的 v2.1.197 版本中移除了追踪代码。如果你使用过该版本范围且配置了国内中转，建议升级到最新版本。
+
+### Q: 国内用 Claude Code 还安全吗？
+
+v2.1.197 版本已移除追踪代码，但信任已经受损。如果你在意数据主权，建议优先选择 OpenCode（开源可审计）或 Cursor。如果必须用 Claude Code，确保使用最新版本，并了解 Anthropic 的数据政策。
+
+---
+
+## 快速开始
+
+```bash
+# Claude Code
+npm install -g @anthropic-ai/claude-code
+claude
+
+# Codex
+npm install -g @openai/codex
+codex
+
+# Cursor
+# 下载安装：https://cursor.com/download
+# 或 brew install --cask cursor
+
+# OpenCode
+curl -fsSL https://opencode.ai/install | bash
+opencode
+```
+
+四条命令，四个世界。选一个试试。
+
+---
+
+*本文为综合对比评测，基于公开资料和实际使用经验整理。各工具版本和定价可能随时间变化，请以官方信息为准。*
