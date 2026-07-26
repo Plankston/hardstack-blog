@@ -1,0 +1,202 @@
+---
+articleType: "comparison"
+title: "Immich vs PhotoPrism：自托管照片管理谁是你的最优解"
+description: "两款最热门的自托管照片管理工具深度对比：Immich（Google Photos 开源替代）vs PhotoPrism（AI 照片浏览器）。从 AI 能力、手机同步、部署难度、性能、社区活跃度五个维度帮你选对方案。"
+pubDate: 2026-07-26
+tags: ["immich", "photoprism", "self-hosted", "photo-management", "comparison", "docker", "homelab"]
+category: "照片管理"
+difficulty: "intermediate"
+timeToRead: 15
+groupKey: "immich-vs-photoprism"
+template: "paper"
+---
+
+## 你的照片该住在哪里？
+
+iCloud 又涨价了。Google Photos 的免费额度还是 15GB。你手机里 256GB 的照片，每个月花 $3 给苹果存着，三年就是 $108。
+
+与此同时，Immich 在 GitHub 上拿了 60K+ Stars，PhotoPrism 也有 40K+。两个开源项目都在说同一句话：**你的照片不需要交给别人。**
+
+但问题来了：你只能选一个。
+
+这篇文章不是功能清单搬运。我们从五个真实维度对比：**AI 能力有多强、手机同步有多顺、部署有多难、跑起来吃多少资源、出了问题有没有人管。**
+
+---
+
+## 选手介绍
+
+### Immich
+
+GitHub 60K+ Stars，2022 年起步，迭代速度堪称疯狂——几乎每周都有更新。定位是"开源版 Google Photos"，目标是像素级复刻 Google Photos 的体验。
+
+核心卖点：原生移动 App（iOS + Android），体验和 Google Photos 几乎一致。自动备份、人脸识别、物体检测、CLIP 向量搜索、地图视图、共享相册——你能想到的功能它都有。
+
+**一句话：想要 Google Photos 的替代品，选 Immich。**
+
+[GitHub](https://github.com/immich-app/immich) | [文档](https://immich.app/docs)
+
+### PhotoPrism
+
+GitHub 40K+ Stars，2019 年起步，比 Immich 早三年。定位不是"Google Photos 替代"，而是"智能照片浏览器"——更像一个带 AI 的照片图书馆。
+
+核心卖点：基于 TensorFlow 的本地 AI 分类，开箱即用不需要额外训练。Web 界面精美，瀑布流浏览体验出色，支持按颜色、日期、地点、标签多维度筛选。对摄影师友好，RAW 格式和 EXIF 信息支持完善。
+
+**一句话：想要一个漂亮的照片库管理器，选 PhotoPrism。**
+
+[GitHub](https://github.com/photoprism/photoprism) | [文档](https://docs.photoprism.app/)
+
+---
+
+## 横向对比
+
+| 维度 | Immich | PhotoPrism |
+|------|--------|------------|
+| 定位 | Google Photos 替代 | 智能照片浏览器 |
+| GitHub Stars | 60K+ | 40K+ |
+| 起步时间 | 2022 | 2019 |
+| 移动 App | 原生 iOS + Android | 无（仅 WebDAV 同步） |
+| 手机自动备份 | ✅ 官方 App 支持 | ❌ 需额外配置 WebDAV |
+| 人脸识别 | ✅ InsightFace，准确率高 | ✅ 基础人脸检测 |
+| 物体搜索 | ✅ CLIP 向量嵌入，支持自然语言 | ✅ TensorFlow 分类，基于标签 |
+| 地图视图 | ✅ 完整地图集成 | ✅ 基础地图视图 |
+| 视频支持 | ✅ 转码 + 播放 | ⚠️ 基础播放，无转码 |
+| RAW 支持 | ✅ 完整处理 | ✅ 完整处理，对摄影师更友好 |
+| 共享相册 | ✅ 共享库、家庭多用户 | ⚠️ 公开链接，功能较基础 |
+| 部署复杂度 | 中等（4+ 容器） | 简单（1-2 容器） |
+| 最低内存 | 4GB+（推荐 8GB） | 2GB 即可流畅 |
+| 首次索引速度 | 快（多容器并行） | 中等（单体架构） |
+| 开发活跃度 | ⭐⭐⭐⭐⭐ 狂热级 | ⭐⭐⭐⭐ 活跃 |
+| 社区规模 | 大，中文资源多 | 中等，英文为主 |
+
+---
+
+## 五个关键维度深挖
+
+### 维度一：AI 能力
+
+这是两者差距最明显的维度。
+
+**Immich 的 AI 更强。** 它内置了机器学习服务，支持人脸识别（InsightFace）、场景分类（海滩、美食、宠物）、物体检测、CLIP 向量搜索。你可以输入自然语言搜索，比如"去年在海边的照片"——它真的能找出来。AI 模型训练需要一定的 CPU/GPU 资源，初次扫描可能需要较长时间，但结果准确率很高。
+
+**PhotoPrism 的 AI 更"开箱即用"。** 基于预训练的 TensorFlow 模型，不需要额外训练就能自动识别物体类型（植物、动物、建筑、食物等），支持按颜色搜索和相似照片查找。"瞬间"功能会自动将照片按时间和地点聚类，生成"那年今日"回忆。但人脸识别在免费版中是实验性的，稳定性不如 Immich。
+
+**结论：** AI 能力 Immich 明显领先。如果你的照片管理依赖智能搜索和人脸分类，选 Immich。
+
+### 维度二：手机同步体验
+
+这是 Immich 的杀手锏。
+
+**Immich** 有原生移动 App（iOS + Android），体验和 Google Photos 几乎一致：自动后台备份、增量同步、实时预览。你拍完照片，打开 Immich App 就能看到——不需要任何手动操作。
+
+**PhotoPrism 没有官方移动 App。** 手机同步需要配置 WebDAV 或使用第三方同步工具（Syncthing 等），门槛比 Immich 高很多。对于只想"拍完自动同步"的用户，这是一个硬伤。
+
+**结论：** 手机同步 Immich 完胜。如果你的核心需求是"Google Photos 替代品"，手机同步是刚需，Immich 是唯一选择。
+
+### 维度三：部署难度
+
+**PhotoPrism 更简单。** 单容器 + 内置 SQLite 数据库（生产环境推荐 PostgreSQL），Docker Compose 一把梭。基础内存占用 500MB-1GB，对 NAS 配置要求低。
+
+**Immich 更复杂。** 需要 4+ 个 Docker 容器（主服务、PostgreSQL、Redis、机器学习服务），整体内存占用 1-2GB。如果开启 AI 训练，峰值 CPU 使用率较高，建议 4GB 以上内存。部署过程需要更多配置，但官方文档写得不错。
+
+**结论：** 部署难度 PhotoPrism < Immich。如果你的 NAS 配置较低（2核2G），PhotoPrism 更合适。
+
+### 维度四：性能与资源
+
+**Immich 是性能怪兽，但也是资源怪兽。** 微服务架构让它在导入大量照片时能充分利用多核 CPU 并行处理，但代价是内存和 CPU 占用高。在低端设备上可能卡顿。首次导入几万张照片是一场"马拉松"，可能需要几天时间。
+
+**PhotoPrism 更克制。** 单体架构，基础内存占用约 500MB-1GB。首次导入时索引和 AI 分类也需要时间，但整体资源需求比 Immich 低。大瀑布流滑动时偶尔会有加载白块，不如 Immich 流畅。
+
+**实测参考（社区数据）：**
+
+| 场景 | Immich | PhotoPrism |
+|------|--------|------------|
+| 10 万张照片滑动流畅度 | 虚拟滚动，几乎瞬时 | 偶尔白块 |
+| 首次索引 5 万张 | 2-4 天（取决于硬件） | 1-2 天 |
+| 内存空闲占用 | 1.5-2GB | 500MB-1GB |
+| 视频转码 | 支持但吃资源 | 不支持 |
+
+**结论：** 性能 Immich 更好，但资源需求也更高。根据你的硬件配置选择。
+
+### 维度五：社区与长期维护
+
+**Immich 的社区更活跃。** 迭代速度极快，几乎每周都有更新，GitHub Issues 响应快。中文社区资源丰富，遇到问题容易找到答案。但更新太快也意味着偶尔会有 breaking changes，需要关注更新日志。
+
+**PhotoPrism 更稳定。** 更新频率不如 Immich，但每个版本更成熟。社区规模中等，英文为主，中文资源较少。长期维护稳定性更好，不太会出现"更新后配置全崩"的情况。
+
+**结论：** 社区活跃度 Immich > PhotoPrism。稳定性 PhotoPrism > Immich。根据你对"折腾"的接受程度选择。
+
+---
+
+## 场景推荐
+
+| 你的情况 | 首选 | 理由 |
+|----------|------|------|
+| 想替代 Google Photos | Immich | 原生 App + 自动备份 + AI 搜索，体验最接近 |
+| NAS 配置较低（< 4GB 内存） | PhotoPrism | 资源占用低，2GB 内存够用 |
+| 想要最智能的 AI 分类 | Immich | CLIP 向量搜索 + 人脸识别，准确率更高 |
+| 摄影师，有大量 RAW 文件 | PhotoPrism | RAW 和 EXIF 支持更完善，界面更适合浏览 |
+| 不想折腾，快速部署 | PhotoPrism | 单容器，5 分钟搞定 |
+| 家庭多用户共享 | Immich | 共享相册 + 家庭多用户，体验更好 |
+| 想要最稳定的长期方案 | PhotoPrism | 更新不激进，不太会 breaking change |
+
+---
+
+## 我的推荐
+
+**如果只选一个：** 大多数人选 Immich。它覆盖了最常见的照片管理需求——备份、搜索、分享——而且手机同步体验是最好的。如果你的核心需求是"替代 Google Photos"，没有第二个选择。
+
+**如果你的 NAS 配置较低：** PhotoPrism。2GB 内存就能跑，部署简单，长期稳定。牺牲的是 AI 能力和手机同步体验。
+
+**如果你是摄影师：** PhotoPrism。RAW 和 EXIF 支持更完善，界面更适合浏览和管理大量照片库。
+
+**最终排名：**
+
+1. **Immich** — 功能最全面，AI 最强，手机同步最好，适合大多数人
+2. **PhotoPrism** — 最轻量最稳定，部署最简单，适合配置低或不想折腾的用户
+
+---
+
+## FAQ
+
+### Q: 可以两个都装吗？
+
+可以。用 Immich 做主力备份和手机同步，PhotoPrism 做浏览和分享——两者可以通过 Docker 卷挂载共享同一个照片目录。
+
+### Q: Immich 的更新太快了，会不会不稳定？
+
+确实偶尔会有 breaking changes。建议锁定版本号，不要每次都跟最新版。大版本更新前先看 changelog。
+
+### Q: PhotoPrism 的手机同步真的不能用吗？
+
+能用，但需要额外配置 WebDAV 服务器。如果你愿意折腾，效果和 Immich 差不多。但大多数用户不想花这个时间。
+
+### Q: 10 万张照片哪个跑得动？
+
+两个都能跑，但体验不同。Immich 的虚拟滚动在大照片库下滑动更流畅。PhotoPrism 偶尔会有白块，但搜索更快。
+
+### Q: AI 功能需要 GPU 吗？
+
+Immich 的 AI 训练在 CPU 上也能跑，但有 GPU 会快很多。PhotoPrism 的 TensorFlow 模型是预训练的，不需要 GPU。
+
+---
+
+## 快速开始
+
+```bash
+# Immich（需要 Docker Compose）
+git clone https://github.com/immich-app/immich
+cd immich
+docker compose up -d
+
+# PhotoPrism（单容器）
+docker run -d -p 2342:2342 \
+  -v photoprism originals:/photoprism/originals \
+  -v photoprism storage:/photoprism/storage \
+  photoprism/photoprism
+```
+
+Immich 要花 30 分钟调参数，PhotoPrism 要花 5 分钟启动。选适合你的那个。
+
+---
+
+*本文为综合对比评测，基于公开资料和社区数据整理。各工具版本和功能可能随时间变化，请以官方信息为准。*
