@@ -178,6 +178,12 @@ const templateLabel: Record<string, string> = {
     </main>
     <Footer />
 
+    <button id="back-to-top" class="back-to-top" aria-label="返回顶部">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 15l-6-6-6 6"/>
+      </svg>
+    </button>
+
     <script is:inline>
       document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('pre.astro-code').forEach((pre) => {
@@ -210,6 +216,21 @@ const templateLabel: Record<string, string> = {
         };
         window.addEventListener('scroll', update, { passive: true });
         update();
+      }
+
+      const backToTop = document.getElementById('back-to-top');
+      if (backToTop) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 300) {
+            backToTop.classList.add('visible');
+          } else {
+            backToTop.classList.remove('visible');
+          }
+        }, { passive: true });
+
+        backToTop.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
       }
     </script>
   </body>

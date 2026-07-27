@@ -790,6 +790,63 @@ body[data-template="dark"] img {
   transition: width 0.1s linear;
 }
 
+/* Back to top button */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--box-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: var(--color-accent-ui);
+  border-color: var(--color-accent-ui);
+  color: white;
+}
+
+.back-to-top:hover svg {
+  stroke: white;
+}
+
+body[data-template="dark"] .back-to-top {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body[data-template="dark"] .back-to-top:hover {
+  background: var(--color-accent-ui);
+  border-color: var(--color-accent-ui);
+}
+
+@media (max-width: 768px) {
+  .back-to-top {
+    bottom: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+}
+
 /* ═══════════════════════════════════════════════
    MOTION
    ═══════════════════════════════════════════════ */
