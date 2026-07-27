@@ -858,72 +858,48 @@ body[data-template="dark"] .back-to-top:hover {
   z-index: 1000;
 }
 
-.airport-ad-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-}
-
 .airport-ad-toggle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+  gap: 6px;
+  padding: 10px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
   box-shadow: var(--box-shadow);
   color: var(--color-accent-ui);
   text-decoration: none;
   transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
 .airport-ad-toggle:hover {
   background: var(--color-accent-ui);
   color: white;
-  transform: scale(1.05);
+  text-decoration: none;
 }
 
 .airport-ad-toggle:hover svg {
   stroke: white;
 }
 
-.airport-ad-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  color: var(--text-faint);
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-  opacity: 0;
-  pointer-events: none;
+.airport-ad-toggle:hover .airport-ad-text {
+  color: white;
 }
 
-.airport-ad:hover .airport-ad-close {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.airport-ad-close:hover {
-  background: var(--bg-code);
-  color: var(--text-body);
-  border-color: var(--color-accent-ui);
+.airport-ad-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-accent-ui);
+  transition: color 0.2s ease;
 }
 
 .airport-ad-card {
   position: absolute;
-  left: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
+  left: 0;
+  top: calc(100% + 8px);
   width: 200px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -961,11 +937,6 @@ body[data-template="dark"] .back-to-top:hover {
   flex-shrink: 0;
 }
 
-/* 折叠状态 */
-.airport-ad.collapsed {
-  transform: translateX(-100%);
-}
-
 /* 暗色主题适配 */
 body[data-template="dark"] .airport-ad-toggle {
   background: var(--bg-card);
@@ -976,18 +947,9 @@ body[data-template="dark"] .airport-ad-toggle:hover {
   background: var(--color-accent-ui);
 }
 
-body[data-template="dark"] .airport-ad-close {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-}
-
 body[data-template="dark"] .airport-ad-card {
   background: var(--bg-card);
   border-color: var(--border-color);
-}
-
-body[data-template="dark"] .airport-ad-close:hover {
-  background: var(--bg-code);
 }
 
 /* 移动端适配 */
@@ -996,10 +958,6 @@ body[data-template="dark"] .airport-ad-close:hover {
     top: auto;
     bottom: 80px;
     transform: none;
-  }
-  
-  .airport-ad.collapsed {
-    transform: translateX(-100%);
   }
   
   .airport-ad-card {
