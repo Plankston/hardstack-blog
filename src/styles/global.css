@@ -848,6 +848,207 @@ body[data-template="dark"] .back-to-top:hover {
 }
 
 /* ═══════════════════════════════════════════════
+   AIRPORT AD — 左侧悬浮广告
+   ═══════════════════════════════════════════════ */
+.airport-ad {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.airport-ad-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  color: var(--color-accent-ui);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  writing-mode: horizontal-tb;
+  transition: all 0.2s ease;
+}
+
+.airport-ad-toggle:hover {
+  background: var(--color-accent-ui);
+  color: white;
+  padding-right: 16px;
+}
+
+.airport-ad-toggle:hover svg {
+  stroke: white;
+}
+
+.toggle-text {
+  white-space: nowrap;
+}
+
+.airport-ad-content {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 240px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.airport-ad:not(.collapsed) .airport-ad-content {
+  opacity: 1;
+  visibility: visible;
+}
+
+.airport-ad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.airport-ad-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-heading);
+}
+
+.airport-ad-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.airport-ad-close:hover {
+  background: var(--bg-code);
+  color: var(--text-body);
+}
+
+.airport-ad-body {
+  padding: 14px;
+}
+
+.airport-ad-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.airport-ad-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.airport-ad-feature svg {
+  color: var(--color-accent-ui);
+  flex-shrink: 0;
+}
+
+.airport-ad-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--color-accent-ui);
+  color: white;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.airport-ad-cta:hover {
+  background: var(--color-accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 140, 90, 0.2);
+  color: white;
+  text-decoration: none;
+}
+
+/* 暗色主题适配 */
+body[data-template="dark"] .airport-ad-toggle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body[data-template="dark"] .airport-ad-toggle:hover {
+  background: var(--color-accent-ui);
+}
+
+body[data-template="dark"] .airport-ad-content {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body[data-template="dark"] .airport-ad-header {
+  border-bottom-color: var(--border-color);
+}
+
+body[data-template="dark"] .airport-ad-close:hover {
+  background: var(--bg-code);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .airport-ad {
+    top: auto;
+    bottom: 80px;
+    transform: none;
+  }
+  
+  .airport-ad-toggle {
+    padding: 8px 10px;
+  }
+  
+  .airport-ad-content {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 120px;
+    top: auto;
+    transform: none;
+    width: auto;
+    margin-left: 0;
+  }
+  
+  .airport-ad:not(.collapsed) .airport-ad-content {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    MOTION
    ═══════════════════════════════════════════════ */
 

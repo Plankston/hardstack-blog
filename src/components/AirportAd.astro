@@ -1,0 +1,88 @@
+---
+// 机场节点推荐广告组件
+const links = [
+  'https://uso.oteacc.org/passport.html#/register?code=5FbOfU9A',
+  'https://uso.oteacc.org/passport.html#/register?code=xN15QVnd'
+];
+const randomLink = links[Math.floor(Math.random() * links.length)];
+---
+
+<div id="airport-ad" class="airport-ad collapsed">
+  <button id="airport-ad-toggle" class="airport-ad-toggle" aria-label="展开广告">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+    </svg>
+    <span class="toggle-text">机场推荐</span>
+  </button>
+  
+  <div class="airport-ad-content">
+    <div class="airport-ad-header">
+      <span class="airport-ad-title">机场节点推荐</span>
+      <button id="airport-ad-close" class="airport-ad-close" aria-label="关闭广告">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="airport-ad-body">
+      <div class="airport-ad-features">
+        <div class="airport-ad-feature">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+          <span>稳定高速</span>
+        </div>
+        <div class="airport-ad-feature">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>多节点覆盖</span>
+        </div>
+        <div class="airport-ad-feature">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span>性价比高</span>
+        </div>
+      </div>
+      
+      <a href={randomLink} target="_blank" rel="noopener noreferrer" class="airport-ad-cta">
+        立即注册
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ad = document.getElementById('airport-ad');
+  const toggle = document.getElementById('airport-ad-toggle');
+  const close = document.getElementById('airport-ad-close');
+  
+  if (ad && toggle && close) {
+    // 检查是否被用户关闭过
+    const isClosed = localStorage.getItem('airport-ad-closed');
+    if (isClosed) {
+      ad.style.display = 'none';
+      return;
+    }
+    
+    toggle.addEventListener('click', () => {
+      ad.classList.toggle('collapsed');
+      const isCollapsed = ad.classList.contains('collapsed');
+      toggle.setAttribute('aria-label', isCollapsed ? '展开广告' : '收起广告');
+    });
+    
+    close.addEventListener('click', () => {
+      ad.style.display = 'none';
+      localStorage.setItem('airport-ad-closed', 'true');
+    });
+  }
+</script>
