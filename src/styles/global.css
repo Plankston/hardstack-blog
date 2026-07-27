@@ -856,76 +856,39 @@ body[data-template="dark"] .back-to-top:hover {
   top: 50%;
   transform: translateY(-50%);
   z-index: 1000;
-  transition: all 0.3s ease;
+}
+
+.airport-ad-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
 }
 
 .airport-ad-toggle {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 12px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-left: none;
-  border-radius: 0 8px 8px 0;
+  border-radius: 8px;
   box-shadow: var(--box-shadow);
-  cursor: pointer;
   color: var(--color-accent-ui);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 500;
-  writing-mode: horizontal-tb;
+  text-decoration: none;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .airport-ad-toggle:hover {
   background: var(--color-accent-ui);
   color: white;
-  padding-right: 16px;
+  transform: scale(1.05);
 }
 
 .airport-ad-toggle:hover svg {
   stroke: white;
-}
-
-.toggle-text {
-  white-space: nowrap;
-}
-
-.airport-ad-content {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 240px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: var(--box-shadow);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  margin-left: 8px;
-}
-
-.airport-ad:not(.collapsed) .airport-ad-content {
-  opacity: 1;
-  visibility: visible;
-}
-
-.airport-ad-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.airport-ad-title {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-heading);
 }
 
 .airport-ad-close {
@@ -935,27 +898,54 @@ body[data-template="dark"] .back-to-top:hover {
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
   color: var(--text-faint);
   cursor: pointer;
   transition: all 0.15s;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.airport-ad:hover .airport-ad-close {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .airport-ad-close:hover {
   background: var(--bg-code);
   color: var(--text-body);
+  border-color: var(--color-accent-ui);
 }
 
-.airport-ad-body {
+.airport-ad-card {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
   padding: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.airport-ad:hover .airport-ad-card {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .airport-ad-features {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
 }
 
 .airport-ad-feature {
@@ -971,29 +961,9 @@ body[data-template="dark"] .back-to-top:hover {
   flex-shrink: 0;
 }
 
-.airport-ad-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 10px 16px;
-  background: var(--color-accent-ui);
-  color: white;
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.airport-ad-cta:hover {
-  background: var(--color-accent-light);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(91, 140, 90, 0.2);
-  color: white;
-  text-decoration: none;
+/* 折叠状态 */
+.airport-ad.collapsed {
+  transform: translateX(-100%);
 }
 
 /* 暗色主题适配 */
@@ -1006,13 +976,14 @@ body[data-template="dark"] .airport-ad-toggle:hover {
   background: var(--color-accent-ui);
 }
 
-body[data-template="dark"] .airport-ad-content {
+body[data-template="dark"] .airport-ad-close {
   background: var(--bg-card);
   border-color: var(--border-color);
 }
 
-body[data-template="dark"] .airport-ad-header {
-  border-bottom-color: var(--border-color);
+body[data-template="dark"] .airport-ad-card {
+  background: var(--bg-card);
+  border-color: var(--border-color);
 }
 
 body[data-template="dark"] .airport-ad-close:hover {
@@ -1027,22 +998,21 @@ body[data-template="dark"] .airport-ad-close:hover {
     transform: none;
   }
   
-  .airport-ad-toggle {
-    padding: 8px 10px;
+  .airport-ad.collapsed {
+    transform: translateX(-100%);
   }
   
-  .airport-ad-content {
+  .airport-ad-card {
     position: fixed;
     left: 1rem;
     right: 1rem;
-    bottom: 120px;
+    bottom: 130px;
     top: auto;
     transform: none;
     width: auto;
-    margin-left: 0;
   }
   
-  .airport-ad:not(.collapsed) .airport-ad-content {
+  .airport-ad:hover .airport-ad-card {
     opacity: 1;
     visibility: visible;
   }

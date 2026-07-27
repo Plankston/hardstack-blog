@@ -7,28 +7,24 @@ const links = [
 const randomLink = links[Math.floor(Math.random() * links.length)];
 ---
 
-<div id="airport-ad" class="airport-ad collapsed">
-  <button id="airport-ad-toggle" class="airport-ad-toggle" aria-label="展开广告">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-    </svg>
-    <span class="toggle-text">机场推荐</span>
-  </button>
-  
-  <div class="airport-ad-content">
-    <div class="airport-ad-header">
-      <span class="airport-ad-title">机场节点推荐</span>
-      <button id="airport-ad-close" class="airport-ad-close" aria-label="关闭广告">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 6 6 18M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
+<div id="airport-ad" class="airport-ad">
+  <div class="airport-ad-wrapper">
+    <a href={randomLink} target="_blank" rel="noopener noreferrer" id="airport-ad-toggle" class="airport-ad-toggle" aria-label="机场节点">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+      </svg>
+    </a>
     
-    <div class="airport-ad-body">
+    <button id="airport-ad-close" class="airport-ad-close" aria-label="收起广告">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+
+    <div class="airport-ad-card">
       <div class="airport-ad-features">
         <div class="airport-ad-feature">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -50,13 +46,6 @@ const randomLink = links[Math.floor(Math.random() * links.length)];
           <span>性价比高</span>
         </div>
       </div>
-      
-      <a href={randomLink} target="_blank" rel="noopener noreferrer" class="airport-ad-cta">
-        立即注册
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      </a>
     </div>
   </div>
 </div>
@@ -64,24 +53,14 @@ const randomLink = links[Math.floor(Math.random() * links.length)];
 <script is:inline>
   document.addEventListener('DOMContentLoaded', () => {
     const ad = document.getElementById('airport-ad');
-    const toggle = document.getElementById('airport-ad-toggle');
     const close = document.getElementById('airport-ad-close');
     
-    if (!ad || !toggle || !close) return;
+    if (!ad || !close) return;
     
-    if (localStorage.getItem('airport-ad-closed')) {
-      ad.style.display = 'none';
-      return;
-    }
-    
-    toggle.addEventListener('click', () => {
-      ad.classList.toggle('collapsed');
-      toggle.setAttribute('aria-label', ad.classList.contains('collapsed') ? '展开广告' : '收起广告');
-    });
-    
-    close.addEventListener('click', () => {
-      ad.style.display = 'none';
-      localStorage.setItem('airport-ad-closed', 'true');
+    close.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      ad.classList.add('collapsed');
     });
   });
 </script>
