@@ -62,27 +62,26 @@ const randomLink = links[Math.floor(Math.random() * links.length)];
 </div>
 
 <script>
-  const ad = document.getElementById('airport-ad');
-  const toggle = document.getElementById('airport-ad-toggle');
-  const close = document.getElementById('airport-ad-close');
-  
-  if (ad && toggle && close) {
-    // 检查是否被用户关闭过
-    const isClosed = localStorage.getItem('airport-ad-closed');
-    if (isClosed) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const ad = document.getElementById('airport-ad');
+    const toggle = document.getElementById('airport-ad-toggle');
+    const close = document.getElementById('airport-ad-close');
+    
+    if (!ad || !toggle || !close) return;
+    
+    if (localStorage.getItem('airport-ad-closed')) {
       ad.style.display = 'none';
       return;
     }
     
     toggle.addEventListener('click', () => {
       ad.classList.toggle('collapsed');
-      const isCollapsed = ad.classList.contains('collapsed');
-      toggle.setAttribute('aria-label', isCollapsed ? '展开广告' : '收起广告');
+      toggle.setAttribute('aria-label', ad.classList.contains('collapsed') ? '展开广告' : '收起广告');
     });
     
     close.addEventListener('click', () => {
       ad.style.display = 'none';
       localStorage.setItem('airport-ad-closed', 'true');
     });
-  }
+  });
 </script>
